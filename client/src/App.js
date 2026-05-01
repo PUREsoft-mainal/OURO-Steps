@@ -9,7 +9,7 @@ import LoginBox from './components/LoginBox';
 import ChatArea from './components/ChatArea';
 import './App.css';
 
-const API_BASE = "http://127.0.0.1:5050";
+const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 const socket = io(API_BASE, { transports: ['polling', 'websocket'] });
 
 function App() {
