@@ -39,7 +39,12 @@ const Ad = mongoose.model('Ad', { imgUrl: String, phone: String, whatsapp: Strin
 app.use(cors());
 app.use(express.json());
 
-const io = new Server(server, { cors: { origin: "*" } });
+const io = new Server(server, {
+  cors: {
+    origin: "https://vercel.app", // السماح لموقعك فقط بالاتصال
+    methods: ["GET", "POST"]
+  }
+});
 let activeUsers = 0;
 
 io.on('connection', async (socket) => {
