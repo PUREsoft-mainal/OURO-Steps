@@ -10,7 +10,10 @@ import ChatArea from './components/ChatArea';
 import './App.css';
 
 const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
-const socket = io(API_BASE, { transports: ['polling', 'websocket'] });
+const socket = io(API_BASE, { 
+    transports: ['websocket'], // أجبره على استخدام ويدجت سريع
+    withCredentials: true 
+});
 
 function App() {
   const [isLogged, setIsLogged] = useState(false);
