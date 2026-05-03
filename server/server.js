@@ -41,12 +41,14 @@ app.use(express.json());
 
 const io = new Server(server, {
   cors: {
-    origin: "*", // للسماح بالاتصال من أي مكان حالياً لحل المشكلة
+    origin: "*", // السماح بالاتصال من أي مكان
     methods: ["GET", "POST"],
     credentials: true
   },
-  allowEIO3: true // متوافق مع نسخ السوكيت المختلفة
+  transports: ['websocket', 'polling'], // دعم كلي لنوعي الاتصال
+  allowEIO3: true
 });
+
 
 let activeUsers = 0;
 
