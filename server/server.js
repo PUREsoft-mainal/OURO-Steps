@@ -41,10 +41,13 @@ app.use(express.json());
 
 const io = new Server(server, {
   cors: {
-    origin: "https://vercel.app", // السماح لموقعك فقط بالاتصال
-    methods: ["GET", "POST"]
-  }
+    origin: "*", // للسماح بالاتصال من أي مكان حالياً لحل المشكلة
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+  allowEIO3: true // متوافق مع نسخ السوكيت المختلفة
 });
+
 let activeUsers = 0;
 
 io.on('connection', async (socket) => {
