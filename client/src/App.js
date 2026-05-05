@@ -11,9 +11,8 @@ import './App.css';
 
 const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 // استخدم الرابط العادي والـ Socket.io سيتولى التحويل تلقائياً
-const socket = io(API_BASE, { 
-    transports: ['polling', 'websocket'], // ابدأ بـ polling ثم انتقل لـ websocket
-    withCredentials: true 
+const socket = io("https://hf.space", { 
+  transports: ['websocket'] 
 });
 
 function App() {
