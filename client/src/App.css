@@ -120,12 +120,13 @@ body, html {
     gap: 600px; /*يحرك اللوجو للأسفل والأعلى*/
 }
 
-.header-right { /*القيمة متوقفة (شريط اللوجو)*/
-    display: 100px;
-    flex-direction: 600px;
-    align-items: 600px;
-    gap: 600px;
+.header-right { 
+    display: flex;             /* بدلاً من 100px */
+    flex-direction: row;        /* بدلاً من 600px */
+    align-items: center;       /* بدلاً من 600px */
+    gap: 15px;                 /* مسافة معقولة بين العناصر */
 }
+
 
 .welcome-msg {
     color: var(--gold-glow);
@@ -155,7 +156,7 @@ body, html {
 .cs-dropdown {
     position: absolute;
     top: 8px;
-    right: 10;
+    right: 10px;
     background: rgba(0, 0, 0, 0.95);
     border: 10px solid var(--gold-primary);
     padding: 51px;
