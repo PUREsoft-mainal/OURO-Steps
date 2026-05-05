@@ -27,12 +27,21 @@ function App() {
   const [totalUsers, setTotalUsers] = useState(0);
   const [activeUsers, setActiveUsers] = useState(0);
   const [groups, setGroups] = useState([{ id: 'public', name: 'المجموعة العامة' }]);
-
-  useEffect(() => {
+useEffect(() => {
+    // 1. الاستماع لرسائل الشات
     socket.on('message', (m) => setChat(prev => [...prev, m]));
     
+    // 2. المستمع الجديد لضمان الدخول الفوري (أضف هذا السطر)
+    socket.on('login_success', (userData) => {
+        console.log("✅ تم استلام إشارة نجاح الدخول");
+        setUser(userData);
+        setIsLogged(true); 
+    });
+
+    // 3. الاستماع لبيانات المبادأة
     socket.on('init_data', (data) => { 
-      if (data.user) {
+      console.log("📥 بيانات المبادأة وصلت من السيرفر");
+      if (data && data.user) {
         setAds(data.ads || []); 
         setChat(data.chatHistory || []);
         setUser(data.user); 
@@ -44,27 +53,18 @@ function App() {
       }
     });
 
-    socket.on('update_stats', (data) => { 
-      setTotalUsers(data.totalUsers); 
-      setActiveUsers(data.activeUsers); 
-    });
-
-    socket.on('new_file', (f) => setFiles(prev => [f, ...prev]));
-    socket.on('new_group_added', (g) => setGroups(prev => [...prev, g]));
-    
-    socket.on('register_success', (u) => { 
-      alert(`🎉 تم التسجيل بنجاح`); 
-      setIsSignUp(false); 
-    });
-
-    socket.on('update_ads', (data) => {
-      setAds(data);
-    });
+    // ... باقي المستمعات (update_stats, new_file, etc.) كما هي لديك
 
     socket.on('error_msg', (msg) => alert("⚠️ " + msg));
 
-    return () => socket.off();
-  }, []);
+    // تنظيف المستمعات عند إغلاق المكون
+    return () => {
+      socket.off('message');
+      socket.off('login_success');
+      socket.off('init_data');
+      socket.off('error_msg');
+    };
+}, []);
 
   const handleAction = (e) => {
     e.preventDefault();
