@@ -56,16 +56,27 @@ io.on('connection', async (socket) => {
         if (!user && data.username === 'Admin_Mostafa' && data.password === '123') {
             user = await User.create({ username: 'Admin_Mostafa', password: '123', role: 'Admin' });
         }
-
         if (user) {
             socket.user = user;
             const ads = await Ad.find();
             const chatHistory = await Chat.find().limit(50);
             const totalUsers = await User.countDocuments();
-            socket.emit('init_data', { ads, chatHistory, user, stats: { totalUsers, activeUsers } });
+            
+            // 1. أرسل إشارة النجاح للواجهة (هذا ما سيقوم بفتح صفحة الشات)
+            socket.emit('login_success', user); 
+
+            // 2. أرسل البيانات اللازمة لبناء الصفحة
+            socket.emit('init_data', { 
+                ads, 
+                chatHistory, 
+                user, 
+                stats: { totalUsers, activeUsers } 
+            });
         } else {
-            socket.emit('error_msg', 'خطأ في البيانات!');
+            // في حالة فشل البيانات
+            socket.emit('error_msg', 'خطأ في اسم المستخدم أو كلمة السر!');
         }
+
     });
 
     socket.on('sendMessage', async (text) => {
