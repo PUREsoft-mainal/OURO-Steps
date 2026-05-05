@@ -10,9 +10,11 @@ import ChatArea from './components/ChatArea';
 import './App.css';
 
 const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
-// استخدم الرابط العادي والـ Socket.io سيتولى التحويل تلقائياً
-const socket = io("https://hf.space", { 
-  transports: ['websocket'] 
+
+// التعديل هنا: يجب استخدام متغير API_BASE وليس hf.space
+const socket = io(API_BASE, { 
+  transports: ['websocket'],
+  withCredentials: true
 });
 
 function App() {
