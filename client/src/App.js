@@ -31,14 +31,17 @@ function App() {
   const [groups, setGroups] = useState([{ id: 'public', name: 'المجموعة العامة' }]);
 useEffect(() => {
     // 1. الاستماع لرسائل الشات
-    socket.on('message', (m) => setChat(prev => [...prev, m]));
-    
-    // 2. المستمع الجديد لضمان الدخول الفوري (أضف هذا السطر)
-    socket.on('login_success', (userData) => {
-        console.log("✅ تم استلام إشارة نجاح الدخول");
-        setUser(userData);
-        setIsLogged(true); 
-    });
+// أضف هذا السطر داخل useEffect في App.js لترى ماذا يقول السيرفر
+socket.on('error_msg', (msg) => {
+    console.log("❌ رد السيرفر بالفشل:", msg);
+    alert(msg);
+});
+
+socket.on('login_success', (u) => {
+    console.log("✅ رد السيرفر بالنجاح! المستخدم هو:", u.username);
+    setUser(u);
+    setIsLogged(true);
+});
 
     // 3. الاستماع لبيانات المبادأة
     socket.on('init_data', (data) => { 
