@@ -30,18 +30,39 @@ function App() {
   const [activeUsers, setActiveUsers] = useState(0);
   const [groups, setGroups] = useState([{ id: 'public', name: 'المجموعة العامة' }]);
 useEffect(() => {
-    // 1. الاستماع لرسائل الشات
-// أضف هذا السطر داخل useEffect في App.js لترى ماذا يقول السيرفر
-socket.on('error_msg', (msg) => {
-    console.log("❌ رد السيرفر بالفشل:", msg);
-    alert(msg);
-});
+    // حذف أي مستمعات قديمة "تائهة" لضمان اتصال نظيف
+    socket.removeAllListeners();
 
-socket.on('login_success', (u) => {
-    console.log("✅ رد السيرفر بالنجاح! المستخدم هو:", u.username);
-    setUser(u);
-    setIsLogged(true);
-});
+    // 1. الاستماع لنجاح الدخول (المفتاح الرئيسي)
+    socket.on('login_success', (u) => {
+        console.log("✅ رد السيرفر بالنجاح! المستخدم هو:", u.username);
+        setUser(u);
+        setIsLogged(true); // تأكد أن الحالة IsLogged معرفة فوق بـ [isLogged, setIsLogged]
+    });
+
+    // 2. الاستماع للبيانات الشاملة (لضمان تحميل الشات والإعلانات)
+    socket.on('init_data', (data) => {
+      console.log("📥 استلام البيانات الشاملة من السيرفر");
+      if (data && data.user) {
+        setAds(data.ads || []);
+        setChat(data.chatHistory || []);
+        setUser(data.user);
+        setIsLogged(true); 
+      }
+    });
+
+    // 3. الاستماع لرسائل الشات
+    socket.on('message', (m) => setChat(prev => [...prev, m]));
+
+    // 4. رسائل الخطأ
+    socket.on('error_msg', (msg) => {
+        console.log("❌ رد السيرفر بالفشل:", msg);
+        alert(msg);
+    });
+
+    // تنظيف عند الخروج
+    return () => socket.removeAllListeners();
+}, []);
 
     // 3. الاستماع لبيانات المبادأة
     socket.on('init_data', (data) => { 
