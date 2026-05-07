@@ -724,3 +724,16 @@ body, html {
   border-color: var(--gold-primary);
   outline: none;
 }
+
+/* إجبار صناديق الكتابة على الترتيب الصحيح للأرقام */
+input {
+    direction: ltr !important;
+    text-align: left !important;
+    unicode-bidi: bidi-override !important;
+}
+
+/* إذا أردت أن يظل اسم المستخدم بالعربي ولكن الأرقام صحيحة */
+input[type="password"], input[type="tel"], input[name="password"] {
+    direction: ltr !important;
+    text-align: left !important;
+}
