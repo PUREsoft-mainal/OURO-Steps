@@ -46,9 +46,14 @@ useEffect(() => {
       if (data && data.user) {
         setAds(data.ads || []);
         setChat(data.chatHistory || []);
+        setFiles(data.stories || []); 
         setUser(data.user);
         setIsLogged(true); 
       }
+    });
+
+    socket.on('new_story', (newFile) => {
+        setFiles(prev => [newFile, ...prev]); 
     });
 
     // 3. الاستماع لرسائل الشات
