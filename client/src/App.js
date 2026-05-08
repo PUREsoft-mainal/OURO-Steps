@@ -16,6 +16,7 @@ const socket = io(API_BASE, {
   transports: ['websocket'],
   upgrade: false,
   reconnection: true
+  reconnectionAttempts: 5
 });
 
 function App() {
