@@ -1,12 +1,27 @@
 import React from 'react';
+import io from 'socket.io-client'; // إضافة المكتبة للاتصال المباشر
+
+// ربط السيرفر السحابي مباشرة داخل الصندوق لضمان تخطي أي عرقلة
+const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
+const directSocket = io(API_BASE, { transports: ['websocket'] });
 
 const LoginBox = ({ isSignUp, setIsSignUp, user, setUser, password, setPassword, handleAction }) => {
   
-  // دالة وسيطة للتأكد من أن الضغط يعمل
+  // دالة وسيطة مطورة: ترسل لـ App.js وللسيرفر مباشرة في نفس الوقت
   const onFormSubmit = (e) => {
     e.preventDefault();
     console.log("الزر استجاب! البيانات المرسلة:", user.username, password);
-    handleAction(e); // استدعاء الدالة الأصلية من App.js
+    
+    // 1. الفعل الأول: إرسال البيانات لملف App.js (الخطة أ)
+    handleAction(e);
+
+    // 2. الفعل الثاني: إرسال مباشر للسيرفر السحابي (الخطة ب - لضمان الاستجابة)
+    const action = isSignUp ? 'register' : 'join';
+    directSocket.emit(action, { 
+        username: user.username, 
+        password: password, 
+        role: user.role || 'مستخدم' 
+    });
   };
 
   return (
@@ -62,4 +77,3 @@ const LoginBox = ({ isSignUp, setIsSignUp, user, setUser, password, setPassword,
 };
 
 export default LoginBox;
-
