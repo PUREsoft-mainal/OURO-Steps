@@ -23,7 +23,7 @@ const GroupsSidebar = ({ groups, onCreateGroup, user, socket, currentGroup, onJo
     formData.append('email', adData.email);
 
     try {
-      const response = await axios.post('http://127.0.0.1:5050/api/upload-ad', formData, {
+      const response = await axios.post('https://puresoft-mainal-ouro-steps.hf.space', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
