@@ -26,7 +26,6 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage });
 
-// 2. الاتصال بقاعدة البيانات (MongoDB)
 const mongoURI = "mongodb+srv://mostafa:01027411921@cluster0.kgw7td9.mongodb.net/ouro_db?retryWrites=true&w=majority";
 mongoose.connect(mongoURI).then(() => console.log("✅ متصل بـ MongoDB Atlas")).catch(err => console.log("❌ خطأ اتصال:", err));
 
@@ -44,15 +43,13 @@ const Story = mongoose.model('Story', {
 app.use(cors());
 app.use(express.json());
 
-// 4. تعريف الـ Socket.io (يجب أن يكون قبل استخدامه في المسارات)
+// تعريف السوكيت أولاً لضمان عمله في كل مكان
 const io = new Server(server, {
   cors: { origin: "*" }, 
   transports: ['websocket'] 
 });
 
-let activeUsers = 0;
-
-// 5. مسارات الرفع (Routes) - تعتمد الآن على io المعرف أعلاه
+// 2. مسارات الرفع (API)
 app.post('/api/upload-story', upload.single('file'), async (req, res) => {
     try {
         const newStory = await Story.create({
@@ -82,7 +79,8 @@ app.post('/api/upload-ad', upload.single('adImage'), async (req, res) => {
     } catch (err) { res.status(500).json({ success: false }); }
 });
 
-// 6. أحداث الـ Socket (Connection)
+let activeUsers = 0;
+
 io.on('connection', async (socket) => {
     activeUsers++;
     
@@ -92,13 +90,12 @@ io.on('connection', async (socket) => {
         if (!user && data.username === 'Admin_Mostafa' && data.password === '123') {
             user = await User.create({ username: 'Admin_Mostafa', password: '123', role: 'Admin' });
         }
+        
         if (user) {
             socket.user = user;
             const ads = await Ad.find();
             const chatHistory = await Chat.find().limit(50);
             const totalUsers = await User.countDocuments();
-            
-            // جلب القصص وإرسالها عند الدخول
             const stories = await Story.find().sort({ time: -1 }).limit(20);
 
             socket.emit('login_success', user); 
@@ -106,7 +103,7 @@ io.on('connection', async (socket) => {
             socket.emit('init_data', { 
                 ads, 
                 chatHistory, 
-                stories, // أضفنا القصص هنا
+                stories, 
                 user, 
                 stats: { totalUsers, activeUsers } 
             });
@@ -121,11 +118,13 @@ io.on('connection', async (socket) => {
             if (existingUser) {
                 return socket.emit('error_msg', 'اسم المستخدم موجود بالفعل!');
             }
+
             const newUser = await User.create({ 
                 username: data.username, 
                 password: data.password, 
                 role: data.role || 'مستخدم' 
             });
+
             if (newUser) {
                 socket.emit('register_success', newUser);
                 const totalUsers = await User.countDocuments();
@@ -146,8 +145,8 @@ io.on('connection', async (socket) => {
     socket.on('disconnect', () => { activeUsers--; });
 });
 
-// 7. تشغيل السيرفر
-const PORT = process.env.PORT || 7860;
+// 5. تشغيل السيرفر
+const PORT = process.env.PORT || 7860; 
 server.listen(PORT, "0.0.0.0", () => {
     console.log(`🚀 السيرفر يعمل الآن على بورت ${PORT}`);
 });
