@@ -10,11 +10,13 @@ import ChatArea from './components/ChatArea';
 import './App.css';
 
 // 1. استخدام الرابط المباشر لـ Hugging Face
-const SERVER_URL = "https://puresoft-mainal-ouro-steps.hf.space";
+const SERVER_URL = "wss://puresoft-mainal-ouro-steps.hf.space";
 
 const socket = io("wss://puresoft-mainal-ouro-steps.hf.space", { 
-  transports: ['websocket'],
-  upgrade: false 
+  transports: ['websocket'], 
+  upgrade: false,
+  reconnection: true,
+  reconnectionAttempts: 5
 });
 
 function App() {
