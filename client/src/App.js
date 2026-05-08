@@ -14,7 +14,7 @@ const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 // التعديل هنا: يجب استخدام متغير API_BASE وليس hf.space
 const socket = io(API_BASE, { 
   transports: ['websocket'],
-  withCredentials: true
+  withCredentials: false
 });
 
 function App() {
