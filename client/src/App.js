@@ -103,16 +103,25 @@ useEffect(() => {
     });
   };
 
-  const handleFileUpload = async (e) => {
-    if (e.target.files[0]) {
-      const fd = new FormData();
-      fd.append('file', e.target.files[0]);
-      fd.append('user', user.username);
-      try {
-        await axios.post(`${API_BASE}/api/upload`, fd);
-      } catch (err) { console.error("Upload error", err); }
+const handleFileUpload = async (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const fd = new FormData();
+    fd.append('file', file); // تأكد أن الاسم 'file' يطابق ما ينتظره السيرفر
+    fd.append('uploader', user.username);
+    
+    try {
+      // نستخدم نفس مسار رفع الإعلانات أو مسار مخصص للقصص
+      const res = await axios.post(`${API_BASE}/api/upload-story`, fd);
+      if (res.data.success) {
+        alert("✅ تم الرفع بنجاح!");
+      }
+    } catch (err) {
+      console.error("خطأ في الرفع:", err);
+      alert("❌ فشل الرفع، تأكد من حجم الملف");
     }
-  };
+  }
+};
 
   if (!isLogged) {
     return (
