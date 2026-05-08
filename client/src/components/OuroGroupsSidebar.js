@@ -16,7 +16,7 @@ const GroupsSidebar = ({ groups, onCreateGroup, user, socket, currentGroup, onJo
 
     try {
       // إرسال الصورة للسيرفر عبر المسار الذي أنشأناه
-      await axios.post('http://127.0.0.1:5050', formData, {
+      await axios.post('https://puresoft-mainal-ouro-steps.hf.space', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       alert("✅ تم رفع الإعلان بنجاح وسيظهر للجميع فوراً!");
