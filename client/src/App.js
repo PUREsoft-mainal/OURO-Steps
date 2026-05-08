@@ -12,11 +12,9 @@ import './App.css';
 // 1. استخدام الرابط المباشر لـ Hugging Face
 const SERVER_URL = "https://puresoft-mainal-ouro-steps.hf.space";
 
-const socket = io(SERVER_URL, { 
+const socket = io("wss://puresoft-mainal-ouro-steps.hf.space", { 
   transports: ['websocket'],
-  upgrade: false,
-  reconnection: true,
-  reconnectionAttempts: 5
+  upgrade: false 
 });
 
 function App() {
