@@ -77,6 +77,35 @@ io.on('connection', async (socket) => {
 
     });
 
+      // --- أضف هذا الجزء هنا لكي يعمل تسجيل الحسابات الجديدة ---
+    socket.on('register', async (data) => {
+        try {
+            // التأكد من أن المستخدم غير موجود مسبقاً
+            const existingUser = await User.findOne({ username: data.username });
+            if (existingUser) {
+                return socket.emit('error_msg', 'اسم المستخدم موجود بالفعل!');
+            }
+
+            // إنشاء مستخدم جديد في MongoDB
+            const newUser = await User.create({ 
+                username: data.username, 
+                password: data.password, 
+                role: data.role || 'مستخدم' 
+            });
+
+            if (newUser) {
+                console.log(`👤 مستخدم جديد سجل الآن: ${newUser.username}`);
+                socket.emit('register_success', newUser);
+                
+                // تحديث عدد المشتركين لكل المتصلين
+                const totalUsers = await User.countDocuments();
+                io.emit('update_stats', { totalUsers, activeUsers });
+            }
+        } catch (err) {
+            socket.emit('error_msg', 'حدث خطأ أثناء التسجيل!');
+        }
+    });
+
     socket.on('sendMessage', async (text) => {
         if (!socket.user) return;
         const msg = { user: socket.user.username, role: socket.user.role, text, time: new Date().toLocaleTimeString() };
