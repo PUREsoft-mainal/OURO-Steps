@@ -49,8 +49,12 @@ app.use(express.json());
 
 // 5. تعريف السوكيت (Socket.io) - يجب تعريفه قبل استخدامه في المسارات
 const io = new Server(server, {
-  cors: { origin: "*" }, 
-  transports: ['websocket'] 
+  cors: { 
+    origin: "*", 
+    methods: ["GET", "POST"] 
+  },
+  transports: ['websocket'], // قبول Websocket فقط لضمان استقرار الشات
+  allowEIO3: true
 });
 
 // 6. مسارات الرفع (API Routes)
