@@ -33,6 +33,9 @@ useEffect(() => {
     // حذف أي مستمعات قديمة "تائهة" لضمان اتصال نظيف
     socket.removeAllListeners();
 
+    socket.on('connect', () => console.log("📡 تم الاتصال بالسيرفر السحابي!"));
+    socket.on('connect_error', (err) => console.log("❌ خطأ اتصال:", err.message));
+
     // 1. الاستماع لنجاح الدخول (المفتاح الرئيسي)
     socket.on('login_success', (u) => {
         console.log("✅ رد السيرفر بالنجاح! المستخدم هو:", u.username);
