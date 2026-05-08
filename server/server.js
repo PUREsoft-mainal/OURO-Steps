@@ -93,6 +93,7 @@ io.on('connection', async (socket) => {
         
         if (user) {
             socket.user = user;
+            socket.emit('login_success', user); 
             const ads = await Ad.find();
             const chatHistory = await Chat.find().limit(50);
             const totalUsers = await User.countDocuments();
