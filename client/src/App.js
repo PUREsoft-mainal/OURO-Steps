@@ -10,9 +10,9 @@ import ChatArea from './components/ChatArea';
 import './App.css';
 
 // 1. استخدام الرابط المباشر لـ Hugging Face
-const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
+const SERVER_URL = "https://puresoft-mainal-ouro-steps.hf.space";
 
-const socket = io(API_BASE, { 
+const socket = io(SERVER_URL, { 
   transports: ['websocket'],
   upgrade: false,
   reconnection: true,
@@ -99,7 +99,7 @@ function App() {
       
       try {
         // تنبيه: Cloudinary يحتاج HTTPS للرفع، لذا نستخدم API_BASE
-        const res = await axios.post(`${API_BASE}/api/upload-story`, fd);
+        const res = await axios.post(`${SERVER_URL}/api/upload-story`, fd);
         if (res.data.success) {
           alert("✅ تم الرفع بنجاح!");
         }
@@ -131,7 +131,7 @@ function App() {
         <div className="main-content">
           <GroupsSidebar groups={groups} socket={socket} user={user} />
           <ChatArea chat={chat} currentUser={user.username} msg={msg} setMsg={setMsg} socket={socket} />
-          <UploadSidebar files={files} serverUrl={API_BASE} onUpload={handleFileUpload} />
+          <UploadSidebar files={files} serverUrl={SERVER_URL} onUpload={handleFileUpload} />
         </div>
       </div>
     </div>
