@@ -50,7 +50,8 @@ app.use(express.json());
 // 5. تعريف السوكيت (Socket.io) - يجب تعريفه قبل استخدامه في المسارات
 const io = new Server(server, {
   cors: { 
-    origin: "*", 
+    origin: true, // السماح لأي أصل بالاتصال طالما يملك الصلاحية
+    credentials: true    
     methods: ["GET", "POST"] 
   },
   transports: ['websocket'], // قبول Websocket فقط لضمان استقرار الشات
