@@ -17,6 +17,9 @@ const socket = io("wss://puresoft-mainal-ouro-steps.hf.space", {
   upgrade: false,
   reconnection: true,
   reconnectionAttempts: 5
+  withCredentials: true, // مهم جداً للسماح بمرور البيانات بين نطاقات مختلفة
+  extraHeaders: {
+    "my-custom-header": "abcd" 
 });
 
 function App() {
