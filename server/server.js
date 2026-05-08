@@ -26,9 +26,7 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage });
 
-// 2. الاتصال بقاعدة البيانات (MongoDB)
-// استبدل <password> بكلمة سر قاعدة البيانات الخاصة بك
-const mongoURI = "mongodb+srv://mostafa:01027411921@cluster0.kgw7td9.mongodb.net/?ouro_db=Cluster0";
+const mongoURI = "mongodb+srv://mostafa:01027411921@cluster0.kgw7td9.mongodb.net/ouro_db?retryWrites=true&w=majority";
 mongoose.connect(mongoURI).then(() => console.log("✅ متصل بـ MongoDB Atlas")).catch(err => console.log("❌ خطأ اتصال:", err));
 
 // 3. تعريف "الجداول" (Schemas)
