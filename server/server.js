@@ -37,6 +37,37 @@ const Ad = mongoose.model('Ad', { imgUrl: String, phone: String, whatsapp: Strin
 app.use(cors());
 app.use(express.json());
 
+// 1. تعريف جدول القصص
+const Story = mongoose.model('Story', { 
+    name: String, 
+    url: String, 
+    uploader: String, 
+    time: { type: Date, default: Date.now } 
+});
+
+// 2. تعديل كود الرفع ليرسل إشارة للواجهة
+app.post('/api/upload-story', upload.single('file'), async (req, res) => {
+    try {
+        const newStory = await Story.create({
+            name: req.file.originalname,
+            url: req.file.path, // الرابط من Cloudinary
+            uploader: req.body.uploader
+        });
+        
+        // إرسال القصة الجديدة فوراً لكل المتصلين (Socket.io)
+        io.emit('new_story', newStory); 
+        
+        res.json({ success: true, story: newStory });
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
+});
+
+// 3. إرسال القصص القديمة عند الدخول (داخل socket.on('join'))
+// أضف هذا السطر داخل دالة join تحت ads و chatHistory:
+const stories = await Story.find().sort({ time: -1 }).limit(20);
+socket.emit('init_data', { ads, chatHistory, stories, user, stats });
+
 const io = new Server(server, {
   cors: { origin: "*" }, // اسمح للكل مؤقتاً لكسر الجدار
   transports: ['websocket'] 
