@@ -11,11 +11,10 @@ import './App.css';
 
 const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
-// التعديل هنا: يجب استخدام متغير API_BASE وليس hf.space
 const socket = io(API_BASE, { 
   transports: ['websocket'],
   upgrade: false,
-  reconnection: true
+  reconnection: true,     // أضفنا الفاصلة هنا ليعمل الكود
   reconnectionAttempts: 5
 });
 
