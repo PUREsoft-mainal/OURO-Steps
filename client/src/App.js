@@ -10,7 +10,7 @@ import ChatArea from './components/ChatArea';
 import './App.css';
 
 // 1. استخدام الرابط المباشر لـ Hugging Face
-const API_BASE = "https://hf.space";
+const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
 const socket = io(API_BASE, { 
   transports: ['websocket'],
