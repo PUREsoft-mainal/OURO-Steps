@@ -110,6 +110,12 @@ io.on('connection', async (socket) => {
     socket.on('disconnect', () => { activeUsers--; });
 });
 
+    // نهاية مستمعات السوكيت
+    socket.on('disconnect', () => { 
+        activeUsers--; 
+    });
+}); // <--- هذا القوس هو الذي كان ينقصك لإغلاق اتصال السوكيت
+
 // 4. مسارات الرفع السحابية (رفع الإعلانات)
 app.post('/api/upload-ad', upload.single('adImage'), async (req, res) => {
     try {
@@ -123,12 +129,14 @@ app.post('/api/upload-ad', upload.single('adImage'), async (req, res) => {
         const allAds = await Ad.find();
         io.emit('update_ads', allAds);
         res.json({ success: true, ad: newAd });
-    } catch (err) { res.status(500).json({ success: false }); }
+    } catch (err) { 
+        res.status(500).json({ success: false }); 
+    }
 });
-
 
 // 8. تشغيل السيرفر
 const PORT = process.env.PORT || 7860; 
 server.listen(PORT, "0.0.0.0", () => {
     console.log(`🚀 السيرفر يعمل الآن على بورت ${PORT}`);
 });
+
