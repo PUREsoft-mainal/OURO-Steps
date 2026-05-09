@@ -29,8 +29,17 @@ function App() {
   const [groups, setGroups] = useState([{ id: 'public', name: 'المجموعة العامة' }]);
 
   useEffect(() => {
+    // 1. الاستماع لرسائل الشات
     socket.on('message', (m) => setChat(prev => [...prev, m]));
     
+    // 2. الاستماع لنجاح الدخول وفتح الصفحة فوراً
+    socket.on('login_success', (u) => {
+        console.log("✅ تم تسجيل الدخول بنجاح");
+        setUser(u);
+        setIsLogged(true);
+    });
+
+    // 3. الاستماع لبيانات المبادأة (الإعلانات، الشات، الإحصائيات)
     socket.on('init_data', (data) => { 
       if (data.user) {
         setAds(data.ads || []); 
@@ -44,25 +53,31 @@ function App() {
       }
     });
 
+    // 4. تحديث الإحصائيات (المتواجدون والمسجلون)
     socket.on('update_stats', (data) => { 
       setTotalUsers(data.totalUsers); 
       setActiveUsers(data.activeUsers); 
     });
 
+    // 5. الاستماع للملفات والمجموعات الجديدة
     socket.on('new_file', (f) => setFiles(prev => [f, ...prev]));
     socket.on('new_group_added', (g) => setGroups(prev => [...prev, g]));
     
+    // 6. الاستماع لنجاح تسجيل حساب جديد
     socket.on('register_success', (u) => { 
       alert(`🎉 تم التسجيل بنجاح`); 
-      setIsSignUp(false); 
+      setIsSignUp(false); // العودة لصفحة الدخول
     });
 
+    // 7. تحديث شريط الإعلانات
     socket.on('update_ads', (data) => {
       setAds(data);
     });
 
+    // 8. رسائل الخطأ
     socket.on('error_msg', (msg) => alert("⚠️ " + msg));
 
+    // تنظيف المستمعات عند إغلاق المكون
     return () => socket.off();
   }, []);
 
