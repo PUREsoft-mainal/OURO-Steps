@@ -1,3 +1,34 @@
+
+Hugging Face's logo Hugging Face
+
+    Models
+    Datasets
+    Spaces
+    Docs
+    Pricing
+
+Spaces:
+PUREsoft-mainal
+/
+OURO-Steps
+App
+Files
+Community
+Settings
+OURO-Steps
+/ server.js
+PUREsoft-mainal's picture
+PUREsoft-mainal
+Update server.js
+46b329c
+verified
+less than a minute ago
+raw
+history
+blame
+edit
+delete
+5.29 kB
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -59,6 +90,34 @@ io.on('connection', async (socket) => {
         
         if (!user && data.username === 'Admin_Mostafa' && data.password === '123') {
             user = await User.create({ username: 'Admin_Mostafa', password: '123', role: 'Admin' });
+        }
+
+          // --- كود تسجيل الحسابات الجديدة ---
+    socket.on('register', async (data) => {
+        try {
+            // 1. التأكد من أن الاسم غير مكرر
+            const existingUser = await User.findOne({ username: data.username });
+            if (existingUser) {
+                return socket.emit('error_msg', 'عذراً، هذا الاسم محجوز مسبقاً!');
+            }
+
+            // 2. إنشاء الحساب في MongoDB
+            const newUser = await User.create({ 
+                username: data.username, 
+                password: data.password, 
+                role: data.role || 'مستخدم' 
+            });
+
+            if (newUser) {
+                console.log(`👤 مستخدم جديد انضم إلينا: ${newUser.username}`);
+                socket.emit('register_success', newUser); // إرسال إشارة النجاح للواجهة
+                
+                // تحديث العداد عند الجميع
+                const totalUsers = await User.countDocuments();
+                io.emit('update_stats', { totalUsers, activeUsers });
+            }
+        } catch (err) {
+            socket.emit('error_msg', 'حدث خطأ فني أثناء التسجيل، حاول مجدداً');
         }
 
         if (user) {
