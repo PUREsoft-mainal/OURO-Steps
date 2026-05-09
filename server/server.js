@@ -98,6 +98,9 @@ app.post('/api/upload-ad', upload.single('adImage'), async (req, res) => {
     } catch (err) { res.status(500).json({ success: false }); }
 });
 
-// 5. تشغيل السيرفر
-const PORT = process.env.PORT || 5050;
-server.listen(PORT, () => console.log(`🚀 السيرفر السحابي يعمل على منفذ ${PORT}`));
+
+// 8. تشغيل السيرفر
+const PORT = process.env.PORT || 7860; 
+server.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 السيرفر يعمل الآن على بورت ${PORT}`);
+});
