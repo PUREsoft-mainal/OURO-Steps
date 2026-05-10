@@ -740,4 +740,23 @@ body, html {
     cursor: pointer;
     font-weight: bold;
 }
+.create-group-btn {
+    background: #d4af37;
+    color: black;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.add-btn-royal {
+    background: #d4af37;
+    color: white;
+    font-size: 24px;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+}
 
