@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
 import Header from './components/Header';
-import AdSlider from './components/AdSlider'; // استخدام المكون الجديد
+import AdSlider from './components/AdSlider'; 
 import GroupsSidebar from './components/GroupsSidebar';
 import UploadSidebar from './components/UploadSidebar';
 import LoginBox from './components/LoginBox';
@@ -11,7 +11,7 @@ import './App.css';
 
 const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 const socket = io(API_BASE, { 
-  transports: ['websocket'], // حذفنا polling لإجبار الاتصال المباشر
+  transports: ['websocket'], 
   upgrade: false 
 });
 
@@ -27,19 +27,19 @@ function App() {
   const [totalUsers, setTotalUsers] = useState(0);
   const [activeUsers, setActiveUsers] = useState(0);
   const [groups, setGroups] = useState([{ id: 'public', name: 'المجموعة العامة' }]);
+  
+  // 1. إضافة حالة المجموعة الحالية لتعمل مع ChatArea الجديد
+  const [currentGroup, setCurrentGroup] = useState({ id: 'public', name: 'المجموعة العامة' });
 
   useEffect(() => {
-    // 1. الاستماع لرسائل الشات
     socket.on('message', (m) => setChat(prev => [...prev, m]));
     
-    // 2. الاستماع لنجاح الدخول وفتح الصفحة فوراً
     socket.on('login_success', (u) => {
         console.log("✅ تم تسجيل الدخول بنجاح");
         setUser(u);
         setIsLogged(true);
     });
 
-    // 3. الاستماع لبيانات المبادأة (الإعلانات، الشات، الإحصائيات)
     socket.on('init_data', (data) => { 
       if (data.user) {
         setAds(data.ads || []); 
@@ -53,31 +53,25 @@ function App() {
       }
     });
 
-    // 4. تحديث الإحصائيات (المتواجدون والمسجلون)
     socket.on('update_stats', (data) => { 
       setTotalUsers(data.totalUsers); 
       setActiveUsers(data.activeUsers); 
     });
 
-    // 5. الاستماع للملفات والمجموعات الجديدة
     socket.on('new_file', (f) => setFiles(prev => [f, ...prev]));
     socket.on('new_group_added', (g) => setGroups(prev => [...prev, g]));
     
-    // 6. الاستماع لنجاح تسجيل حساب جديد
     socket.on('register_success', (u) => { 
       alert(`🎉 تم التسجيل بنجاح`); 
-      setIsSignUp(false); // العودة لصفحة الدخول
+      setIsSignUp(false); 
     });
 
-    // 7. تحديث شريط الإعلانات
     socket.on('update_ads', (data) => {
       setAds(data);
     });
 
-    // 8. رسائل الخطأ
     socket.on('error_msg', (msg) => alert("⚠️ " + msg));
 
-    // داخل useEffect
     socket.on('new_group_success', (group) => {
         setGroups(prev => [...prev, group]);
     });
@@ -88,9 +82,9 @@ function App() {
             alert(`🔔 تم إضافتك لمجموعة جديدة: ${data.groupName}`);
         }
     });
-    // تنظيف المستمعات عند إغلاق المكون
+
     return () => socket.off();
-  }, []);
+  }, [user.username]); // أضفنا اسم المستخدم لضمان تحديث مستمع الإضافة للمجموعات
 
   const handleAction = (e) => {
     e.preventDefault();
@@ -130,15 +124,19 @@ function App() {
   return (
     <div className="app-container" style={{ backgroundImage: "url('/assets/background.png')", backgroundSize: 'cover' }}>
       <div className="app-overlay">
-        {/* الهيدر الملكي */}
         <Header activeUsers={activeUsers} totalUsers={totalUsers} user={user} />
-        
-        {/* شريط الإعلانات الجديد بالملف المستقل والأسهم */}
         <AdSlider ads={ads} /> 
-
         <div className="main-content">
-          <GroupsSidebar groups={groups} socket={socket} user={user} />
-          <ChatArea chat={chat} currentUser={user.username} msg={msg} setMsg={setMsg} socket={socket} />
+          <GroupsSidebar groups={groups} socket={socket} user={user} onGroupSelect={setCurrentGroup} />
+          {/* 2. تمرير currentGroup لـ ChatArea ليعود للعمل */}
+          <ChatArea 
+            chat={chat} 
+            currentUser={user.username} 
+            msg={msg} 
+            setMsg={setMsg} 
+            socket={socket} 
+            currentGroup={currentGroup}
+          />
           <UploadSidebar files={files} serverUrl={API_BASE} onUpload={handleFileUpload} />
         </div>
       </div>
@@ -147,4 +145,3 @@ function App() {
 }
 
 export default App;
-
