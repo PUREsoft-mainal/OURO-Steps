@@ -31,7 +31,7 @@ const GroupsSidebar = ({ groups, user, socket, currentGroup, onGroupSelect }) =>
 
     try {
       // تصحيح الرابط ليكون السيرفر السحابي (Hugging Face) بدلاً من localhost
-      const response = await axios.post('https://hf.space', formData, {
+      const response = await axios.post('https://puresoft-mainal-ouro-steps.hf.space', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
