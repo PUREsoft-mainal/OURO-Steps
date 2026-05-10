@@ -77,6 +77,17 @@ function App() {
     // 8. رسائل الخطأ
     socket.on('error_msg', (msg) => alert("⚠️ " + msg));
 
+    // داخل useEffect
+    socket.on('new_group_success', (group) => {
+        setGroups(prev => [...prev, group]);
+    });
+
+    socket.on('added_to_group', (data) => {
+        if (data.targetUser === user.username) {
+            setGroups(prev => [...prev, { id: data.groupId, name: data.groupName }]);
+            alert(`🔔 تم إضافتك لمجموعة جديدة: ${data.groupName}`);
+        }
+    });
     // تنظيف المستمعات عند إغلاق المكون
     return () => socket.off();
   }, []);
