@@ -27,7 +27,6 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 
 // 2. الاتصال بقاعدة البيانات (MongoDB)
-// استبدل <password> بكلمة سر قاعدة البيانات الخاصة بك
 const mongoURI = "mongodb+srv://mostafa:01027411921@cluster0.kgw7td9.mongodb.net/ouro_db?retryWrites=true&w=majority";
 mongoose.connect(mongoURI).then(() => console.log("✅ متصل بـ MongoDB Atlas")).catch(err => console.log("❌ خطأ اتصال:", err));
 
@@ -41,19 +40,62 @@ app.use(express.json());
 
 const io = new Server(server, {
   cors: {
-    origin: "*", // للسماح بالاتصال من أي مكان حالياً لحل المشكلة
+    origin: "*",
     methods: ["GET", "POST"],
     credentials: true
   },
-  allowEIO3: true // متوافق مع نسخ السوكيت المختلفة
+  allowEIO3: true
 });
+
+// تعريف جدول المجموعات الخاصة
+const Group = mongoose.model('Group', { 
+    name: String, 
+    owner: String, 
+    members: [String], // قائمة بأسماء المستخدمين المضافين
+    createdAt: { type: Date, default: Date.now } 
+});
+
+// --- داخل io.on('connection') أضف هذه المستمعات الجديدة ---
+
+// 1. إنشاء شات جديد
+socket.on('create_group', async (data) => {
+    try {
+        const newGroup = await Group.create({
+            name: data.groupName,
+            owner: socket.user.username,
+            members: [socket.user.username] // المنشئ هو أول عضو
+        });
+        socket.join(newGroup._id.toString()); // إدخال المنشئ للغرفة تقنياً
+        socket.emit('new_group_success', newGroup);
+    } catch (err) {
+        socket.emit('error_msg', 'فشل إنشاء المجموعة');
+    }
+});
+
+// 2. إضافة مستخدم لشات موجود (زر +)
+socket.on('add_member', async (data) => {
+    try {
+        const group = await Group.findById(data.groupId);
+        if (group && !group.members.includes(data.targetUser)) {
+            group.members.push(data.targetUser);
+            await group.save();
+            
+            // إعلام الشخص المضاف فوراً (إذا كان متصلاً) ليظهر له الزر
+            io.emit('added_to_group', { groupId: group._id, groupName: group.name, targetUser: data.targetUser });
+            socket.emit('error_msg', `تمت إضافة ${data.targetUser} بنجاح!`);
+        }
+    } catch (err) {
+        socket.emit('error_msg', 'فشل إضافة العضو');
+    }
+});
+
 
 let activeUsers = 0;
 
 io.on('connection', async (socket) => {
     activeUsers++;
     
-    // تسجيل الدخول والاشتراك (تلقائي للأدمن كما طلبنا سابقاً)
+    // 1. تسجيل الدخول والاشتراك (للمستخدمين الموجودين)
     socket.on('join', async (data) => {
         let user = await User.findOne({ username: data.username, password: data.password });
         
@@ -61,16 +103,27 @@ io.on('connection', async (socket) => {
             user = await User.create({ username: 'Admin_Mostafa', password: '123', role: 'Admin' });
         }
 
-          // --- كود تسجيل الحسابات الجديدة ---
+        if (user) {
+            socket.user = user;
+            const ads = await Ad.find();
+            const chatHistory = await Chat.find().limit(50);
+            const totalUsers = await User.countDocuments();
+            
+            socket.emit('login_success', user); 
+            socket.emit('init_data', { ads, chatHistory, user, stats: { totalUsers, activeUsers } });
+        } else {
+            socket.emit('error_msg', 'خطأ في اسم المستخدم أو كلمة السر!');
+        }
+    });
+
+    // 2. كود تسجيل الحسابات الجديدة
     socket.on('register', async (data) => {
         try {
-            // 1. التأكد من أن الاسم غير مكرر
             const existingUser = await User.findOne({ username: data.username });
             if (existingUser) {
                 return socket.emit('error_msg', 'عذراً، هذا الاسم محجوز مسبقاً!');
             }
 
-            // 2. إنشاء الحساب في MongoDB
             const newUser = await User.create({ 
                 username: data.username, 
                 password: data.password, 
@@ -79,27 +132,16 @@ io.on('connection', async (socket) => {
 
             if (newUser) {
                 console.log(`👤 مستخدم جديد انضم إلينا: ${newUser.username}`);
-                socket.emit('register_success', newUser); // إرسال إشارة النجاح للواجهة
-                
-                // تحديث العداد عند الجميع
+                socket.emit('register_success', newUser); 
                 const totalUsers = await User.countDocuments();
                 io.emit('update_stats', { totalUsers, activeUsers });
             }
         } catch (err) {
             socket.emit('error_msg', 'حدث خطأ فني أثناء التسجيل، حاول مجدداً');
         }
-
-        if (user) {
-            socket.user = user;
-            const ads = await Ad.find();
-            const chatHistory = await Chat.find().limit(50);
-            const totalUsers = await User.countDocuments();
-            socket.emit('init_data', { ads, chatHistory, user, stats: { totalUsers, activeUsers } });
-        } else {
-            socket.emit('error_msg', 'خطأ في البيانات!');
-        }
     });
 
+    // 3. إرسال الرسائل
     socket.on('sendMessage', async (text) => {
         if (!socket.user) return;
         const msg = { user: socket.user.username, role: socket.user.role, text, time: new Date().toLocaleTimeString() };
@@ -107,20 +149,16 @@ io.on('connection', async (socket) => {
         io.emit('message', msg);
     });
 
-    socket.on('disconnect', () => { activeUsers--; });
-});
-
-    // نهاية مستمعات السوكيت
     socket.on('disconnect', () => { 
         activeUsers--; 
     });
-}); // <--- هذا القوس هو الذي كان ينقصك لإغلاق اتصال السوكيت
+});
 
 // 4. مسارات الرفع السحابية (رفع الإعلانات)
 app.post('/api/upload-ad', upload.single('adImage'), async (req, res) => {
     try {
         const newAd = await Ad.create({
-            imgUrl: req.file.path, // الرابط يأتي من Cloudinary
+            imgUrl: req.file.path,
             phone: req.body.phone,
             whatsapp: req.body.whatsapp,
             telegram: req.body.telegram,
@@ -139,4 +177,3 @@ const PORT = process.env.PORT || 7860;
 server.listen(PORT, "0.0.0.0", () => {
     console.log(`🚀 السيرفر يعمل الآن على بورت ${PORT}`);
 });
-
