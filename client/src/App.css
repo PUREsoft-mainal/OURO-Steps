@@ -723,3 +723,21 @@ body, html {
   border-color: var(--gold-primary);
   outline: none;
 }
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background: rgba(0,0,0,0.5);
+    border-bottom: 1px solid #d4af37;
+}
+.add-member-btn {
+    background: #d4af37;
+    color: black;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
