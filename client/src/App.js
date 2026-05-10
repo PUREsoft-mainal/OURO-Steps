@@ -27,8 +27,6 @@ function App() {
   const [totalUsers, setTotalUsers] = useState(0);
   const [activeUsers, setActiveUsers] = useState(0);
   const [groups, setGroups] = useState([{ id: 'public', name: 'المجموعة العامة' }]);
-  
-  // 1. إضافة حالة المجموعة الحالية لتعمل مع ChatArea الجديد
   const [currentGroup, setCurrentGroup] = useState({ id: 'public', name: 'المجموعة العامة' });
 
   useEffect(() => {
@@ -41,15 +39,17 @@ function App() {
     });
 
     socket.on('init_data', (data) => { 
-      if (data.user) {
-        setAds(data.ads || []); 
-        setChat(data.chatHistory || []);
-        setUser(data.user); 
-        if (data.stats) { 
-            setTotalUsers(data.stats.totalUsers); 
-            setActiveUsers(data.stats.activeUsers); 
+      if (data) {
+        if (data.ads) setAds(data.ads);
+        if (data.chatHistory) setChat(data.chatHistory);
+        if (data.stories) setFiles(data.stories);
+        if (data.user) setUser(data.user);
+        if (data.stats) {
+            setTotalUsers(data.stats.totalUsers);
+            setActiveUsers(data.stats.activeUsers);
         }
-        setIsLogged(true); 
+        if (data.groups) setGroups(prev => [...prev, ...data.groups]);
+        setIsLogged(true);
       }
     });
 
@@ -58,22 +58,9 @@ function App() {
       setActiveUsers(data.activeUsers); 
     });
 
-    socket.on('new_file', (f) => setFiles(prev => [f, ...prev]));
-    socket.on('new_group_added', (g) => setGroups(prev => [...prev, g]));
-    
-    socket.on('register_success', (u) => { 
-      alert(`🎉 تم التسجيل بنجاح`); 
-      setIsSignUp(false); 
-    });
-
-    socket.on('update_ads', (data) => {
-      setAds(data);
-    });
-
-    socket.on('error_msg', (msg) => alert("⚠️ " + msg));
-
     socket.on('new_group_success', (group) => {
         setGroups(prev => [...prev, group]);
+        alert(`✨ تم إنشاء غرفة "${group.name}" بنجاح!`);
     });
 
     socket.on('added_to_group', (data) => {
@@ -83,8 +70,10 @@ function App() {
         }
     });
 
+    socket.on('error_msg', (msg) => alert("⚠️ " + msg));
+
     return () => socket.off();
-  }, [user.username]); // أضفنا اسم المستخدم لضمان تحديث مستمع الإضافة للمجموعات
+  }, [user.username]);
 
   const handleAction = (e) => {
     e.preventDefault();
@@ -95,6 +84,14 @@ function App() {
         password: password, 
         role: user.role || 'مستخدم' 
     });
+  };
+
+  // دالة إنشاء الشات الجديد المفقودة
+  const handleCreateGroup = () => {
+    const name = prompt("👑 أدخل اسم الشات الملكي الجديد:");
+    if (name) {
+      socket.emit('create_group', { groupName: name });
+    }
   };
 
   const handleFileUpload = async (e) => {
@@ -127,8 +124,17 @@ function App() {
         <Header activeUsers={activeUsers} totalUsers={totalUsers} user={user} />
         <AdSlider ads={ads} /> 
         <div className="main-content">
-          <GroupsSidebar groups={groups} socket={socket} user={user} onGroupSelect={setCurrentGroup} />
-          {/* 2. تمرير currentGroup لـ ChatArea ليعود للعمل */}
+          <GroupsSidebar 
+            groups={groups} 
+            socket={socket} 
+            user={user} 
+            currentGroup={currentGroup.id}
+            onJoinRoom={(id) => {
+              const g = groups.find(x => (x.id || x._id) === id);
+              if(g) setCurrentGroup({id: g.id || g._id, name: g.name});
+            }}
+            onCreateGroup={handleCreateGroup} // تمرير الدالة هنا ليعمل الزر
+          />
           <ChatArea 
             chat={chat} 
             currentUser={user.username} 
