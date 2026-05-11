@@ -520,3 +520,10 @@ body, html {
 }
 
 .add-member-btn:hover { background: var(--gold-glow); }
+
+.gold-btn {
+  position: relative;
+  z-index: 9999 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
