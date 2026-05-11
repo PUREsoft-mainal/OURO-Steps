@@ -9,14 +9,7 @@ const GroupsSidebar = ({ groups, user, socket, currentGroup, onJoinRoom, trigger
     email: ''
   });
 
-  // دالة إنشاء مجموعة جديدة عبر السوكيت
-  const handleCreateGroup = () => {
-    const name = prompt("👑 أدخل اسم الشات الجديد:");
-    if (name) {
-      socket.emit('create_group', { groupName: name });
-    }
-  };
-
+  // دالة رفع الإعلانات مع تصحيح المسار ليتوافق مع السيرفر
   const handleAdUpload = async (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
@@ -29,19 +22,19 @@ const GroupsSidebar = ({ groups, user, socket, currentGroup, onJoinRoom, trigger
     formData.append('email', adData.email);
 
     try {
-      // تصحيح الرابط ليكون السيرفر السحابي (Hugging Face) بدلاً من localhost
-      const response = await axios.post('https://puresoft-mainal-ouro-steps.hf.space', formData, {
+      // الرابط المسئول عن الرفع في السيرفر هو /api/upload-ad
+      const response = await axios.post('https://hf.space', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       if (response.data && response.data.success) {
-        alert("✅ تم رفع الإعلان مع بيانات التواصل بنجاح!");
+        alert("✅ تم رفع الإعلان بنجاح!");
         setAdData({ phone: '', whatsapp: '', telegram: '', email: '' });
         e.target.value = ""; 
       }
     } catch (error) {
       console.error("Error details:", error.response || error);
-      alert("❌ فشل الرفع، تأكد من اتصال السيرفر السحابي.");
+      alert("❌ فشل الرفع، تأكد من اتصال السيرفر.");
     }
   };
 
@@ -49,22 +42,24 @@ const GroupsSidebar = ({ groups, user, socket, currentGroup, onJoinRoom, trigger
     <aside className="sidebar right-side">
       <h3>🌐 المجموعات</h3>
       
-      {/* زر إنشاء شات جديد المربوط بالسوكيت */}
+      {/* هذا الزر يستدعي الوظيفة القادمة من App.js مباشرة */}
       <button className="gold-btn" onClick={triggerCreate}> ➕ إنشاء شات جديد </button>
 
       <div className="groups-list">
         {groups.map((g, i) => (
           <div 
             key={g.id || g._id || i} 
-            className={`group-item ${currentGroup?.id === (g.id || g._id) ? 'active-group' : ''}`}
-            onClick={() => onGroupSelect({ id: g.id || g._id, name: g.name })}
+            /* تصحيح: مقارنة الـ ID الحالي بالجروب المختار لعمل اللون الذهبي (Active) */
+            className={`group-item ${currentGroup === (g.id || g._id) ? 'active-group' : ''}`}
+            /* تصحيح: استدعاء onJoinRoom لتبديل الغرف في App.js */
+            onClick={() => onJoinRoom(g.id || g._id)}
           >
             {g.name}
           </div>
         ))}
       </div>
 
-      {/* قسم الأدمن - رفع الإعلان مع البيانات */}
+      {/* قسم الأدمن - مخصص فقط لـ Admin_Mostafa */}
       {user && user.username === 'Admin_Mostafa' && (
         <div className="admin-controls" style={{ marginTop: '20px', borderTop: '2px solid #d4af37', paddingTop: '15px' }}>
           <h4 style={{color: '#d4af37', fontSize: '12px'}}>⚙️ إدارة الإعلانات التفاعلية</h4>
@@ -75,11 +70,11 @@ const GroupsSidebar = ({ groups, user, socket, currentGroup, onJoinRoom, trigger
               value={adData.phone} onChange={(e) => setAdData({...adData, phone: e.target.value})} 
             />
             <input 
-              type="text" placeholder="رقم الواتساب (بدون +)" className="admin-input"
+              type="text" placeholder="رقم الواتساب" className="admin-input"
               value={adData.whatsapp} onChange={(e) => setAdData({...adData, whatsapp: e.target.value})} 
             />
             <input 
-              type="text" placeholder="معرف التلغرام (Username)" className="admin-input"
+              type="text" placeholder="معرف التلغرام" className="admin-input"
               value={adData.telegram} onChange={(e) => setAdData({...adData, telegram: e.target.value})} 
             />
           </div>
@@ -92,10 +87,6 @@ const GroupsSidebar = ({ groups, user, socket, currentGroup, onJoinRoom, trigger
           <button className="admin-gold-btn" onClick={() => document.getElementById('ad-upload-input').click()}>
             🖼️ اختر الصورة واجهة الإعلان
           </button>
-          
-          <p style={{ fontSize: '9px', color: '#8e6d45', marginTop: '5px' }}>
-            (سيتم دمج البيانات المكتوبة أعلاه مع الصورة فور الرفع)
-          </p>
         </div>
       )}
     </aside>
