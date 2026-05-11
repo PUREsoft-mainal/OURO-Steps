@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const GroupsSidebar = ({ groups, user, socket, currentGroup, onGroupSelect, onCreateGroup }) => {  // حالة لتخزين بيانات التواصل الاختيارية
+const GroupsSidebar = ({ groups, user, socket, currentGroup, onJoinRoom, triggerCreate }) => {
   const [adData, setAdData] = useState({
     phone: '',
     whatsapp: '',
