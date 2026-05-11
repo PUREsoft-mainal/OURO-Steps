@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
 
-// استدعاء المكونات (التي أرسلتها سابقاً)
+// استدعاء المكونات
 import Header from './components/Header';
 import AdSlider from './components/AdSlider'; 
 import GroupsSidebar from './components/GroupsSidebar';
@@ -10,13 +10,10 @@ import UploadSidebar from './components/UploadSidebar';
 import LoginBox from './components/LoginBox';
 import ChatArea from './components/ChatArea';
 
-// استدعاء التنسيقات
 import './App.css';
 
-// الإعدادات السحابية (Hugging Face)
 const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
-// إنشاء اتصال السوكيت خارج المكون لضمان استقراره
 const socket = io(API_BASE, { 
   transports: ['websocket'], 
   upgrade: false,
@@ -24,26 +21,19 @@ const socket = io(API_BASE, {
 });
 
 function App() {
-  // --- 1. حالات الهوية والدخول ---
   const [isLogged, setIsLogged] = useState(false);
   const [user, setUser] = useState({ username: '', role: '', user_id: '' });
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
-
-  // --- 2. حالات البيانات الأساسية ---
   const [chat, setChat] = useState([]);
   const [msg, setMsg] = useState("");
   const [ads, setAds] = useState([]);
-  const [files, setFiles] = useState([]); // Stories
+  const [files, setFiles] = useState([]);
   const [groups, setGroups] = useState([{ id: 'public', name: 'المجموعة العامة' }]);
   const [currentGroup, setCurrentGroup] = useState({ id: 'public', name: 'المجموعة العامة' });
-
-  // --- 3. حالات الإحصائيات ---
   const [stats, setStats] = useState({ activeUsers: 0, totalUsers: 0 });
 
-  // --- 4. إدارة أحداث السوكيت (Socket Logic) ---
   useEffect(() => {
-    // استقبال البيانات عند الدخول لأول مرة
     socket.on('init_data', (data) => {
       if (data.ads) setAds(data.ads);
       if (data.chatHistory) setChat(data.chatHistory);
@@ -52,17 +42,11 @@ function App() {
       setIsLogged(true);
     });
 
-    // استقبال الرسائل اللحظية
     socket.on('message', (m) => setChat(prev => [...prev, m]));
-
-    // تحديث الإحصائيات لحظياً
     socket.on('update_stats', (newStats) => setStats(newStats));
-
-    // تحديث الإعلانات عند رفع إعلان جديد
     socket.on('update_ads', (updatedAds) => setAds(updatedAds));
-
-    // إدارة المجموعات
     socket.on('new_group_success', (group) => setGroups(prev => [...prev, group]));
+    
     socket.on('added_to_group', (data) => {
       if (data.targetUser === user.username) {
         setGroups(prev => [...prev, { id: data.groupId, name: data.groupName }]);
@@ -71,69 +55,41 @@ function App() {
 
     socket.on('error_msg', (msg) => alert("⚠️ " + msg));
 
-    return () => {
-      socket.off('message');
-      socket.off('init_data');
-      socket.off('update_stats');
-    };
+    return () => socket.off();
   }, [user.username]);
 
-  // --- 5. العمليات (Actions) ---
+  // --- تفعيل الزر بشكل احترافي ---
+  const handleCreateGroup = useCallback(() => {
+    const name = prompt("👑 أدخل اسم الشات الملكي الجديد:");
+    if (name && name.trim() !== "") {
+      socket.emit('create_group', { groupName: name });
+      console.log("تم إرسال طلب إنشاء مجموعة:", name);
+    }
+  }, []);
 
-  // دخول / تسجيل
-  const handleAuthAction = useCallback((e) => {
+  const handleAuthAction = (e) => {
     e.preventDefault();
     const action = isSignUp ? 'register' : 'join';
-    socket.emit(action, { 
-      username: user.username, 
-      password: password, 
-      role: user.role || 'مستخدم' 
-    });
-  }, [isSignUp, user, password]);
+    socket.emit(action, { username: user.username, password: password, role: user.role || 'مستخدم' });
+  };
 
-  // إنشاء مجموعة جديدة
-const handleCreateGroup = () => {
-  console.log("تم الضغط على زر إنشاء المجموعة!"); // سيظهر في الـ Console
-  alert("جاري إنشاء شات جديد..."); // سيظهر كتنبيه على الشاشة
- 
-  const name = prompt("👑 أدخل اسم الشات الملكي الجديد:");
-  if (name && name.trim() !== "") {
-    // إرسال البيانات للسيرفر
-    socket.emit('create_group', { groupName: name });
-    console.log("تم إرسال طلب إنشاء مجموعة:", name); // للتأكد من التفاعل في الـ Console
-  }
-};
-
-  // رفع القصص (Stories) إلى Cloudinary عبر السيرفر
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const fd = new FormData();
-    fd.append('file', file);
+    fd.append('adImage', file);
     fd.append('user', user.username);
-
     try {
-      const res = await axios.post(`${API_BASE}/api/upload-ad`, fd);
-      if (res.data.success) alert("✨ تم نشر قصتك بنجاح!");
-    } catch (err) {
-      console.error("Upload error", err);
-      alert("❌ فشل الرفع، حاول مرة أخرى.");
-    }
+      await axios.post(`${API_BASE}/api/upload-ad`, fd);
+      alert("✅ تم الرفع بنجاح!");
+    } catch (err) { console.error("Upload error", err); }
   };
 
-  // تبديل الغرف
   const handleSwitchRoom = (groupId) => {
     const target = groups.find(g => (g.id || g._id) === groupId);
-    if (target) {
-      setCurrentGroup({ id: target.id || target._id, name: target.name });
-      // هنا يمكن إضافة socket.emit('join_room', groupId) إذا فعلنا الغرف الخاصة بالسيرفر
-    }
+    if (target) setCurrentGroup({ id: target.id || target._id, name: target.name });
   };
 
-  // --- 6. واجهة المستخدم (UI) ---
-
-  // إذا لم يسجل الدخول، اعرض شاشة الدخول فقط
   if (!isLogged) {
     return (
       <div className="login-page">
@@ -147,37 +103,23 @@ const handleCreateGroup = () => {
     );
   }
 
-  // الواجهة الرئيسية للمنصة
   return (
     <div className="app-container">
       <div className="app-overlay">
-        
-        {/* الرأس: الإحصائيات والملف الشخصي */}
-        <Header 
-          activeUsers={stats.activeUsers} 
-          totalUsers={stats.totalUsers} 
-          user={user} 
-        />
-
-        {/* سلايدر الإعلانات التفاعلي */}
+        <Header activeUsers={stats.activeUsers} totalUsers={stats.totalUsers} user={user} />
         <AdSlider ads={ads} /> 
 
         <main className="main-content">
-          {/* الجانب الأيمن: إدارة المجموعات */}
           <GroupsSidebar 
             groups={groups} 
             user={user} 
             socket={socket}
             currentGroup={currentGroup.id}
             onJoinRoom={handleSwitchRoom}
-  // التعديل هنا: نمرر الدالة داخل دالة سهمية لضمان التعرف عليها
-            onCreateGroup={() => {
-               console.log("تم استدعاء الدالة من داخل المكون");
-               handleCreateGroup();
-            }}
+            // نستخدم triggerCreate كاسم وسيط لضمان كسر أي تعارض قديم
+            triggerCreate={handleCreateGroup} 
           />
 
-          {/* المنتصف: منطقة الدردشة */}
           <ChatArea 
             chat={chat} 
             currentUser={user.username} 
@@ -187,14 +129,8 @@ const handleCreateGroup = () => {
             currentGroup={currentGroup}
           />
 
-          {/* الجانب الأيسر: القصص (Stories) */}
-          <UploadSidebar 
-            files={files} 
-            serverUrl={API_BASE} 
-            onUpload={handleFileUpload} 
-          />
+          <UploadSidebar files={files} serverUrl={API_BASE} onUpload={handleFileUpload} />
         </main>
-
       </div>
     </div>
   );
