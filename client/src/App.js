@@ -170,7 +170,11 @@ const handleCreateGroup = () => {
             socket={socket}
             currentGroup={currentGroup.id}
             onJoinRoom={handleSwitchRoom}
-            onCreateGroup={handleCreateGroup}
+  // التعديل هنا: نمرر الدالة داخل دالة سهمية لضمان التعرف عليها
+            onCreateGroup={() => {
+               console.log("تم استدعاء الدالة من داخل المكون");
+               handleCreateGroup();
+            }}
           />
 
           {/* المنتصف: منطقة الدردشة */}
