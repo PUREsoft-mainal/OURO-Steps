@@ -35,7 +35,6 @@ const User = mongoose.model('User', { username: String, password: String, role: 
 const Chat = mongoose.model('Chat', { user: String, role: String, text: String, time: String });
 const Ad = mongoose.model('Ad', { imgUrl: String, phone: String, whatsapp: String, telegram: String, email: String });
 
-// تعريف جدول المجموعات الخاصة
 const Group = mongoose.model('Group', { 
     name: String, 
     owner: String, 
@@ -59,10 +58,11 @@ let activeUsers = 0;
 
 io.on('connection', async (socket) => {
     activeUsers++;
-    console.log("📡 مستخدم متصل بالسيرفر");
+    console.log("📡 مستخدم جديد حاول الاتصال...");
 
     // 1. تسجيل الدخول والاشتراك
     socket.on('join', async (data) => {
+        console.log(`🔑 محاولة دخول للمستخدم: ${data.username}`);
         let user = await User.findOne({ username: data.username, password: data.password });
         
         if (!user && data.username === 'Admin_Mostafa' && data.password === '123') {
@@ -70,22 +70,22 @@ io.on('connection', async (socket) => {
         }
 
         if (user) {
-            socket.user = user;
+            socket.user = user; // تخزين بيانات المستخدم في جلسة السوكيت
+            console.log(`✅ تم تأكيد هوية: ${user.username}`);
+            
             const ads = await Ad.find();
             const chatHistory = await Chat.find().limit(50);
             const totalUsers = await User.countDocuments();
-            
-            // جلب المجموعات التي يكون المستخدم عضواً فيها
             const userGroups = await Group.find({ members: user.username });
 
             socket.emit('login_success', user); 
             socket.emit('init_data', { ads, chatHistory, user, stats: { totalUsers, activeUsers }, groups: userGroups });
+            io.emit('update_stats', { totalUsers, activeUsers }); // تحديث الجميع بالعدد الجديد
         } else {
             socket.emit('error_msg', 'خطأ في اسم المستخدم أو كلمة السر!');
         }
     });
 
-    // 2. كود تسجيل الحسابات الجديدة
     socket.on('register', async (data) => {
         try {
             const existingUser = await User.findOne({ username: data.username });
@@ -98,6 +98,7 @@ io.on('connection', async (socket) => {
             });
 
             if (newUser) {
+                console.log(`🆕 مستخدم جديد سجل في المنصة: ${newUser.username}`);
                 socket.emit('register_success', newUser); 
                 const totalUsers = await User.countDocuments();
                 io.emit('update_stats', { totalUsers, activeUsers });
@@ -107,23 +108,36 @@ io.on('connection', async (socket) => {
         }
     });
 
-    // 3. إنشاء شات جديد (تم نقله للمكان الصحيح)
+    // 3. إنشاء شات جديد (تم تعزيزه بالرسائل التحذيرية)
     socket.on('create_group', async (data) => {
+        console.log("🛠 محاولة إنشاء مجموعة جديدة...");
         try {
-            if (!socket.user) return;
+            // التحقق إذا كان المستخدم مسجل في السوكيت حالياً
+            if (!socket.user) {
+                console.log("❌ فشل الإنشاء: المستخدم غير معرف في السوكيت");
+                return socket.emit('error_msg', 'يجب تسجيل الدخول أولاً لإنشاء مجموعة');
+            }
+
             const newGroup = await Group.create({
                 name: data.groupName,
                 owner: socket.user.username,
                 members: [socket.user.username]
             });
+
+            console.log(`✨ تم إنشاء مجموعة بنجاح: ${newGroup.name}`);
             socket.join(newGroup._id.toString());
+            
+            // إرسال النجاح للمنشئ وتحديث القائمة عند الجميع إذا أردت
             socket.emit('new_group_success', newGroup);
+            // إرسال تنبيه للمستخدمين النشطين بوجود مجموعة جديدة (اختياري)
+            // io.emit('new_group_created', newGroup); 
+            
         } catch (err) {
-            socket.emit('error_msg', 'فشل إنشاء المجموعة');
+            console.error("❌ MongoDB Error:", err);
+            socket.emit('error_msg', 'فشل إنشاء المجموعة في قاعدة البيانات');
         }
     });
 
-    // 4. إضافة مستخدم لشات موجود (تم نقله للمكان الصحيح)
     socket.on('add_member', async (data) => {
         try {
             const group = await Group.findById(data.groupId);
@@ -139,7 +153,6 @@ io.on('connection', async (socket) => {
         }
     });
 
-    // 5. إرسال الرسائل
     socket.on('sendMessage', async (data) => {
         if (!socket.user) return;
         const msgText = typeof data === 'string' ? data : data.text;
@@ -155,10 +168,10 @@ io.on('connection', async (socket) => {
 
     socket.on('disconnect', () => { 
         activeUsers--; 
+        io.emit('update_stats', { activeUsers }); // تحديث العدد عند الجميع عند الخروج
     });
 });
 
-// 6. مسارات الرفع السحابية (رفع الإعلانات)
 app.post('/api/upload-ad', upload.single('adImage'), async (req, res) => {
     try {
         const newAd = await Ad.create({
@@ -176,7 +189,6 @@ app.post('/api/upload-ad', upload.single('adImage'), async (req, res) => {
     }
 });
 
-// 7. تشغيل السيرفر
 const PORT = process.env.PORT || 7860; 
 server.listen(PORT, "0.0.0.0", () => {
     console.log(`🚀 السيرفر يعمل الآن على بورت ${PORT}`);
