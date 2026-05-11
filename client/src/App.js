@@ -111,7 +111,7 @@ const handleCreateGroup = () => {
     fd.append('user', user.username);
 
     try {
-      const res = await axios.post(`${API_BASE}/api/upload`, fd);
+      const res = await axios.post(`${API_BASE}/api/upload-ad`, fd);
       if (res.data.success) alert("✨ تم نشر قصتك بنجاح!");
     } catch (err) {
       console.error("Upload error", err);
