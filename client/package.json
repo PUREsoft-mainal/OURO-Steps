@@ -38,7 +38,4 @@
       "last 1 safari version"
     ]
   }
-  "scripts": {
-    "build": "rm -rf build && react-scripts build"
-  }
 }
