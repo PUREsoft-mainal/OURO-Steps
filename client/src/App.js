@@ -92,10 +92,14 @@ function App() {
   }, [isSignUp, user, password]);
 
   // إنشاء مجموعة جديدة
-  const handleCreateGroup = () => {
-    const name = prompt("👑 أدخل اسم الشات الملكي الجديد:");
-    if (name) socket.emit('create_group', { groupName: name });
-  };
+const handleCreateGroup = () => {
+  const name = prompt("👑 أدخل اسم الشات الملكي الجديد:");
+  if (name && name.trim() !== "") {
+    // إرسال البيانات للسيرفر
+    socket.emit('create_group', { groupName: name });
+    console.log("تم إرسال طلب إنشاء مجموعة:", name); // للتأكد من التفاعل في الـ Console
+  }
+};
 
   // رفع القصص (Stories) إلى Cloudinary عبر السيرفر
   const handleFileUpload = async (e) => {
