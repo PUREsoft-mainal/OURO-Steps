@@ -50,9 +50,7 @@ const GroupsSidebar = ({ groups, user, socket, currentGroup, onJoinRoom, trigger
       <h3>🌐 المجموعات</h3>
       
       {/* زر إنشاء شات جديد المربوط بالسوكيت */}
-      <button className="gold-btn" onClick={onCreateGroup}>
-        ➕ مجموعة جديدة
-      </button>
+      <button className="gold-btn" onClick={triggerCreate}> ➕ إنشاء شات جديد </button>
 
       <div className="groups-list">
         {groups.map((g, i) => (
