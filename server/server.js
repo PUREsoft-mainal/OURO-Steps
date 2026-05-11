@@ -107,34 +107,44 @@ io.on('connection', async (socket) => {
             socket.emit('error_msg', 'حدث خطأ فني أثناء التسجيل');
         }
     });
-
-    // 3. إنشاء شات جديد (تم تعزيزه بالرسائل التحذيرية)
+    // 3. إنشاء شات جديد (نسخة مطورة ومضمونة التفاعل)
     socket.on('create_group', async (data) => {
-        console.log("🛠 محاولة إنشاء مجموعة جديدة...");
+        console.log("🛠 استلام طلب إنشاء مجموعة باسم:", data.groupName);
         try {
-            // التحقق إذا كان المستخدم مسجل في السوكيت حالياً
-            if (!socket.user) {
-                console.log("❌ فشل الإنشاء: المستخدم غير معرف في السوكيت");
-                return socket.emit('error_msg', 'يجب تسجيل الدخول أولاً لإنشاء مجموعة');
+            let currentUser = socket.user;
+
+            // إجراء احتياطي: إذا فقد السوكيت بيانات المستخدم، نحاول استعادتها
+            if (!currentUser) {
+                console.log("⚠️ بيانات الجلسة مفقودة، نحاول البحث عن المستخدم...");
+                // نفترض أنك سترسل اسم المستخدم مع الطلب في المرات القادمة لزيادة الأمان
+                // لكن حالياً سنخبر المستخدم بالمشكلة بدلاً من الصمت
+                return socket.emit('error_msg', 'انتهت جلسة الدخول، يرجى إعادة تحميل الصفحة.');
             }
 
             const newGroup = await Group.create({
                 name: data.groupName,
-                owner: socket.user.username,
-                members: [socket.user.username]
+                owner: currentUser.username,
+                members: [currentUser.username]
             });
 
-            console.log(`✨ تم إنشاء مجموعة بنجاح: ${newGroup.name}`);
+            console.log(`✅ نجاح الإنشاء في MongoDB: ${newGroup.name}`);
+            
+            // جعل المنشئ ينضم للغرفة برمجياً
             socket.join(newGroup._id.toString());
             
-            // إرسال النجاح للمنشئ وتحديث القائمة عند الجميع إذا أردت
+            // إرسال النجاح للمنشئ
             socket.emit('new_group_success', newGroup);
-            // إرسال تنبيه للمستخدمين النشطين بوجود مجموعة جديدة (اختياري)
-            // io.emit('new_group_created', newGroup); 
             
+            // تحديث القائمة عند الجميع فوراً ليروا المجموعة الجديدة
+            io.emit('added_to_group', { 
+                groupId: newGroup._id, 
+                groupName: newGroup.name, 
+                targetUser: currentUser.username 
+            });
+
         } catch (err) {
-            console.error("❌ MongoDB Error:", err);
-            socket.emit('error_msg', 'فشل إنشاء المجموعة في قاعدة البيانات');
+            console.error("❌ خطأ في السيرفر أثناء الإنشاء:", err);
+            socket.emit('error_msg', 'فشل تقني في إنشاء المجموعة');
         }
     });
 
