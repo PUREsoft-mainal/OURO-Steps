@@ -18,8 +18,7 @@ body, html {
 
 /* --- 2. الحاويات والخلفية الرسمية --- */
 .app-container { 
-  min-height: 250px; 
-  height: auto; 
+  min-height: 100vh; 
   background-size: cover; 
   background-attachment: fixed; 
   background-position: center;
@@ -28,43 +27,41 @@ body, html {
 }
 
 .app-overlay {
-  min-height: 200vh;
+  min-height: 100vh;
   background: rgba(0, 0, 0, 0.7); 
   display: flex; 
   flex-direction: column;
 }
 
 .stories-sidebar {
-  width: 300px; /* زيادة العرض قليلاً لتناسب الصور */
+  width: 300px;
   background: rgba(10, 10, 10, 0.9) !important;
 }
 
 .stories-container {
   max-height: 80vh;
-  height: 500px; /* ارتفاع ثابت لمركز المشاركات */
   overflow-y: auto !important;
-  padding: 20px;
+  padding: 15px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding-top: 15px;
+  gap: 15px;
 }
 
 .story-card {
   background: #1a1a1a;
-  border: 0px solid var(--bronze-border);
-  border-radius: 1px;
+  border: 1px solid rgba(142, 109, 69, 0.3);
+  border-radius: 8px;
   overflow: hidden;
   transition: 0.3s;
 }
 
 .story-card:hover {
   border-color: var(--gold-primary);
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
 }
 
 .story-user-info {
-  padding: 1px;
+  padding: 8px;
   font-size: 12px;
   color: var(--gold-glow);
   background: rgba(255,255,255,0.05);
@@ -72,43 +69,31 @@ body, html {
 
 .story-media {
   width: 100%;
-  height: 150px; /* طول ثابت للستوري */
-  object-fit: cover; /* لضمان عدم تشوه الصورة */
+  height: 180px;
+  object-fit: cover;
   display: block;
 }
 
 .story-footer {
-  padding: 1px;
+  padding: 8px;
   display: flex;
   justify-content: space-between;
   font-size: 11px;
 }
 
-.download-link {
-  color: var(--gold-primary);
-  text-decoration: none;
-}
-
-
-/* --- 3. الهيدر المطور (توزيع احترافي) --- */
+/* --- 3. الهيدر المطور --- */
 .ouro-header { 
   position: relative; 
-  height: 60px;
+  height: 80px;
   background: rgba(0, 0, 0, 0.9);
   color: white; 
   display: flex; 
   justify-content: space-between;
   align-items: center;
-  height: 10px;
   width: 100%;
   padding: 0 20px;
-  padding-top: 400px;
-  margin-top: 5px;
-  margin-bottom: 600px; /* المسافة بين الهيدر وشريط الإعلانات */
-  /* بقية خواص الهيدر كما هي */   
-  padding: 30px 5px; 
-  border-bottom: 5px solid var(--gold-primary);
-  box-shadow: 0 40px 100px rgba(212, 175, 55, 0.3);
+  border-bottom: 2px solid var(--gold-primary);
+  box-shadow: 0 5px 25px rgba(212, 175, 55, 0.2);
   box-sizing: border-box;
   z-index: 1000;
 }
@@ -117,36 +102,28 @@ body, html {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 600px; /*يحرك اللوجو للأسفل والأعلى*/
 }
 
-.header-right { /*القيمة متوقفة (شريط اللوجو)*/
-    display: 100px;
-    flex-direction: 600px;
-    align-items: 600px;
-    gap: 600px;
+.header-right {
+    display: flex; /* تم التصحيح من 100px إلى flex */
+    align-items: center;
+    gap: 15px;
 }
 
 .welcome-msg {
     color: var(--gold-glow);
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: bold;
-    text-shadow: 0 0 60px var(--gold-primary);
-    flex-grow: 8;
+    text-shadow: 0 0 10px var(--gold-primary);
     text-align: center;
-}
-
-/* زر خدمة العملاء والقائمة */
-.customer-service-container {
-    position: relative;
 }
 
 .cs-btn {
     background: linear-gradient(45deg, #8e6d45, #d4af37);
     color: black;
     border: none;
-    padding: 0px 5px;
-    border-radius: 8px;
+    padding: 5px 15px;
+    border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
     transition: 0.3s;
@@ -154,609 +131,392 @@ body, html {
 
 .cs-dropdown {
     position: absolute;
-    top: 8px;
-    right: 10;
-    background: rgba(0, 0, 0, 0.95);
-    border: 10px solid var(--gold-primary);
-    padding: 51px;
-    width: 300px;
-    border-radius: 100px;
+    top: 50px;
+    right: 0;
+    background: rgba(10, 10, 10, 0.98);
+    border: 1px solid var(--gold-primary);
+    padding: 20px;
+    width: 250px;
+    border-radius: 8px;
     z-index: 3000;
-    box-shadow: 0 10px 80px rgba(0,0,0,0.5);
-    color: white;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
 }
 
-.cs-dropdown p {
-    font-size: 30px;
-    margin: 20px 0;
-    border-bottom: 5px solid rgba(212, 175, 55, 0.2);
-    padding-bottom: 10px;
-}
-
-/* اللوجو في المنتصف تماماً */
 .mini-logo { 
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  height: 500px;/*تكبير وتصغير اللوجو*/
-  width: auto;      /* للحفاظ على أبعاد الصورة دون تشويه */
-  margin-left: -10px; /*تحريك اللوجو يمين +لليسار و-لليمين*/
-  margin-top: 350px; /*الأعلى- و الأسفل+*/
-  z-index: 1000;
-  filter: drop-shadow(0 0 60px var(--gold-primary));
-  pointer-events: none; /* يسمح بالضغط على العناصر التي خلفه إذا تداخلت */
+  height: 60px; /* تم تصغيرها لتناسب الهيدر */
+  width: auto;
+  filter: drop-shadow(0 0 15px var(--gold-primary));
+  pointer-events: none;
 }
-
-.gold-text-glow {
-  color: var(--gold-glow);
-  text-shadow: 0 0 60px rgba(249, 226, 149, 0.5);
-}
-
 
 /* شريط الإحصائيات (يمين) */
 .stats-bar {
   display: flex;
   flex-direction: column;
-  gap: 0px;
-  font-size: 8px;
+  gap: 2px;
+  font-size: 11px;
   color: #fff;
   text-align: right;
   z-index: 1003;
 }
 
-/* شريط الإعلانات المصورة (يسار اللوجو) */
-.ads-container {
-  flex-grow: 50;
-  width: 60px;           /* يمكنك تقليل العرض ليكون الشريط أقصر عرضاً */
-  min-height: 120px !important;
-  display: flex !important;
-  overflow-x: auto;
-  gap: 10px;
-  padding: 10px;
-  scrollbar-width: none;
-  max-width: 1000px;
-  height: 200px;        /* زيادة الارتفاع ليتناسب مع حجم الصور الجديد */
-  margin-top: 10px;      /* مسافة بين اللوجو وبداية الشريط */
-  margin-bottom: 10px;   /* مسافة بين الشريط وبداية الشات */
-}
-
-.ads { 
-  flex-grow: 1; 
-  color: var(--gold-primary); 
-  font-weight: bold; 
-  font-size: 1.1rem;
-}
-
 /* حاوية الإعلانات الرئيسية أسفل الهيدر */
 .ads-slider-wrapper {
-  margin-top: 10px; /* غيّر هذا الرقم لزيادة أو تقليل المسافة */
-  background: rgba(20, 20, 20, 0.9);
-  border-top: 7px solid var(--gold-primary); /* اختياري: إضافة خط علوي بسيط لفصله */
-  border-bottom: 5px solid var(--bronze-border);
-  padding: 20px 0;
+  margin-top: 10px;
+  background: rgba(15, 15, 15, 0.95);
+  border-top: 2px solid var(--gold-primary);
+  border-bottom: 2px solid var(--bronze-border);
+  padding: 15px 0;
   position: relative;
   display: flex;
   align-items: center;
-  overflow: hidden; /* لإخفاء الزيادات */
 }
 
-/* حاوية التمرير */
+/* حاوية التمرير - تم إصلاحها لتعمل مع الـ useRef والأسهم */
 .ads-scroll-container {
   display: flex;
-  gap: 20px;
-  overflow-x: hidden !important; 
-  overflow: hidden !important; /* إخفاء أي شيء يخرج عن النطاق */
+  gap: 15px;
+  overflow-x: auto; /* تم التغيير للسماح بالتحريك البرمجي */
   width: 100%;
   scroll-behavior: smooth;
-  padding: 0 50px; /* مساحة للأسهم */
-  scrollbar-width: none; /* إخفاء شريط التمرير الافتراضي */
-  will-change: scroll-position;
-  backface-visibility: hidden;
+  padding: 0 45px;
+  scrollbar-width: none; /* إخفاء الشريط في فايرفوكس */
 }
 
 .ads-scroll-container::-webkit-scrollbar {
-  display: none;
+  display: none; /* إخفاء الشريط في كروم */
 }
 
-.ad-mini-img {
-  width: 80px;          /* الحجم الذي طلبته (الضعف) */
-  height: 80px;
-  border-radius: 10px;  /* زوايا دائرية لتعطي مظهراً عصرياً */
+.ad-card {
+  flex: 0 0 auto;
+  background: rgba(212, 175, 55, 0.05);
+  border: 1px solid var(--gold-primary);
+  padding: 10px;
+  border-radius: 8px;
+  color: var(--gold-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.3s;
 }
 
-/* إضافة الأنيميشن للحاوية */
-.ads-wrapper-inner {
-    display: flex;
-    gap: 50px;
-    animation: marquee-move 30s linear infinite; /* 20s هي السرعة، قللها لتسريع الحركة */
+.ad-image-content {
+  height: 100px; /* حجم معقول للإعلانات */
+  width: auto;
+  border-radius: 4px;
 }
 
-@keyframes marquee-move {
-    0% { transform: translateX(100%); }
-    100% { transform: translateX(-100%); }
-}
-
-/* توقف الحركة عند وضع الماوس على الإعلان */
-.ads-container:hover .ads-wrapper-inner {
-    animation-play-state: paused;
-}
-
-
-/* أزرار التنقل (الأسهم) */
+/* أزرار التنقل (الأسهم الملكية) */
 .slider-arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   background: var(--gold-primary);
-  color: black;
+  color: #000;
   border: none;
-  width: 35px;
-  height: 35px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   cursor: pointer;
   z-index: 10;
   font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 10px var(--gold-glow);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+  transition: 0.3s;
 }
 
 .arrow-left { left: 10px; }
 .arrow-right { right: 10px; }
+.slider-arrow:hover { background: var(--gold-glow); transform: translateY(-50%) scale(1.1); }
 
-.slider-arrow:hover { background: var(--gold-glow); }
-
-.ads-container::-webkit-scrollbar { display: none; }
-
-/* تنسيق شريط التمرير للمتصفحات (Chrome, Edge, Safari) */
-::-webkit-scrollbar {
-  width: 4px; /* عرض الشريط */
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.3); /* خلفية مسار الشريط */
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, var(--gold-primary), var(--bronze-border));
-  border-radius: 20px; /* جعل حواف الشريط دائرية */
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--gold-glow); /* توهج عند الوقوف بالماوس */
-}
-
-
-.ad-card {
-  background: rgba(212, 175, 55, 0.1);
-  border: 5px solid var(--gold-primary);
-  padding: 70px 70px;
-  border-radius: 30px;
-  color: var(--gold-glow);
-  white-space: nowrap;
-  font-weight: bold;
-  font-size: 40px; /*التحكم فى حجم الاعلانات*/
-}
-
-.admin-info { 
-  font-size: 13px; 
-  border-right: 5px solid var(--bronze-border); 
-  padding-right: 15px; 
-  color: #f1e1c6;
-}
-
-/* بروفايل المستخدم وزر الخروج (أقصى اليسار) */
+/* بروفايل المستخدم وزر الخروج */
 .user-profile-section {
   display: flex;
   align-items: center;
-  gap: 15px;
-  z-index: 1001;
-}
-
-.user-info-text {
-  color: var(--gold-primary);
-  font-weight: bold;
-  font-size: 10px;/*حجم اسم المستخدم*/
+  gap: 12px;
 }
 
 .logout-btn {
   background: #c0392b;
   color: white;
   border: none;
-  padding: 0px 1px;
-  border-radius: 100px;
+  padding: 4px 12px;
+  border-radius: 4px;
   cursor: pointer;
-  font-weight: bold;
+  font-size: 11px;
   transition: 0.3s;
 }
 
-.logout-btn:hover { background: #e74c3c; }
-
-/* --- 4. صفحة الدخول (إصلاح تجمد الأزرار) --- */
-.login-page { /*خاص بصفحة تسجيل الدخول*/
-  height: 100vw;
-  width: 100vw;
+/* صفحة الدخول - تم إصلاح الطول والتمركز */
+.login-page {
+  height: 100vh; /* تصحيح من 100vw إلى 100vh */
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  position: relative;
-  z-index: 1;
+  background-color: #000;
 }
 
 .login-box { 
-  background: rgba(0, 0, 0, 0.95);
-  padding: 70px; 
-  border-radius: 40px; 
+  background: rgba(10, 10, 10, 0.98);
+  padding: 40px; 
+  border-radius: 15px; 
   display: flex; 
   flex-direction: column; 
   align-items: center; 
-  gap: 4px; 
-  width: 350px; 
-  border: 5px solid var(--gold-primary);
-  box-shadow: 0 0 60px rgba(212, 175, 55, 0.4);
-  text-align: center;
-  position: relative;
-  z-index: 9999; 
-  pointer-events: all; /* يسمح بمرور النقرات للأزرار */
-}
-
-.login-box h2 {
-  color: var(--gold-primary);
-  margin: 0; 
-}
-
-.main-logo {
-  width: 420px; 
-  height: auto;
-  margin-bottom: 10px;
-  filter: drop-shadow(0 0 30px var(--gold-primary));
-  animation: pulse 3s infinite ease-in-out;
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-.login-box input, .login-box select { 
-  width: 100%;
-  padding: 12px; 
-  border-radius: 15px; 
-  border: 3px solid var(--bronze-border);
-  background: #111;
-  color: #fff;
-  box-sizing: border-box;
-}
-
-.login-btn {
-  width: 100%;
-  padding: 2px;
-  background: linear-gradient(to bottom, var(--gold-primary), var(--bronze-border));
-  border: none;
-  border-radius: 15px;
-  color: #000;
-  font-weight: bold;
-  cursor: pointer !important;
-  position: relative;
-  z-index: 10000;
-  transition: 0.3s;
-}
-
-.login-btn:hover {
-  background: var(--gold-glow);
-  transform: translateY(1px);
-  box-shadow: 0 15px 15px rgba(212, 175, 55, 0.4);
+  gap: 20px; 
+  width: 320px; 
+  border: 2px solid var(--gold-primary);
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+  z-index: 9999;
 }
 
 /* --- 5. توزيع المحتوى الداخلي --- */
 .main-content { 
   display: flex; 
-  flex-grow: 5; 
+  flex-grow: 1; 
   overflow: hidden; 
-  padding: 5px;   /*التحكم فى حجم القائمتين الجانبيتين*/
-  margin-top: 5px;     /* هذه القيمة تبعد الشات والجانبين عن الهيدر والسقف */
-  min-height: 750px;   /* لضمان تمدد الصفحة والسماح بالتمرير لأسفل */
-  height: auto;
-  gap: 30px;
+  padding: 15px;
+  margin-top: 10px;
+  min-height: calc(100vh - 120px); /* تمدد ذكي حسب طول الشاشة */
+  gap: 20px;
 }
 
 .sidebar { 
-  width: 500px; /*تضيق وتوسيع النافذتين الجانبيتين*/
-  background: rgba(20, 20, 20, 0.85);
-  padding: 10px; 
-  overflow-y: auto; 
-  border: 8px solid var(--bronze-border);/*بنط تحديد الجوانب*/
-  border-radius: 60px;/*دوران الزوايا*/
+  width: 280px; /* عرض احترافي للقوائم */
+  background: rgba(15, 15, 15, 0.9);
+  padding: 15px; 
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--bronze-border);
+  border-radius: 12px;
   color: #fff;
 }
 
 .sidebar h3 {
   color: var(--gold-primary);
   text-align: center;
-  border-bottom: 5px solid var(--bronze-border);
-  padding-bottom: 8px;
+  border-bottom: 2px solid var(--bronze-border);
+  padding-bottom: 10px;
+  font-size: 1.1rem;
 }
 
 .chat-area { 
   flex-grow: 2; 
-  height: 700px !important; /* هذا الرقم يتحكم في الطول*/
-  overflow-y: hidden; /* لإخفاء أي زوائد خارج النافذة */
+  height: 80vh; /* طول متناسب مع الشاشة */
   display: flex; 
   flex-direction: column; 
-  background: rgba(0, 0, 0, 0.6);
-  border: 5px solid var(--bronze-border);
-  border-radius: 50px;
+  background: rgba(5, 5, 5, 0.8);
+  border: 2px solid var(--bronze-border);
+  border-radius: 15px;
   backdrop-filter: blur(10px);
+  overflow: hidden; /* الحاوية ثابتة والرسائل فقط تتحرك */
 }
 
-.messages, .stories-container, .groups-list {
-  overflow-y: auto !important; /* للسماح بالتمرير العمودي */
-  height: 450px !important; /* هذا الرقم يتحكم في الطول*/
-  overflow-y: hidden; /* لإخفاء أي زوائد خارج النافذة */
+/* إصلاح منطقة الرسائل للسماح بالتمرير */
+.messages {
+  flex-grow: 1;
+  padding: 15px;
+  overflow-y: auto !important; /* السماح بالتمرير لأسفل */
   display: flex;
   flex-direction: column;
-  flex-grow: 2;   
+  gap: 10px;
 }
 
 .groups-list {
-  max-height: 400px; /* أو أي ارتفاع تريده */
-  overflow-y: auto;
-  padding-right: 5px;
-  display: flex;
-  flex-direction: column;
-}
-
-.msg, .story-card {
-  flex-shrink: 0; /* هذا السطر يمنع المتصفح من تقصير طول المنشور */
-  margin-bottom: 15px;
-}
-
-.messages {
   flex-grow: 1;
-  padding: 10px;
   overflow-y: auto;
-  height: 500px; /* أو أي ارتفاع يتناسب مع شاشتك */
-  overflow-y: scroll !important; /* scroll تضمن حجز مكان للشريط دائماً */
-  max-height: 150vh; /* تحديد ارتفاع منطقة الرسائل */
-  display: flex;
-  flex-direction: column;
+  margin-top: 10px;
 }
 
 .msg { 
-  margin-bottom: 10px; 
-  padding: 7px; 
-  border-radius: 7px; 
-  border-right: 5px solid var(--gold-primary);
-  background: rgba(255, 255, 255, 0.05);
+  max-width: 85%;
+  align-self: flex-start;
+  margin-bottom: 8px; 
+  padding: 10px 15px; 
+  border-radius: 10px; 
+  border-right: 4px solid var(--gold-primary);
+  background: rgba(255, 255, 255, 0.07);
   color: #fff;
-  text-align: right;
+  line-height: 1.5;
+}
+
+.my-msg {
+  align-self: flex-end;
+  border-right: none;
+  border-left: 4px solid var(--gold-glow);
+  background: rgba(212, 175, 55, 0.15);
 }
 
 .badge { 
-  font-size: 20px; 
+  font-size: 10px; 
   background: var(--bronze-border); 
   color: white; 
-  padding: 2px 6px; 
+  padding: 2px 8px; 
   border-radius: 4px; 
   margin-left: 8px;
-  font-weight: bold;
+  vertical-align: middle;
 }
 
 .input-box { 
-  padding: 8px; 
+  padding: 15px; 
   display: flex; 
-  background: rgba(0, 0, 0, 0.8);
-  border-top: 4px solid var(--bronze-border);
+  background: rgba(10, 10, 10, 1);
+  border-top: 1px solid var(--bronze-border);
+  gap: 10px;
 }
 
 .input-box input { 
-  flex-grow: 2;
-  padding: 4px;
-  border: 3px solid var(--bronze-border); 
+  flex-grow: 1;
+  padding: 10px 15px;
+  border: 1px solid var(--bronze-border); 
   background: #1a1a1a;
   color: white;
-  border-radius: 20px;
+  border-radius: 8px;
 }
 
 .input-box button {
   background: linear-gradient(to bottom, var(--gold-primary), var(--bronze-border));
   border: none;
-  padding: 0 20px;
-  margin-right: 10px;
-  border-radius: 5px;
+  padding: 0 25px;
+  border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
   color: #000;
+  transition: 0.3s;
 }
 
 .file-card {
   background: rgba(255, 255, 255, 0.05);
-  padding: 400px;
-  border-radius: 10px;
-  margin-bottom: 350px;
+  padding: 15px; /* تم تصحيح القيمة من 400px إلى 15px */
+  border-radius: 8px;
+  margin-bottom: 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border: 1px solid rgba(212, 175, 55, 0.2);
 }
 
-.file-card a { 
-  color: var(--gold-primary);
-  text-decoration: none;
-  font-weight: bold; 
-}
-
-.disclaimer-bar { 
-  background: rgba(212, 175, 55, 0.1);
-  color: var(--gold-glow);
-  text-align: center;
-  padding: 20px;
-  font-size: 18px;
-  font-weight: bold; 
-  border-bottom: 5px solid var(--bronze-border);
-}
-
-/* تفعيل الشريط بشكل مرئي */
+/* تخصيص شريط التمرير (Scrollbar) */
 .messages::-webkit-scrollbar, 
-.stories-container::-webkit-scrollbar, 
 .groups-list::-webkit-scrollbar {
-  display: block !important; /* التأكد من عدم إخفائه */
-  width: 5px;
+  width: 4px;
 }
 
-.messages::-webkit-scrollbar-thumb, 
-.stories-container::-webkit-scrollbar-thumb, 
-.groups-list::-webkit-scrollbar-thumb {
+.messages::-webkit-scrollbar-thumb {
   background-color: var(--gold-primary);
-  border-radius: 5px;
-  border: 0px solid #000; /* فراغ حول الشريط لجعله بارزاً */
+  border-radius: 10px;
 }
 
+/* الجانب الأيمن المطور */
 .sidebar.right-side {
-  height: 700px !important; /* هذا الرقم يتحكم في الطول الكلي للنافذة */
-  overflow-y: hidden; /* لإخفاء أي زوائد خارج النافذة */
-}
-
-/* الحاوية التي تضم الإعلانات */
-.ads-track {
+  height: 80vh !important; 
   display: flex;
-  width: max-content; /* تجعل العرض على قدر محتوى الصور */
-  animation: scroll-ads 70s linear infinite; /* التحكم في السرعة من هنا */
-}
-
-@keyframes scrollContinuous {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); } /* التحرك لنصف عرض الحاوية (لأننا كررنا الإعلانات) */
-}
-
-/* حركة التمرير */
-@keyframes scroll-ads {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); } /* يتحرك لنصف المسافة ثم يعيد الكرة */
-}
-
-/* ميزة التوقف عند وضع الماوس (اختياري) */
-.ads-track:hover {
-  animation-play-state: paused;
-}
-
-.ads-slider-wrapper {
-  position: relative;
-  width: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  border-bottom: 2px solid var(--bronze-border);
-  margin: 10px 0;
-  display: flex;
-  align-items: center;
-}
-
-.ads-scroll-container {
-  display: flex;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  gap: 15px;
-  padding: 10px 50px; /* مسافة للأسهم */
-  scrollbar-width: none; /* إخفاء الشريط الافتراضي */
-}
-
-.ads-scroll-container::-webkit-scrollbar { display: none; }
-
-.ad-card-item {
-  flex: 0 0 auto; /* يمنع المتصفح من تقليص حجم الإعلان */
-  width: 200px;
-  height: 100px;
-  border: 3px solid var(--gold-primary);
-  border-radius: 8px;
+  flex-direction: column;
   overflow: hidden;
 }
 
-.ad-image-content {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+/* حاوية الإعلانات المتحركة */
+.ads-track {
+  display: flex;
+  width: max-content; 
+  animation: scroll-ads 40s linear infinite; /* سرعة انسيابية */
 }
 
-.slider-arrow {
-  position: absolute;
-  z-index: 10;
-  background: var(--gold-primary);
-  color: #000;
-  border: none;
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
+@keyframes scroll-ads {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); } 
+}
+
+.ads-track:hover {
+  animation-play-state: paused; /* توقف عند القراءة */
+}
+
+.ad-card-item {
+  flex: 0 0 auto;
+  width: 180px;
+  height: 90px;
+  margin: 0 10px;
+  border: 2px solid var(--gold-primary);
+  border-radius: 8px;
+  overflow: hidden;
   cursor: pointer;
-  font-weight: bold;
+  transition: 0.3s;
 }
 
-.arrow-right { right: 10px; }
-.arrow-left { left: 10px; }
+.ad-card-item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px var(--gold-glow);
+}
 
+/* النوافذ المنبثقة (Modal) */
 .ad-modal-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.9); z-index: 9999; display: flex; justify-content: center; align-items: center;
+  position: fixed; 
+  top: 0; left: 0; 
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.92); 
+  z-index: 10000; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center;
+  backdrop-filter: blur(5px);
 }
 
 .ad-modal-content {
-  background: #111; border: 2px solid var(--gold-primary);
-  padding: 30px; border-radius: 15px; text-align: center; width: 300px;
+  background: #0a0a0a; 
+  border: 2px solid var(--gold-primary);
+  padding: 25px; 
+  border-radius: 12px; 
+  text-align: center; 
+  width: 320px;
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.3);
 }
 
-.contact-btns { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+/* أزرار التواصل */
+.contact-btns { 
+  display: flex; 
+  gap: 12px; 
+  justify-content: center; 
+  margin-top: 20px; 
+}
 
 .contact-btn {
-  padding: 8px 15px; border-radius: 5px; text-decoration: none; color: #000; font-weight: bold;
+  padding: 10px 18px; 
+  border-radius: 6px; 
+  text-decoration: none; 
+  color: #000; 
+  font-weight: bold;
+  font-size: 14px;
+  transition: 0.3s;
 }
+
 .contact-btn.wa { background: #25d366; }
 .contact-btn.tg { background: #0088cc; color: #fff; }
 
+/* أدوات الأدمن */
 .admin-input {
-  background: #000;
+  background: #111;
   border: 1px solid var(--bronze-border);
   color: var(--gold-glow);
-  padding: 5px;
-  border-radius: 5px;
-  font-size: 11px;
-}
-.admin-input:focus {
-  border-color: var(--gold-primary);
-  outline: none;
-}
-.chat-header {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    background: rgba(0,0,0,0.5);
-    border-bottom: 1px solid #d4af37;
-}
-.add-member-btn {
-    background: #d4af37;
-    color: black;
-    border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    cursor: pointer;
-    font-weight: bold;
-}
-.create-group-btn {
-    background: #d4af37;
-    color: black;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-}
-.add-btn-royal {
-    background: #d4af37;
-    color: white;
-    font-size: 24px;
-    border: none;
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    cursor: pointer;
+  padding: 8px;
+  margin-bottom: 5px;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
+.add-member-btn, .create-group-btn {
+  background: var(--gold-primary);
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.add-member-btn:hover { background: var(--gold-glow); }
