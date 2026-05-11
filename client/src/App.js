@@ -14,6 +14,7 @@ import './App.css';
 
 const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
+// إنشاء اتصال السوكيت
 const socket = io(API_BASE, { 
   transports: ['websocket'], 
   upgrade: false,
@@ -45,7 +46,10 @@ function App() {
     socket.on('message', (m) => setChat(prev => [...prev, m]));
     socket.on('update_stats', (newStats) => setStats(newStats));
     socket.on('update_ads', (updatedAds) => setAds(updatedAds));
-    socket.on('new_group_success', (group) => setGroups(prev => [...prev, group]));
+    socket.on('new_group_success', (group) => {
+        setGroups(prev => [...prev, group]);
+        console.log("✅ تمت إضافة المجموعة الجديدة للقائمة:", group.name);
+    });
     
     socket.on('added_to_group', (data) => {
       if (data.targetUser === user.username) {
@@ -58,14 +62,21 @@ function App() {
     return () => socket.off();
   }, [user.username]);
 
-  // --- تفعيل الزر بشكل احترافي ---
+  // --- إصلاح الزر (تمت إضافة التبعيات اللازمة لمنع التجميد) ---
   const handleCreateGroup = useCallback(() => {
+    console.log("🛠️ جاري تشغيل دالة إنشاء الشات...");
     const name = prompt("👑 أدخل اسم الشات الملكي الجديد:");
+    
     if (name && name.trim() !== "") {
-      socket.emit('create_group', { groupName: name });
-      console.log("تم إرسال طلب إنشاء مجموعة:", name);
+      socket.emit('create_group', { 
+        groupName: name.trim(),
+        owner: user.username // إرسال اسم المالك لضمان التوثيق في قاعدة البيانات
+      });
+      console.log("📡 تم إرسال الطلب للسيرفر باسم:", name);
+    } else {
+      console.log("⚠️ تم إلغاء الإنشاء أو الاسم فارغ.");
     }
-  }, []);
+  }, [user.username]); // تأكدنا من أن الدالة تعرف المستخدم الحالي
 
   const handleAuthAction = (e) => {
     e.preventDefault();
@@ -116,7 +127,6 @@ function App() {
             socket={socket}
             currentGroup={currentGroup.id}
             onJoinRoom={handleSwitchRoom}
-            // نستخدم triggerCreate كاسم وسيط لضمان كسر أي تعارض قديم
             triggerCreate={handleCreateGroup} 
           />
 
