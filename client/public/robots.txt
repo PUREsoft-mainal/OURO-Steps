@@ -1,3 +1,8 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+# منع الأرشفة لملفات السيرفر الحساسة
+Disallow: /config/
+Disallow: /server/
+# منع أرشفة بيانات المستخدمين الخاصة
+Disallow: /api/user/
+Disallow: /private/
