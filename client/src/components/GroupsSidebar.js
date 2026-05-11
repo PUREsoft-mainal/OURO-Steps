@@ -51,7 +51,7 @@ const GroupsSidebar = ({ groups, user, socket, currentGroup, onGroupSelect, onCr
       
       {/* زر إنشاء شات جديد المربوط بالسوكيت */}
       <button className="gold-btn" onClick={onCreateGroup}>
-        ➕ إنشاء شات جديد
+        ➕ مجموعة جديدة
       </button>
 
       <div className="groups-list">
