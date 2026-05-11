@@ -14,7 +14,7 @@ import ChatArea from './components/ChatArea';
 import './App.css';
 
 // الإعدادات السحابية (Hugging Face)
-const API_BASE = "https://hf.space";
+const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
 // إنشاء اتصال السوكيت خارج المكون لضمان استقراره
 const socket = io(API_BASE, { 
