@@ -97,6 +97,9 @@ body, html {
   box-sizing: border-box;
   z-index: 1000;
   overflow: visible !important; /* للسماح للوجو بالبروز للخارج */
+  padding-top: 400px;
+  margin-top: 5px;
+  margin-bottom: 600px; /* المسافة بين الهيدر وشريط الإعلانات
 }
 
 /* 👑 اللوجو العائم الكبير بين الهيدر والإعلانات */
