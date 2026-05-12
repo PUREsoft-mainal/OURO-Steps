@@ -21,9 +21,10 @@ const DiscoveryStore = ({ user, socket, API_BASE, onClose }) => {
         const usersRes = await axios.get(`${API_BASE}/api/users`);
         const postsRes = await axios.get(`${API_BASE}/api/init_data`);
         console.log("قائمة المستخدمين المستلمة:", usersRes.data); // للفحص في الـ Console
+        const marketData = await axios.get(`${API_BASE}/api/init_data`); 
         setAllUsers(usersRes.data);
         const postsRes = await axios.get(`${API_BASE}/api/init_data`); 
-        setMarketPosts(postsRes.data.marketPosts || []);
+        setMarketPosts(marketData.data.marketPosts || []);       
         setLoading(false);
       } catch (err) {
         console.error("خطأ في جلب البيانات:", err);
