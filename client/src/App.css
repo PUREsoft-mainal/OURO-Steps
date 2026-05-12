@@ -122,7 +122,7 @@ body, html {
   left: 50%;
   top: 70px; /* تموضعه ليبدأ من منتصف الهيدر وينزل لأسفل */
   transform: translate(-50%, -50%) !important;
-  height: 500px !important;  /* الحجم الذي طلبته */
+  height: 400px !important;  /* الحجم الذي طلبته */
   width: auto !important;
   filter: drop-shadow(0 0 40px var(--gold-primary));
   pointer-events: none !important; /* لضمان القدرة على الضغط على ما خلفه */
@@ -132,6 +132,17 @@ body, html {
   flex-shrink: 0 !important; /* يمنع المكونات الأخرى من تصغيره */
   min-height: 400px !important; /* يضمن بقاء الحجم كما طلبت */
   z-index: 2500 !important; /* ليكون فوق الهيدر وشريط الإعلانات */
+}
+
+.login-box .main-logo {
+  height: 120px !important; /* حجم هادئ لصفحة الدخول */
+  width: auto !important;
+  margin-bottom: 20px !important;
+  position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+  transform: none !important;
+  filter: drop-shadow(0 0 10px #d4af37) !important;
 }
 
 .header-center {
