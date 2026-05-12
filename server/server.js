@@ -6,6 +6,8 @@ const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cors = require('cors');
+const fs = require('fs'); // 🆕 مضافة لقراءة الملفات
+const path = require('path'); // 🆕 مضافة للتعامل مع المسارات
 
 const app = express();
 const server = http.createServer(app);
@@ -41,14 +43,28 @@ const Chat = mongoose.model('Chat', { user: String, role: String, text: String, 
 const Ad = mongoose.model('Ad', { imgUrl: String, phone: String, whatsapp: String, telegram: String, email: String });
 const Group = mongoose.model('Group', { name: String, owner: String, members: [String], createdAt: { type: Date, default: Date.now } });
 
-// 🆕 تطوير جدول السوق ليدعم مصفوفة من الصور
 const MarketPost = mongoose.model('MarketPost', {
     uploader: String,
-    images: [String], // مصفوفة لتخزين روابط الصور المتعددة
+    images: [String], 
     description: String,
     price: String,
     createdAt: { type: Date, default: Date.now }
 });
+
+// 🆕 دالة جلب المستخدمين من ملف JSON المحلي
+const getUsersFromFile = () => {
+    try {
+        const filePath = path.join(__dirname, 'users.json');
+        if (fs.existsSync(filePath)) {
+            const data = fs.readFileSync(filePath, 'utf8');
+            return JSON.parse(data);
+        }
+        return [];
+    } catch (err) {
+        console.error("❌ خطأ في قراءة ملف users.json:", err);
+        return [];
+    }
+};
 
 app.use(cors());
 app.use(express.json());
@@ -124,21 +140,28 @@ io.on('connection', async (socket) => {
 
 // --- [4] مسارات الـ API (المستخدمون والسوق) ---
 app.get('/api/users', async (req, res) => {
-    const users = await User.find({}, 'username role friends');
-    res.json(users);
-      try {
-        // جلب كل المستخدمين مع الحقول المطلوبة فقط للأمان
-        const users = await User.find({}, 'username role friends');
-        res.json(users);
+    try {
+        // 1. جلب المستخدمين من ملف JSON
+        const fileUsers = getUsersFromFile();
+        
+        // 2. جلب المستخدمين من MongoDB
+        const dbUsers = await User.find({}, 'username role friends');
+
+        // 3. دمج البيانات ومنع التكرار
+        const allUsersMap = new Map();
+        fileUsers.forEach(u => allUsersMap.set(u.username, { ...u, friends: u.friends || [] }));
+        dbUsers.forEach(u => allUsersMap.set(u.username, u));
+
+        const finalUsers = Array.from(allUsersMap.values());
+        res.json(finalUsers);
     } catch (err) {
         res.status(500).json({ error: "فشل جلب المستخدمين" });
     }
 });
 
-// 🆕 مسار رفع بضاعة جديدة (يدعم حتى 5 صور)
 app.post('/api/market/upload', upload.array('marketImages', 5), async (req, res) => {
     try {
-        const imageUrls = req.files.map(file => file.path); // جلب روابط كل الصور المرفوعة
+        const imageUrls = req.files.map(file => file.path); 
         const newPost = await MarketPost.create({
             uploader: req.body.username,
             images: imageUrls,
@@ -152,25 +175,19 @@ app.post('/api/market/upload', upload.array('marketImages', 5), async (req, res)
     }
 });
 
-// 🆕 مسار حذف منشور من السوق (للصاحب أو الأدمن فقط)
 app.delete('/api/market/delete/:id', async (req, res) => {
     try {
         const postId = req.params.id;
         const requester = req.body.username;
         const post = await MarketPost.findById(postId);
-        
         if (!post) return res.status(404).json({ success: false, message: "المنشور غير موجود" });
-
-        // التحقق من الصلاحية
         if (post.uploader === requester || requester === 'Admin_Mostafa') {
             await MarketPost.findByIdAndDelete(postId);
             res.json({ success: true, message: "تم الحذف بنجاح" });
         } else {
-            res.status(403).json({ success: false, message: "ليس لديك صلاحية لحذف هذا المنشور" });
+            res.status(403).json({ success: false, message: "ليس لديك صلاحية" });
         }
-    } catch (err) { 
-        res.status(500).json({ success: false }); 
-    }
+    } catch (err) { res.status(500).json({ success: false }); }
 });
 
 const PORT = process.env.PORT || 7860; 
