@@ -114,6 +114,8 @@ body, html {
   transition: all 0.5s ease-in-out;
   margin-top: 250px !important;
   display: block !important;
+  flex-shrink: 0 !important; /* يمنع المكونات الأخرى من تصغيره */
+  min-height: 400px !important; /* يضمن بقاء الحجم كما طلبت */
   z-index: 2500 !important; /* ليكون فوق الهيدر وشريط الإعلانات */
 }
 
