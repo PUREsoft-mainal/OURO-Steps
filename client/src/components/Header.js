@@ -1,35 +1,41 @@
 import React, { useState } from 'react';
 import StatsBar from './StatsBar';
 
-const Header = ({ activeUsers, totalUsers, user }) => {
+const Header = ({ activeUsers, totalUsers, user, onOpenDiscovery }) => {
   const [showCS, setShowCS] = useState(false);
 
   return (
     <header className="ouro-header">
-      {/* جهة اليمين: الإحصائيات + خدمة العملاء */}
+      {/* جهة اليمين: الإحصائيات + خدمة العملاء + زر الاكتشاف الجديد */}
       <div className="header-right">
         <StatsBar activeCount={activeUsers} totalCount={totalUsers} />
         
-        <div className="customer-service-container">
-          <button className="cs-btn" onClick={() => setShowCS(!showCS)}>
-            🎧 خدمة العملاء
+        <div className="header-actions-group" style={{ display: 'flex', gap: '10px' }}>
+          {/* الزر الملكي الجديد لفتح الأصدقاء والسوق */}
+          <button className="discovery-trigger-btn" onClick={onOpenDiscovery}>
+            🌐 أصدقاء جدد & السوق
           </button>
-          
-          {showCS && (
-            <div className="cs-dropdown">
-              <p>📞 <strong>واتساب:</strong> 01080166413</p>
-              <p>💸 <strong>فودافون كاش:</strong> 01080166413</p>
-              <p>📧 <strong>البريد:</strong> mostafadesha953@gmail.com</p>
-              <p style={{fontSize: '10px', color: 'var(--gold-primary)'}}>نحن هنا لخدمتك دائماً</p>
-            </div>
-          )}
+
+          <div className="customer-service-container">
+            <button className="cs-btn" onClick={() => setShowCS(!showCS)}>
+              🎧 خدمة العملاء
+            </button>
+            
+            {showCS && (
+              <div className="cs-dropdown">
+                <p>📞 <strong>واتساب:</strong> 01080166413</p>
+                <p>💸 <strong>فودافون كاش:</strong> 01080166413</p>
+                <p>📧 <strong>البريد:</strong> mostafadesha953@gmail.com</p>
+                <p style={{fontSize: '10px', color: 'var(--gold-primary)'}}>نحن هنا لخدمتك دائماً</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* المنتصف: جملة الترحيب + اللوجو */}
       <div className="header-center">
         <div className="welcome-msg">مرحباً بكم فى عالمكم الجديد</div>
-        {/* تم حذف الـ style المباشر هنا ليعود التحكم لملف CSS */}
         <img 
           src="/assets/logo.png" 
           className="mini-logo" 
@@ -47,4 +53,3 @@ const Header = ({ activeUsers, totalUsers, user }) => {
 };
 
 export default Header;
-
