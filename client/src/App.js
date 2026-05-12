@@ -126,23 +126,33 @@ function App() {
     if (target) setCurrentGroup({ id: target.id || target._id, name: target.name });
   };
 
+  // --- عرض واجهة تسجيل الدخول ---
   if (!isLogged) {
     return (
+      /* الربط المطلق بكلاس login-page لضمان تمركز العناصر */
       <div className="login-page">
         <LoginBox 
-          isSignUp={isSignUp} setIsSignUp={setIsSignUp}
-          user={user} setUser={setUser}
-          password={password} setPassword={setPassword}
+          isSignUp={isSignUp} 
+          setIsSignUp={setIsSignUp}
+          user={user} 
+          setUser={setUser}
+          password={password} 
+          setPassword={setPassword}
           handleAction={handleAuthAction}
         />
       </div>
     );
   }
 
+  // --- عرض الواجهة الرئيسية الملكية ---
   return (
-    <div className="app-container" style={{ backgroundColor: '#000', minHeight: '100vh' }}>
-      <div className="app-overlay" style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
+    /* 1. الحاوية الأم: تتبع .app-container لضمان التمدد الحر وشريط التمرير */
+    <div className="app-container">
+      
+      {/* 2. الغلاف: يتبع .app-overlay للمرونة وتوزيع العناصر تحت بعضها */}
+      <div className="app-overlay">
         
+        {/* 3. الهيدر الملكي: يطبق .ouro-header بكل مسافاته (يحتوي بداخله على اللوجو 500px) */}
         <Header 
           activeUsers={stats.activeUsers} 
           totalUsers={stats.totalUsers} 
@@ -150,13 +160,15 @@ function App() {
           onOpenDiscovery={() => setShowDiscovery(true)} 
         />
         
-          {/* حذفنا الـ style المباشر واكتفينا بالكلاس */}
+        {/* 4. شريط الإعلانات: يتبع .ads-section-wrapper لترك مسافة الـ 450px للوجو */}
         <div className="ads-section-wrapper">
           <AdSlider ads={ads} /> 
         </div>
 
-
-        <main className="main-content" style={{ marginTop: '20px', display: 'flex', flexGrow: 1, gap: '20px', padding: '0 20px' }}>
+        {/* 5. المحتوى الرئيسي: يتبع .main-content لتقسيم الشات والسايدبار ببنط 8px ودوران 60px */}
+        <main className="main-content">
+          
+          {/* الجانب الأيمن: المجموعات (Sidebar) */}
           <GroupsSidebar 
             groups={groups} 
             user={user} 
@@ -166,6 +178,7 @@ function App() {
             triggerCreate={handleCreateGroup} 
           />
 
+          {/* المنتصف: ساحة الدردشة (Chat Area) */}
           <ChatArea 
             chat={chat} 
             currentUser={user.username} 
@@ -175,9 +188,19 @@ function App() {
             currentGroup={currentGroup}
           />
 
-          <UploadSidebar files={files} serverUrl={API_BASE} onUpload={handleFileUpload} />
+          {/* الجانب الأيسر: القصص والمشاركات (Stories Sidebar) */}
+          {/* تم تغليفه بكلاس stories-sidebar لربطه بتنسيق الـ 300px في ملف الـ CSS */}
+          <div className="stories-sidebar">
+            <UploadSidebar 
+              files={files} 
+              serverUrl={API_BASE} 
+              onUpload={handleFileUpload} 
+            />
+          </div>
+          
         </main>
 
+        {/* 6. نافذة الأصدقاء والسوق (Discovery Modal) */}
         {showDiscovery && (
           <DiscoveryStore 
             user={user} 
@@ -187,9 +210,11 @@ function App() {
           />
         )}
 
+        {/* 7. شريط التنبيه السفلي: يتبع .disclaimer-bar لضمان اللون الذهبي المتوهج */}
         <div className="disclaimer-bar">
-          👑 منصة OURO Steps - تجربة ملكية فريدة
+          👑 منصة OURO Steps - تجربة ملكية فريدة 2026
         </div>
+
       </div>
     </div>
   );
