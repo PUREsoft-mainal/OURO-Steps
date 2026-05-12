@@ -42,6 +42,9 @@ function App() {
       if (data.groups) setGroups([{ id: 'public', name: 'المجموعة العامة' }, ...data.groups]);
       if (data.stats) setStats(data.stats);
       setIsLogged(true);
+      setTimeout(() => {
+        setIsLogged(true);
+      }, 100);
     });
 
     socket.on('message', (m) => setChat(prev => [...prev, m]));
