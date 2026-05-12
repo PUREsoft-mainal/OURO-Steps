@@ -6,18 +6,20 @@ const DiscoveryStore = ({ user, socket, API_BASE, onClose }) => {
   const [allUsers, setAllUsers] = useState([]);
   const [marketPosts, setMarketPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // حالة المراسلة الخاصة (للمربع العائم)
+  const [activeChat, setActiveChat] = useState(null);
+  const [privateMsg, setPrivateMsg] = useState("");
+  const [privateChatHistory, setPrivateChatHistory] = useState([]);
 
-  // حالة رفع منشور جديد للسوق (تدعم مصفوفة ملفات)
   const [newPost, setNewPost] = useState({ description: '', price: '', files: null });
 
-  // 1. جلب البيانات الأولية من السيرفر
   useEffect(() => {
     const fetchData = async () => {
       try {
         const usersRes = await axios.get(`${API_BASE}/api/users`);
         const postsRes = await axios.get(`${API_BASE}/api/init_data`); 
         setAllUsers(usersRes.data);
-        // تأكد من أن السيرفر يرسل marketPosts في بيانات البدء
         setMarketPosts(postsRes.data.marketPosts || []);
         setLoading(false);
       } catch (err) {
@@ -27,158 +29,120 @@ const DiscoveryStore = ({ user, socket, API_BASE, onClose }) => {
     };
     fetchData();
 
-    // الاستماع لتحديثات الصداقة اللحظية
     socket.on('friend_updated', (data) => {
-        alert(data.message);
+        // تحديث القائمة فوراً عند الإضافة أو الإلغاء
         setAllUsers(prev => prev.map(u => 
-            u.username === data.targetUser ? { ...u, friends: data.status === 'remove' ? [...u.friends, user.username] : u.friends.filter(f => f !== user.username) } : u
+            u.username === data.targetUser 
+            ? { ...u, friends: data.status === 'remove' ? [...(u.friends || []), user.username] : (u.friends || []).filter(f => f !== user.username) } 
+            : u
         ));
     });
 
     return () => socket.off('friend_updated');
   }, [API_BASE, socket, user.username]);
 
-  // 2. دالة رفع البضاعة (صور متعددة)
+  // تصفية القوائم (يمين ويسار)
+  const usersToDiscover = allUsers.filter(u => u.username !== user.username && !u.friends?.includes(user.username));
+  const myFriends = allUsers.filter(u => u.username !== user.username && u.friends?.includes(user.username));
+
+  // دالة الرفع للسوق
   const handleMarketUpload = async (e) => {
     e.preventDefault();
-    if (!newPost.files || newPost.files.length === 0) return alert("الرجاء اختيار صورة واحدة على الأقل");
-
+    if (!newPost.files) return alert("الرجاء اختيار الصور");
     const formData = new FormData();
-    // تحويل FileList إلى مصفوفة وإضافتها للـ FormData
-    Array.from(newPost.files).forEach(file => {
-      formData.append('marketImages', file);
-    });
+    Array.from(newPost.files).forEach(file => formData.append('marketImages', file));
     formData.append('description', newPost.description);
     formData.append('price', newPost.price);
     formData.append('username', user.username);
 
     try {
-      const res = await axios.post(`${API_BASE}/api/market/upload`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await axios.post(`${API_BASE}/api/market/upload`, formData);
       if (res.data.success) {
-        alert("✅ تم نشر بضاعتك بنجاح!");
+        alert("✅ تم النشر!");
         setMarketPosts([res.data.post, ...marketPosts]);
-        setNewPost({ description: '', price: '', files: null });
       }
-    } catch (err) { 
-      console.error(err);
-      alert("❌ فشل النشر في السوق"); 
-    }
+    } catch (err) { alert("❌ فشل النشر"); }
   };
 
-  // 3. دالة حذف المنشور (للمالك أو الأدمن فقط)
   const handleDeletePost = async (postId) => {
-    if (!window.confirm("هل أنت متأكد من حذف هذه البضاعة؟")) return;
+    if (!window.confirm("حذف المنشور؟")) return;
     try {
-      const res = await axios.delete(`${API_BASE}/api/market/delete/${postId}`, { 
-        data: { username: user.username } 
-      });
-      if (res.data.success) {
-        alert("🗑️ تم الحذف بنجاح");
-        setMarketPosts(prev => prev.filter(p => p._id !== postId));
-      }
-    } catch (err) { 
-      console.error(err);
-      alert("❌ فشل الحذف"); 
-    }
+      await axios.delete(`${API_BASE}/api/market/delete/${postId}`, { data: { username: user.username } });
+      setMarketPosts(prev => prev.filter(p => p._id !== postId));
+    } catch (err) { alert("فشل الحذف"); }
   };
 
   return (
     <div className="discovery-overlay" onClick={onClose}>
       <div className="discovery-window gold-border" onClick={e => e.stopPropagation()}>
         
-        {/* شريط التنقل العلوي */}
         <div className="discovery-tabs">
-          <button className={activeTab === 'friends' ? 'active' : ''} onClick={() => setActiveTab('friends')}>
-            👥 أصدقاء جدد
-          </button>
-          <button className={activeTab === 'market' ? 'active' : ''} onClick={() => setActiveTab('market')}>
-            🛍️ السوق الملكي
-          </button>
+          <button className={activeTab === 'friends' ? 'active' : ''} onClick={() => setActiveTab('friends')}>👥 أصدقاء جدد</button>
+          <button className={activeTab === 'market' ? 'active' : ''} onClick={() => setActiveTab('market')}>🛍️ السوق الملكي</button>
           <button className="close-discovery" onClick={onClose}>❌ إغلاق</button>
         </div>
 
         <div className="discovery-body scrollbar-gold">
-          {loading ? (
-            <div className="loading-container">
-               <p className="gold-text">جاري تحميل البيانات الملكية...</p>
-            </div>
-          ) : (
+          {loading ? <p className="gold-text">جاري التحميل...</p> : (
             <>
-              {/* قسم البحث عن الأصدقاء */}
               {activeTab === 'friends' && (
-                <div className="friends-grid">
-                  {allUsers.filter(u => u.username !== user.username).map(u => (
-                    <div key={u._id} className="user-card-discovery">
-                      <div className="user-avatar">👤</div>
-                      <div className="user-details">
-                        <span className="user-name">{u.username}</span>
-                        <span className="user-role">{u.role}</span>
-                      </div>
-                      <button 
-                        className={u.friends?.includes(user.username) ? "unfriend-btn" : "add-friend-btn"}
-                        onClick={() => socket.emit('toggle_friend', { targetUser: u.username })}
-                      >
-                        {u.friends?.includes(user.username) ? "💔 إلغاء الصداقة" : "🤝 إضافة صديق"}
-                      </button>
+                <div className="friends-split-layout">
+                  {/* القائمة اليمنى: اكتشاف */}
+                  <div className="discover-column">
+                    <h4 className="column-title">🔍 استكشاف أشخاص جدد</h4>
+                    <div className="users-scroll">
+                      {usersToDiscover.map(u => (
+                        <div key={u._id} className="mini-user-card">
+                          <span>👤 {u.username}</span>
+                          <button className="add-friend-btn" onClick={() => socket.emit('toggle_friend', { targetUser: u.username })}>إضافة صديق +</button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+
+                  {/* القائمة اليسرى: الأصدقاء */}
+                  <div className="my-friends-column">
+                    <h4 className="column-title">🤝 قائمة أصدقائي</h4>
+                    <div className="users-scroll">
+                      {myFriends.map(u => (
+                        <div key={u._id} className="mini-user-card friend-active">
+                          <span>👤 {u.username}</span>
+                          <div className="friend-btns">
+                            <button className="msg-btn" onClick={() => setActiveChat(u)}>مراسلة 💬</button>
+                            <button className="unfriend-btn" onClick={() => socket.emit('toggle_friend', { targetUser: u.username })}>إلغاء 💔</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 
-              {/* قسم السوق الملكي */}
               {activeTab === 'market' && (
                 <div className="market-section">
-                  {/* نموذج النشر للأدمن والمستخدمين */}
                   <form className="market-upload-form gold-border" onSubmit={handleMarketUpload}>
-                    <h4>📣 انشر بضاعتك الجديدة (يمكنك اختيار حتى 5 صور)</h4>
-                    <textarea 
-                      placeholder="وصف البضاعة بالتفصيل..." 
-                      value={newPost.description} 
-                      onChange={e => setNewPost({...newPost, description: e.target.value})}
-                      required
-                    />
-                    <div className="form-row">
-                        <input 
-                        type="text" placeholder="السعر (مثلاً: 500 جنيه)" 
-                        value={newPost.price} 
-                        onChange={e => setNewPost({...newPost, price: e.target.value})}
-                        required 
-                        />
-                        <input 
-                        type="file" multiple accept="image/*" 
-                        onChange={e => setNewPost({...newPost, files: e.target.files})}
-                        required
-                        />
-                    </div>
-                    <button type="submit" className="gold-btn">🚀 نشر البضاعة</button>
+                    <h4>📣 انشر بضاعة (صور متعددة)</h4>
+                    <textarea placeholder="وصف البضاعة..." onChange={e => setNewPost({...newPost, description: e.target.value})} required />
+                    <input type="text" placeholder="السعر..." onChange={e => setNewPost({...newPost, price: e.target.value})} required />
+                    <input type="file" multiple accept="image/*" onChange={e => setNewPost({...newPost, files: e.target.files})} required />
+                    <button type="submit" className="gold-btn">نشر</button>
                   </form>
 
-                  {/* شبكة عرض المنشورات */}
                   <div className="market-grid">
                     {marketPosts.map(post => (
                       <div key={post._id} className="market-item-card">
                         <div className="post-header">
-                            <span className="post-uploader">👤 المالك: {post.uploader}</span>
-                            {(post.uploader === user.username || user.username === 'Admin_Mostafa') && (
-                            <button className="delete-post-btn" onClick={() => handleDeletePost(post._id)}>حذف 🗑️</button>
-                            )}
+                          <span>👤 {post.uploader}</span>
+                          {(post.uploader === user.username || user.username === 'Admin_Mostafa') && (
+                            <button className="delete-post-btn" onClick={() => handleDeletePost(post._id)}>حذف</button>
+                          )}
                         </div>
-                        
-                        {/* حاوية الصور المتعددة */}
-                        <div className="post-images-slider scrollbar-none">
-                            {post.images && post.images.map((img, idx) => (
-                                <img key={idx} src={img} alt={`product-${idx}`} className="market-img-slide" />
-                            ))}
+                        <div className="post-images-slider">
+                          {post.images?.map((img, idx) => <img key={idx} src={img} className="market-img-slide" alt="p" />)}
                         </div>
-
                         <div className="market-info">
-                          <p className="market-desc">{post.description}</p>
-                          <div className="market-footer">
-                            <span className="market-price">💰 {post.price}</span>
-                            <span className="market-date">{new Date(post.createdAt).toLocaleDateString()}</span>
-                          </div>
+                          <p>{post.description}</p>
+                          <span className="market-price">💰 {post.price}</span>
                         </div>
                       </div>
                     ))}
@@ -189,6 +153,31 @@ const DiscoveryStore = ({ user, socket, API_BASE, onClose }) => {
           )}
         </div>
       </div>
+
+      {/* 🆕 مربع المراسلة العائم (Facebook Style) */}
+      {activeChat && (
+        <div className="private-chat-floating gold-border" onClick={e => e.stopPropagation()}>
+          <div className="p-chat-header">
+            <span>💬 {activeChat.username}</span>
+            <button onClick={() => setActiveChat(null)}>✖</button>
+          </div>
+          <div className="p-chat-msgs scrollbar-gold">
+            <p className="system-msg">بداية المحادثة مع {activeChat.username}</p>
+            {/* هنا ستظهر الرسائل الخاصة لاحقاً */}
+          </div>
+          <div className="p-chat-input">
+            <input 
+                value={privateMsg} 
+                onChange={e => setPrivateMsg(e.target.value)} 
+                placeholder="اكتب رسالة..." 
+            />
+            <button onClick={() => {
+                socket.emit('private_message', { to: activeChat.username, text: privateMsg });
+                setPrivateMsg("");
+            }}>إرسال</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
