@@ -766,3 +766,73 @@ body, html {
   height: 200px;
   object-fit: cover;
 }
+
+/* تنسيق اليمين واليسار */
+.friends-split-layout {
+  display: flex;
+  gap: 20px;
+  height: 100%;
+}
+.discover-column, .my-friends-column {
+  flex: 1;
+  background: rgba(20,20,20,0.5);
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid var(--bronze-border);
+  display: flex;
+  flex-direction: column;
+}
+.column-title { color: var(--gold-primary); text-align: center; margin-bottom: 15px; border-bottom: 1px solid; }
+.mini-user-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: #111;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  color: white;
+}
+.friend-btns { display: flex; gap: 5px; }
+
+/* مربع المراسلة العائم */
+.private-chat-floating {
+  position: fixed;
+  bottom: 0;
+  left: 50px;
+  width: 280px;
+  height: 350px;
+  background: #000;
+  z-index: 10001;
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 0 20px var(--gold-primary);
+}
+.p-chat-header {
+  background: var(--gold-primary);
+  padding: 8px;
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+}
+.p-chat-msgs {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  color: #ccc;
+  font-size: 13px; 
+}
+.p-chat-input {
+  display: flex;
+  padding: 5px;
+  background: #111;
+  gap: 5px; 
+}
+.p-chat-input input {
+  flex: 1;
+  background: #000;
+  color: #fff;
+  border: 1px solid var(--bronze-border);
+  padding: 5px; 
+}
