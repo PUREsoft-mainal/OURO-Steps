@@ -527,3 +527,199 @@ body, html {
   pointer-events: auto !important;
   cursor: pointer !important;
 }
+
+/* --- نافذة الأصدقاء والسوق (Discovery Modal) --- */
+.discovery-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(10px);
+}
+
+.discovery-window {
+  width: 90%;
+  max-width: 1000px;
+  height: 85vh;
+  background: #0a0a0a;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 0 50px rgba(212, 175, 55, 0.2);
+}
+
+.discovery-tabs {
+  display: flex;
+  background: #111;
+  padding: 10px;
+  border-bottom: 2px solid var(--bronze-border);
+  gap: 10px;
+}
+
+.discovery-tabs button {
+  background: transparent;
+  color: #fff;
+  border: 1px solid var(--bronze-border);
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.discovery-tabs button.active {
+  background: var(--gold-primary);
+  color: #000;
+  border-color: var(--gold-primary);
+}
+
+.close-discovery {
+  margin-right: auto;
+  color: var(--gold-primary) !important;
+}
+
+.discovery-body {
+  flex-grow: 1;
+  padding: 25px;
+  overflow-y: auto;
+}
+
+/* --- شبكة الأصدقاء --- */
+.friends-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.user-card-discovery {
+  background: #151515;
+  padding: 15px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+.user-avatar {
+  font-size: 30px;
+  background: #222;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+}
+
+.user-name {
+  display: block;
+  color: var(--gold-glow);
+  font-weight: bold;
+}
+
+.user-role {
+  font-size: 11px;
+  color: #888;
+}
+
+.add-friend-btn {
+  background: var(--gold-primary);
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-right: auto;
+}
+
+.unfriend-btn {
+  background: #c0392b;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* --- شبكة السوق --- */
+.market-upload-form {
+  background: #111;
+  padding: 20px;
+  border-radius: 15px;
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.market-upload-form h4 {
+  color: var(--gold-primary);
+  margin-top: 0; 
+}
+
+.market-upload-form textarea, .market-upload-form input {
+  background: #000;
+  border: 1px solid var(--bronze-border);
+  color: #fff;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 25px;
+}
+
+.market-item-card {
+  background: #111;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.1);
+  transition: 0.3s;
+}
+
+.market-item-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--gold-primary); 
+}
+
+.market-img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover; 
+}
+
+.market-info {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px; 
+}
+
+.market-desc {
+  font-size: 13px;
+  color: #ccc;
+  margin: 0;
+  height: 40px;
+  overflow: hidden; 
+}
+
+.market-price {
+  color: var(--gold-glow);
+  font-weight: bold;
+  font-size: 1.1rem; 
+}
+
+.market-owner {
+  font-size: 10px;
+  color: #666; 
+}
