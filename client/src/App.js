@@ -9,12 +9,12 @@ import GroupsSidebar from './components/GroupsSidebar';
 import UploadSidebar from './components/UploadSidebar';
 import LoginBox from './components/LoginBox';
 import ChatArea from './components/ChatArea';
+import DiscoveryStore from './components/DiscoveryStore'; // 🆕 استدعاء المكون الجديد
 
 import './App.css';
 
 const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
-// إنشاء اتصال السوكيت
 const socket = io(API_BASE, { 
   transports: ['websocket'], 
   upgrade: false,
@@ -33,6 +33,9 @@ function App() {
   const [groups, setGroups] = useState([{ id: 'public', name: 'المجموعة العامة' }]);
   const [currentGroup, setCurrentGroup] = useState({ id: 'public', name: 'المجموعة العامة' });
   const [stats, setStats] = useState({ activeUsers: 0, totalUsers: 0 });
+  
+  // 🆕 حالة التحكم في فتح وإغلاق نافذة الأصدقاء والسوق
+  const [showDiscovery, setShowDiscovery] = useState(false);
 
   useEffect(() => {
     socket.on('init_data', (data) => {
@@ -46,9 +49,12 @@ function App() {
     socket.on('message', (m) => setChat(prev => [...prev, m]));
     socket.on('update_stats', (newStats) => setStats(newStats));
     socket.on('update_ads', (updatedAds) => setAds(updatedAds));
+    
+    // 🛠️ دمج وتصحيح استقبال "المجموعة الجديدة" مع الانتقال التلقائي
     socket.on('new_group_success', (group) => {
         setGroups(prev => [...prev, group]);
-        console.log("✅ تمت إضافة المجموعة الجديدة للقائمة:", group.name);
+        setCurrentGroup({ id: group._id || group.id, name: group.name }); // الانتقال التلقائي
+        console.log(`✨ تم الانتقال لغرفة: ${group.name}`);
     });
     
     socket.on('added_to_group', (data) => {
@@ -57,35 +63,20 @@ function App() {
       }
     });
 
-    // داخل useEffect في App.js
-    socket.on('new_group_success', (group) => {
-        setGroups(prev => [...prev, group]);
-    // التعديل: الانتقال التلقائي للغرفة الجديدة
-        setCurrentGroup({ id: group._id, name: group.name });
-        alert(`✨ تم إنشاء غرفة "${group.name}" والانتقال إليها!`);
-    });
-
-
     socket.on('error_msg', (msg) => alert("⚠️ " + msg));
 
     return () => socket.off();
   }, [user.username]);
 
-  // --- إصلاح الزر (تمت إضافة التبعيات اللازمة لمنع التجميد) ---
   const handleCreateGroup = useCallback(() => {
-    console.log("🛠️ جاري تشغيل دالة إنشاء الشات...");
     const name = prompt("👑 أدخل اسم الشات الملكي الجديد:");
-    
     if (name && name.trim() !== "") {
       socket.emit('create_group', { 
         groupName: name.trim(),
-        owner: user.username // إرسال اسم المالك لضمان التوثيق في قاعدة البيانات
+        owner: user.username 
       });
-      console.log("📡 تم إرسال الطلب للسيرفر باسم:", name);
-    } else {
-      console.log("⚠️ تم إلغاء الإنشاء أو الاسم فارغ.");
     }
-  }, [user.username]); // تأكدنا من أن الدالة تعرف المستخدم الحالي
+  }, [user.username]);
 
   const handleAuthAction = (e) => {
     e.preventDefault();
@@ -126,7 +117,14 @@ function App() {
   return (
     <div className="app-container">
       <div className="app-overlay">
-        <Header activeUsers={stats.activeUsers} totalUsers={stats.totalUsers} user={user} />
+        {/* 🛠️ تمرير دالة الفتح للهيدر */}
+        <Header 
+          activeUsers={stats.activeUsers} 
+          totalUsers={stats.totalUsers} 
+          user={user} 
+          onOpenDiscovery={() => setShowDiscovery(true)} 
+        />
+        
         <AdSlider ads={ads} /> 
 
         <main className="main-content">
@@ -150,6 +148,16 @@ function App() {
 
           <UploadSidebar files={files} serverUrl={API_BASE} onUpload={handleFileUpload} />
         </main>
+
+        {/* 🆕 عرض نافذة الأصدقاء والسوق عند الضغط على الزر */}
+        {showDiscovery && (
+          <DiscoveryStore 
+            user={user} 
+            socket={socket} 
+            API_BASE={API_BASE} 
+            onClose={() => setShowDiscovery(false)} 
+          />
+        )}
       </div>
     </div>
   );
