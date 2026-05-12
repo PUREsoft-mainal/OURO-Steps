@@ -232,6 +232,12 @@ body, html {
   padding: 0 50px;
 }
 
+.ads-section-wrapper {
+  margin-top: 320px !important;
+  position: relative !important;
+  z-index: 50 !important; /* هنا نستخدم الشرطة بشكل قانوني */
+}
+
 .ads-wrapper-inner {
     display: flex;
     gap: 50px;
