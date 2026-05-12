@@ -6,11 +6,11 @@ const Header = ({ activeUsers, totalUsers, user, onOpenDiscovery }) => {
 
   return (
     <header className="ouro-header">
-      {/* 1. جهة اليمين: الإحصائيات + الخدمات */}
+      
       <div className="header-right">
         <StatsBar activeCount={activeUsers} totalCount={totalUsers} />
         
-        <div className="header-actions-group" style={{ display: 'flex', gap: '10px' }}>
+        <div className="header-actions-group">
           <button className="discovery-trigger-btn" onClick={onOpenDiscovery}>
             🌐 أصدقاء جدد & السوق
           </button>
@@ -22,32 +22,31 @@ const Header = ({ activeUsers, totalUsers, user, onOpenDiscovery }) => {
             
             {showCS && (
               <div className="cs-dropdown">
-                <p>📞 <strong>واتساب:</strong> 01080166413</p>
-                <p>💸 <strong>فودافون كاش:</strong> 01080166413</p>
-                <p>📧 <strong>البريد:</strong> mostafadesha953@gmail.com</p>
+                <p>واتساب: 01080166413</p>
+                <p>فودافون كاش: 01080166413</p>
+                <p>mostafadesha953@gmail.com</p>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* 2. المنتصف: جملة الترحيب فقط */}
       <div className="header-center">
         <div className="welcome-msg">مرحباً بكم فى عالمكم الجديد</div>
       </div>
 
-      {/* 3. جهة اليسار: المستخدم والخروج */}
       <div className="user-profile-section">
         <span className="user-info-text">👤 {user.username}</span>
         <button onClick={() => window.location.reload()} className="logout-btn">خروج</button>
       </div>
 
-      {/* 👑 اللوجو الملكي: تم وضعه هنا ليكون حراً خارج تقسيمات الـ flex */}
+      {/* اللوجو يتبع كلاس royal-floating-logo المسجل في App.css فقط */}
       <img 
         src="/assets/logo.png" 
         className="royal-floating-logo" 
         alt="logo" 
       />
+      
     </header>
   );
 };
