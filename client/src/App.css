@@ -310,6 +310,8 @@ body, html {
   width: 100%;
   position: relative !important;
   z-index: 500 !important; /* هنا نستخدم الشرطة بشكل قانوني */
+  background: rgba(10, 10, 10, 0.8); /* تعتيم بسيط لإبراز الإعلانات */
+  padding: 15px 0;
 }
 
 .ads-wrapper-inner {
