@@ -57,6 +57,15 @@ function App() {
       }
     });
 
+    // داخل useEffect في App.js
+    socket.on('new_group_success', (group) => {
+        setGroups(prev => [...prev, group]);
+    // التعديل: الانتقال التلقائي للغرفة الجديدة
+        setCurrentGroup({ id: group._id, name: group.name });
+        alert(`✨ تم إنشاء غرفة "${group.name}" والانتقال إليها!`);
+    });
+
+
     socket.on('error_msg', (msg) => alert("⚠️ " + msg));
 
     return () => socket.off();
