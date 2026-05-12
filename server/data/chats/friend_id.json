@@ -1,0 +1,10 @@
+{
+  "friend_id": "101",
+  "messages": [
+    {
+      "sender_id": "me",
+      "text": "مرحباً، كيف حالك؟",
+      "timestamp": "2023-10-27T14:30:00Z"
+    }
+  ]
+}
