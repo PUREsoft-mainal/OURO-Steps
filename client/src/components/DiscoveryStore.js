@@ -31,7 +31,6 @@ const DiscoveryStore = ({ user, socket, API_BASE, onClose }) => {
       }
     };
     fetchData();
-  }, [API_BASE]); // جلب البيانات عند فتح المكون
 
     socket.on('friend_updated', (data) => {
         // تحديث القائمة فوراً عند الإضافة أو الإلغاء
