@@ -9,7 +9,7 @@ import GroupsSidebar from './components/GroupsSidebar';
 import UploadSidebar from './components/UploadSidebar';
 import LoginBox from './components/LoginBox';
 import ChatArea from './components/ChatArea';
-import DiscoveryStore from './components/DiscoveryStore'; // 🆕 استدعاء المكون الجديد
+import DiscoveryStore from './components/DiscoveryStore';
 
 import './App.css';
 
@@ -20,13 +20,6 @@ const socket = io(API_BASE, {
   upgrade: false,
   reconnection: true 
 });
-
-const ROYAL_THEME = {
-  goldPrimary: '#d4af37',
-  logoSize: '400px',
-  headerHeight: '100px',
-  adMargin: '350px'
-};
 
 function App() {
   const [isLogged, setIsLogged] = useState(false);
@@ -40,8 +33,6 @@ function App() {
   const [groups, setGroups] = useState([{ id: 'public', name: 'المجموعة العامة' }]);
   const [currentGroup, setCurrentGroup] = useState({ id: 'public', name: 'المجموعة العامة' });
   const [stats, setStats] = useState({ activeUsers: 0, totalUsers: 0 });
-  
-  // 🆕 حالة التحكم في فتح وإغلاق نافذة الأصدقاء والسوق
   const [showDiscovery, setShowDiscovery] = useState(false);
 
   useEffect(() => {
@@ -57,10 +48,9 @@ function App() {
     socket.on('update_stats', (newStats) => setStats(newStats));
     socket.on('update_ads', (updatedAds) => setAds(updatedAds));
     
-    // 🛠️ دمج وتصحيح استقبال "المجموعة الجديدة" مع الانتقال التلقائي
     socket.on('new_group_success', (group) => {
         setGroups(prev => [...prev, group]);
-        setCurrentGroup({ id: group._id || group.id, name: group.name }); // الانتقال التلقائي
+        setCurrentGroup({ id: group._id || group.id, name: group.name }); 
         console.log(`✨ تم الانتقال لغرفة: ${group.name}`);
     });
     
@@ -78,10 +68,7 @@ function App() {
   const handleCreateGroup = useCallback(() => {
     const name = prompt("👑 أدخل اسم الشات الملكي الجديد:");
     if (name && name.trim() !== "") {
-      socket.emit('create_group', { 
-        groupName: name.trim(),
-        owner: user.username 
-      });
+      socket.emit('create_group', { groupName: name.trim(), owner: user.username });
     }
   }, [user.username]);
 
@@ -121,74 +108,59 @@ function App() {
     );
   }
 
-// --- التعديل النهائي لجزء الواجهة (Return) ---
-
-return (
-  <div className="app-container" style={{ backgroundColor: '#000', minHeight: '100vh' }}>
-    <div className="app-overlay" style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
-      
-      {/* 1. الهيدر الملكي: يحتوي على الإحصائيات والأزرار واللوجو العائم */}
-      <Header 
-        activeUsers={stats.activeUsers} 
-        totalUsers={stats.totalUsers} 
-        user={user} 
-        onOpenDiscovery={() => setShowDiscovery(true)} 
-      />
-      
-      {/* 2. حاوية الإعلانات: تم ربط المسافة العلوية برمجياً لترك مكان للوجو الـ 400px */}
-      <div className="ads-section-wrapper" style={{ marginTop: '320px', position: 'relative', z-index: 50 }}>
-        <AdSlider ads={ads} /> 
-      </div>
-
-      {/* 3. المحتوى الرئيسي: الشات والقوائم الجانبية */}
-      <main className="main-content" style={{ marginTop: '20px', display: 'flex', flexGrow: 1, gap: '20px', padding: '0 20px' }}>
+  return (
+    <div className="app-container" style={{ backgroundColor: '#000', minHeight: '100vh' }}>
+      <div className="app-overlay" style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
         
-        {/* الجانب الأيمن: المجموعات */}
-        <GroupsSidebar 
-          groups={groups} 
+        <Header 
+          activeUsers={stats.activeUsers} 
+          totalUsers={stats.totalUsers} 
           user={user} 
-          socket={socket}
-          currentGroup={currentGroup.id}
-          onJoinRoom={handleSwitchRoom}
-          triggerCreate={handleCreateGroup} 
+          onOpenDiscovery={() => setShowDiscovery(true)} 
         />
+        
+        {/* 🛠️ تم تصحيح zIndex هنا لضمان قبول Vercel للكود */}
+        <div className="ads-section-wrapper" style={{ marginTop: '320px', position: 'relative', zIndex: 50 }}>
+          <AdSlider ads={ads} /> 
+        </div>
 
-        {/* المنتصف: منطقة الدردشة */}
-        <ChatArea 
-          chat={chat} 
-          currentUser={user.username} 
-          msg={msg} 
-          setMsg={setMsg} 
-          socket={socket} 
-          currentGroup={currentGroup}
-        />
+        <main className="main-content" style={{ marginTop: '20px', display: 'flex', flexGrow: 1, gap: '20px', padding: '0 20px' }}>
+          <GroupsSidebar 
+            groups={groups} 
+            user={user} 
+            socket={socket}
+            currentGroup={currentGroup.id}
+            onJoinRoom={handleSwitchRoom}
+            triggerCreate={handleCreateGroup} 
+          />
 
-        {/* الجانب الأيسر: القصص والمشاركات */}
-        <UploadSidebar 
-          files={files} 
-          serverUrl={API_BASE} 
-          onUpload={handleFileUpload} 
-        />
-      </main>
+          <ChatArea 
+            chat={chat} 
+            currentUser={user.username} 
+            msg={msg} 
+            setMsg={setMsg} 
+            socket={socket} 
+            currentGroup={currentGroup}
+          />
 
-      {/* 4. النوافذ المنبثقة: الأصدقاء والسوق */}
-      {showDiscovery && (
-        <DiscoveryStore 
-          user={user} 
-          socket={socket} 
-          API_BASE={API_BASE} 
-          onClose={() => setShowDiscovery(false)} 
-        />
-      )}
+          <UploadSidebar files={files} serverUrl={API_BASE} onUpload={handleFileUpload} />
+        </main>
 
-      {/* شريط التنبيه السفلي (اختياري) */}
-      <div className="disclaimer-bar">
-        👑 منصة OURO Steps - تجربة ملكية فريدة
+        {showDiscovery && (
+          <DiscoveryStore 
+            user={user} 
+            socket={socket} 
+            API_BASE={API_BASE} 
+            onClose={() => setShowDiscovery(false)} 
+          />
+        )}
+
+        <div className="disclaimer-bar">
+          👑 منصة OURO Steps - تجربة ملكية فريدة
+        </div>
       </div>
-
     </div>
-  </div>
-);
+  );
 }
 
 export default App;
