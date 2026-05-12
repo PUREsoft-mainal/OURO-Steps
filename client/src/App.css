@@ -90,10 +90,9 @@ body, html {
   display: flex; 
   justify-content: space-between; 
   align-items: center;
-  align-items: center;
   width: 100%;
-  padding: 10px 20px;
-  border-bottom: 3px solid var(--gold-primary);
+  padding: 15px 30px;
+  border-bottom: 4px solid var(--gold-primary);
   box-shadow: 0 5px 25px rgba(212, 175, 55, 0.2);
   box-sizing: border-box;
   z-index: 1000;
@@ -107,13 +106,13 @@ body, html {
 .royal-floating-logo {
   position: absolute;
   left: 50%;
-  top: 60px; /* يستقر بالضبط على الخط الفاصل */
+  top: 90px; /* يستقر بالضبط على الخط الفاصل */
   transform: translate(-50%, -50%); /* يمركز اللوجو */
-  height: 150px; /* حجم كبير كما طلبت */
+  height: 400px; /* حجم كبير كما طلبت */
   width: auto;
   z-index: 1100; /* فوق الهيدر وفوق شريط الإعلانات */
-  filter: drop-shadow(0 0 15px var(--gold-primary));
-  transition: transform 0.3s ease;
+  filter: drop-shadow(0 0 25px var(--gold-primary));
+  transition: transform 0.4s ease;
   pointer-events: none; /* لكي لا يعيق الضغط على العناصر خلفه */
 }
 
@@ -185,12 +184,13 @@ body, html {
 
 /* حاوية الإعلانات الرئيسية أسفل الهيدر */
 .ads-slider-wrapper {
-  margin-top: 50px !important; /* مسافة كافية لكي يظهر اللوجو بوضوح */
-  background: rgba(15, 15, 15, 0.95);
-  border-top: 2px solid var(--gold-primary);
+  margin-top: 280px !important; /* مسافة كافية لكي يظهر اللوجو بوضوح */
+  background: rgba(15, 15, 15, 0.9);
+  border-top: 1px solid rgba(212, 175, 55, 0.3);
   border-bottom: 2px solid var(--bronze-border);
   padding: 15px 0;
   position: relative;
+  z-index: 500;
   display: flex;
   align-items: center;
 }
