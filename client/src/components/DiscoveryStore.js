@@ -17,9 +17,12 @@ const DiscoveryStore = ({ user, socket, API_BASE, onClose }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
         const usersRes = await axios.get(`${API_BASE}/api/users`);
-        const postsRes = await axios.get(`${API_BASE}/api/init_data`); 
+        const postsRes = await axios.get(`${API_BASE}/api/init_data`);
+        console.log("قائمة المستخدمين المستلمة:", usersRes.data); // للفحص في الـ Console
         setAllUsers(usersRes.data);
+        const postsRes = await axios.get(`${API_BASE}/api/init_data`); 
         setMarketPosts(postsRes.data.marketPosts || []);
         setLoading(false);
       } catch (err) {
@@ -28,6 +31,7 @@ const DiscoveryStore = ({ user, socket, API_BASE, onClose }) => {
       }
     };
     fetchData();
+  }, [API_BASE]); // جلب البيانات عند فتح المكون
 
     socket.on('friend_updated', (data) => {
         // تحديث القائمة فوراً عند الإضافة أو الإلغاء
