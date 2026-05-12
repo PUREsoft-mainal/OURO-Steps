@@ -43,7 +43,7 @@ const Header = ({ activeUsers, totalUsers, user, onOpenDiscovery }) => {
       {/* اللوجو يتبع كلاس royal-floating-logo المسجل في App.css فقط */}
       <img 
         src="/assets/logo.png" 
-        className="royal-floating-logo" 
+        className="ouro-header" 
         alt="logo" 
       />
       
