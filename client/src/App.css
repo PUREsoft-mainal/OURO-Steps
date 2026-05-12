@@ -22,14 +22,19 @@ body, html {
   background-size: cover; 
   background-attachment: fixed; 
   background-position: center;
-  display: flex; 
+  height: auto !important; /* يسمح لها بالتمدد للأسفل */
+  background-color: #000;
+  display: block !important; /* إلغاء الـ flex الأم لكي لا يضغط العناصر */
+  overflow-y: visible !important; /* السماح بالتمرير الجانبي للمتصفح */
   flex-direction: column; 
 }
 
 .app-overlay {
   min-height: 100vh;
   background: rgba(0, 0, 0, 0.7); 
-  display: flex; 
+  height: auto !important;
+  display: block !important;
+  position: relative;
   flex-direction: column;
 }
 
@@ -90,7 +95,7 @@ body, html {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  height: 80px;
+  height: 100px;
   /* المسافات الضخمة التي طلبتها */
   padding: 400px 20px 30px 20px; 
   margin-top: 5px;
@@ -107,8 +112,8 @@ body, html {
   left: 50%;
   top: 70px; /* تموضعه ليبدأ من منتصف الهيدر وينزل لأسفل */
   transform: translate(-50%, -50%) !important;
-  height: 400px !important;  /* الحجم الذي طلبته */
-  width: auto !important;  z-index: 2000; /* ليكون فوق كل شيء */
+  height: 500px !important;  /* الحجم الذي طلبته */
+  width: auto !important;
   filter: drop-shadow(0 0 40px var(--gold-primary));
   pointer-events: none !important; /* لضمان القدرة على الضغط على ما خلفه */
   transition: all 0.5s ease-in-out;
@@ -235,9 +240,10 @@ body, html {
 }
 
 .ads-section-wrapper {
-  margin-top: 320px !important;
+  margin-top: 450px !important;
+  width: 100%;
   position: relative !important;
-  z-index: 50 !important; /* هنا نستخدم الشرطة بشكل قانوني */
+  z-index: 500 !important; /* هنا نستخدم الشرطة بشكل قانوني */
 }
 
 .ads-wrapper-inner {
@@ -338,12 +344,13 @@ body, html {
 
 /* --- 5. توزيع المحتوى الداخلي --- */
 .main-content { 
-  display: flex; 
+  display: flex !important; /* العودة للـ flex هنا فقط لتوزيع (يمين - وسط - يسار) */
   flex-grow: 1; 
   overflow: hidden; 
-  padding: 15px;
-  margin-top: 10px;
-  min-height: calc(100vh - 120px); /* تمدد ذكي حسب طول الشاشة */
+  height: auto !important;
+  padding: 0 20px 50px 20px; /* بادنج سفلي لكي لا تلتصق الحواف بالأسفل */
+  margin-top: 50px;
+  min-height: 800px; /* طول منطقة الشات لضمان الفخامة */
   gap: 20px;
 }
 
@@ -373,7 +380,7 @@ body, html {
 
 .chat-area { 
   flex-grow: 2; 
-  height: 80vh; /* طول متناسب مع الشاشة */
+  height: 800px !important; /* طول مربع الشات */
   display: flex; 
   flex-direction: column; 
   background: rgba(5, 5, 5, 0.8);
