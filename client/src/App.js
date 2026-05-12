@@ -95,6 +95,20 @@ function App() {
     }
 };
 
+  const handleSendMessage = async (text) => {
+    const response = await fetch('/api/send-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ friendId: "101", text: text })
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+        console.log(`تم الإرسال في تمام الساعة: ${new Date(result.timestamp).toLocaleTimeString()}`);
+    }
+};
+
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
