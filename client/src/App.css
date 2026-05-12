@@ -120,7 +120,7 @@ body, html {
 .royal-floating-logo {
   position: absolute !important;
   left: 50% !important;
-  top: 70px;  !important;/* تموضعه ليبدأ من منتصف الهيدر وينزل لأسفل */
+  top: 70px  !important;/* تموضعه ليبدأ من منتصف الهيدر وينزل لأسفل */
   transform: translate(-50%, -50%) !important;
   height: 400px !important;  /* الحجم الذي طلبته */
   width: auto !important;
