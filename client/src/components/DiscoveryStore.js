@@ -2,21 +2,22 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const DiscoveryStore = ({ user, socket, API_BASE, onClose }) => {
-  const [activeTab, setActiveTab] = useState('friends'); // التبديل بين الأصدقاء والسوق
+  const [activeTab, setActiveTab] = useState('friends'); 
   const [allUsers, setAllUsers] = useState([]);
   const [marketPosts, setMarketPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // حالة رفع منشور جديد للسوق
-  const [newPost, setNewPost] = useState({ description: '', price: '', file: null });
+  // حالة رفع منشور جديد للسوق (تدعم مصفوفة ملفات)
+  const [newPost, setNewPost] = useState({ description: '', price: '', files: null });
 
-  // 1. جلب البيانات من السيرفر السحابي
+  // 1. جلب البيانات الأولية من السيرفر
   useEffect(() => {
     const fetchData = async () => {
       try {
         const usersRes = await axios.get(`${API_BASE}/api/users`);
-        const postsRes = await axios.get(`${API_BASE}/api/init_data`); // أو مسار السوق الخاص
+        const postsRes = await axios.get(`${API_BASE}/api/init_data`); 
         setAllUsers(usersRes.data);
+        // تأكد من أن السيرفر يرسل marketPosts في بيانات البدء
         setMarketPosts(postsRes.data.marketPosts || []);
         setLoading(false);
       } catch (err) {
@@ -29,78 +30,65 @@ const DiscoveryStore = ({ user, socket, API_BASE, onClose }) => {
     // الاستماع لتحديثات الصداقة اللحظية
     socket.on('friend_updated', (data) => {
         alert(data.message);
-        // تحديث القائمة محلياً فوراً ليتغير اسم الزر
         setAllUsers(prev => prev.map(u => 
-            u.username === data.targetUser ? { ...u, isFriend: data.status === 'remove' } : u
+            u.username === data.targetUser ? { ...u, friends: data.status === 'remove' ? [...u.friends, user.username] : u.friends.filter(f => f !== user.username) } : u
         ));
     });
 
     return () => socket.off('friend_updated');
-  }, [API_BASE, socket]);
+  }, [API_BASE, socket, user.username]);
 
-  // 2. دالة رفع منشور للسوق
+  // 2. دالة رفع البضاعة (صور متعددة)
   const handleMarketUpload = async (e) => {
     e.preventDefault();
-    if (!newPost.file) return alert("الرجاء اختيار صورة المنتج");
+    if (!newPost.files || newPost.files.length === 0) return alert("الرجاء اختيار صورة واحدة على الأقل");
 
     const formData = new FormData();
-    Array.from(newPost.files).forEach(file => formData.append('marketImages', file));
-    formData.append('marketImage', newPost.file);
+    // تحويل FileList إلى مصفوفة وإضافتها للـ FormData
+    Array.from(newPost.files).forEach(file => {
+      formData.append('marketImages', file);
+    });
     formData.append('description', newPost.description);
     formData.append('price', newPost.price);
     formData.append('username', user.username);
 
     try {
-      const res = await axios.post(`${API_BASE}/api/market/upload`, formData);
+      const res = await axios.post(`${API_BASE}/api/market/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       if (res.data.success) {
-        alert("✅ تم نشر بضاعتك في السوق الملكي!");
+        alert("✅ تم نشر بضاعتك بنجاح!");
         setMarketPosts([res.data.post, ...marketPosts]);
-        setNewPost({ description: '', price: '', file: null });
+        setNewPost({ description: '', price: '', files: null });
       }
-    } catch (err) { alert("❌ فشل الرفع للسوق"); }
+    } catch (err) { 
+      console.error(err);
+      alert("❌ فشل النشر في السوق"); 
+    }
   };
 
+  // 3. دالة حذف المنشور (للمالك أو الأدمن فقط)
   const handleDeletePost = async (postId) => {
-  if (!window.confirm("هل أنت متأكد من حذف هذا المنشور؟")) return;
-  try {
-    const res = await axios.delete(`${API_BASE}/api/market/delete/${postId}`, { data: { username: user.username } });
-    if (res.data.success) {
-      setMarketPosts(prev => prev.filter(p => p._id !== postId));
+    if (!window.confirm("هل أنت متأكد من حذف هذه البضاعة؟")) return;
+    try {
+      const res = await axios.delete(`${API_BASE}/api/market/delete/${postId}`, { 
+        data: { username: user.username } 
+      });
+      if (res.data.success) {
+        alert("🗑️ تم الحذف بنجاح");
+        setMarketPosts(prev => prev.filter(p => p._id !== postId));
+      }
+    } catch (err) { 
+      console.error(err);
+      alert("❌ فشل الحذف"); 
     }
-  } catch (err) { alert("فشل الحذف"); }
-};
+  };
 
   return (
-    <form className="market-upload-form" onSubmit={handleMarketUpload}>
-  <textarea placeholder="وصف البضاعة..." required onChange={e => setNewPost({...newPost, description: e.target.value})} />
-  <input type="text" placeholder="السعر..." required onChange={e => setNewPost({...newPost, price: e.target.value})} />
-  <input type="file" multiple accept="image/*" onChange={e => setNewPost({...newPost, files: e.target.files})} />
-  <button type="submit" className="gold-btn">نشر</button>
-</form>
-
-<div className="market-grid">
-  {marketPosts.map(post => (
-    <div key={post._id} className="market-item-card">
-      <div className="post-header">
-        <span className="post-uploader">👤 {post.uploader}</span>
-        {(post.uploader === user.username || user.username === 'Admin_Mostafa') && (
-          <button className="delete-post-btn" onClick={() => handleDeletePost(post._id)}>حذف</button>
-        )}
-      </div>
-      <div className="post-images-container">
-         {post.images.map((img, idx) => <img key={idx} src={img} className="market-img-slide" />)}
-      </div>
-      <div className="market-info">
-        <p>{post.description}</p>
-        <span className="market-price">💰 {post.price}</span>
-      </div>
-    </div>
-  ))}
-</div>
     <div className="discovery-overlay" onClick={onClose}>
       <div className="discovery-window gold-border" onClick={e => e.stopPropagation()}>
         
-        {/* نافذة التنقل العلوي */}
+        {/* شريط التنقل العلوي */}
         <div className="discovery-tabs">
           <button className={activeTab === 'friends' ? 'active' : ''} onClick={() => setActiveTab('friends')}>
             👥 أصدقاء جدد
@@ -108,13 +96,17 @@ const DiscoveryStore = ({ user, socket, API_BASE, onClose }) => {
           <button className={activeTab === 'market' ? 'active' : ''} onClick={() => setActiveTab('market')}>
             🛍️ السوق الملكي
           </button>
-          <button className="close-discovery" onClick={onClose}>❌</button>
+          <button className="close-discovery" onClick={onClose}>❌ إغلاق</button>
         </div>
 
         <div className="discovery-body scrollbar-gold">
-          {loading ? <p className="gold-text">جاري تحميل البيانات الملكية...</p> : (
+          {loading ? (
+            <div className="loading-container">
+               <p className="gold-text">جاري تحميل البيانات الملكية...</p>
+            </div>
+          ) : (
             <>
-              {/* قسم الأصدقاء */}
+              {/* قسم البحث عن الأصدقاء */}
               {activeTab === 'friends' && (
                 <div className="friends-grid">
                   {allUsers.filter(u => u.username !== user.username).map(u => (
@@ -135,41 +127,58 @@ const DiscoveryStore = ({ user, socket, API_BASE, onClose }) => {
                 </div>
               )}
 
-              {/* قسم السوق */}
+              {/* قسم السوق الملكي */}
               {activeTab === 'market' && (
                 <div className="market-section">
-                  {/* نموذج النشر في السوق */}
+                  {/* نموذج النشر للأدمن والمستخدمين */}
                   <form className="market-upload-form gold-border" onSubmit={handleMarketUpload}>
-                    <h4>📣 انشر بضاعتك الآن</h4>
+                    <h4>📣 انشر بضاعتك الجديدة (يمكنك اختيار حتى 5 صور)</h4>
                     <textarea 
-                      placeholder="وصف المنتج..." 
+                      placeholder="وصف البضاعة بالتفصيل..." 
                       value={newPost.description} 
                       onChange={e => setNewPost({...newPost, description: e.target.value})}
                       required
                     />
-                    <input 
-                      type="text" placeholder="السعر..." 
-                      value={newPost.price} 
-                      onChange={e => setNewPost({...newPost, price: e.target.value})}
-                      required 
-                    />
-                    <input 
-                      type="file" accept="image/*" 
-                      onChange={e => setNewPost({...newPost, file: e.target.files[0]})}
-                      required
-                    />
-                    <button type="submit" className="gold-btn">تأكيد النشر</button>
+                    <div className="form-row">
+                        <input 
+                        type="text" placeholder="السعر (مثلاً: 500 جنيه)" 
+                        value={newPost.price} 
+                        onChange={e => setNewPost({...newPost, price: e.target.value})}
+                        required 
+                        />
+                        <input 
+                        type="file" multiple accept="image/*" 
+                        onChange={e => setNewPost({...newPost, files: e.target.files})}
+                        required
+                        />
+                    </div>
+                    <button type="submit" className="gold-btn">🚀 نشر البضاعة</button>
                   </form>
 
-                  {/* عرض المنشورات */}
+                  {/* شبكة عرض المنشورات */}
                   <div className="market-grid">
                     {marketPosts.map(post => (
                       <div key={post._id} className="market-item-card">
-                        <img src={post.imgUrl} alt="product" className="market-img" />
+                        <div className="post-header">
+                            <span className="post-uploader">👤 المالك: {post.uploader}</span>
+                            {(post.uploader === user.username || user.username === 'Admin_Mostafa') && (
+                            <button className="delete-post-btn" onClick={() => handleDeletePost(post._id)}>حذف 🗑️</button>
+                            )}
+                        </div>
+                        
+                        {/* حاوية الصور المتعددة */}
+                        <div className="post-images-slider scrollbar-none">
+                            {post.images && post.images.map((img, idx) => (
+                                <img key={idx} src={img} alt={`product-${idx}`} className="market-img-slide" />
+                            ))}
+                        </div>
+
                         <div className="market-info">
                           <p className="market-desc">{post.description}</p>
-                          <span className="market-price">💰 {post.price}</span>
-                          <span className="market-owner">بواسطة: {post.uploader}</span>
+                          <div className="market-footer">
+                            <span className="market-price">💰 {post.price}</span>
+                            <span className="market-date">{new Date(post.createdAt).toLocaleDateString()}</span>
+                          </div>
                         </div>
                       </div>
                     ))}
