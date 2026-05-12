@@ -6,8 +6,8 @@ const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cors = require('cors');
-const fs = require('fs'); // 🆕 مضافة لقراءة الملفات
-const path = require('path'); // 🆕 مضافة للتعامل مع المسارات
+const fs = require('fs'); 
+const path = require('path'); 
 
 const app = express();
 const server = http.createServer(app);
@@ -51,17 +51,31 @@ const MarketPost = mongoose.model('MarketPost', {
     createdAt: { type: Date, default: Date.now }
 });
 
+// 🆕 تعريف جدول المحادثات الفردية في MongoDB (لأرشفة ملفات JSON لاحقاً)
+const PrivateChat = mongoose.model('PrivateChat', {
+    participants: [String],
+    messages: [{ sender: String, text: String, timestamp: { type: Date, default: Date.now } }]
+});
+
+// 🆕 إعدادات المسارات المحلية للملفات
+const CHATS_DIR = path.join(__dirname, 'data', 'chats');
+const FRIENDS_FILE = path.join(__dirname, 'data', 'friends.json');
+
+// التأكد من وجود المجلدات محلياً
+if (!fs.existsSync(CHATS_DIR)) {
+    fs.mkdirSync(CHATS_DIR, { recursive: true });
+}
+
 // 🆕 دالة جلب المستخدمين من ملف JSON المحلي
 const getUsersFromFile = () => {
     try {
-        const filePath = path.join(__dirname, 'users.json');
-        if (fs.existsSync(filePath)) {
-            const data = fs.readFileSync(filePath, 'utf8');
+        if (fs.existsSync(FRIENDS_FILE)) {
+            const data = fs.readFileSync(FRIENDS_FILE, 'utf8');
             return JSON.parse(data);
         }
         return [];
     } catch (err) {
-        console.error("❌ خطأ في قراءة ملف users.json:", err);
+        console.error("❌ خطأ في قراءة ملف friends.json:", err);
         return [];
     }
 };
@@ -95,6 +109,41 @@ io.on('connection', async (socket) => {
             socket.emit('login_success', user); 
             socket.emit('init_data', { ads, chatHistory, user, stats: { totalUsers, activeUsers }, groups: userGroups, marketPosts });
         }
+    });
+
+    // 🆕 منطق إرسال رسالة خاصة وحفظها في ملف مع فحص الحجم
+    socket.on('sendPrivateMessage', async (data) => {
+        if (!socket.user) return;
+        const { targetFriend, text } = data;
+        const chatFileName = [socket.user.username, targetFriend].sort().join('_') + '.json';
+        const filePath = path.join(CHATS_DIR, chatFileName);
+        const MAX_SIZE_MB = 2;
+
+        // 1. فحص الحجم
+        if (fs.existsSync(filePath)) {
+            const stats = fs.statSync(filePath);
+            if (stats.size / (1024 * 1024) > MAX_SIZE_MB) {
+                return socket.emit('error_msg', 'حجم ملف المحادثة ممتلئ، سيتم الأرشفة قريباً');
+            }
+        }
+
+        // 2. هيكلة الرسالة مع التوقيت
+        const newMessage = {
+            sender: socket.user.username,
+            text: text,
+            timestamp: new Date().toISOString()
+        };
+
+        // 3. الحفظ في ملف JSON مستقل لكل صديقين
+        let chatData = { messages: [] };
+        if (fs.existsSync(filePath)) {
+            chatData = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        }
+        chatData.messages.push(newMessage);
+        fs.writeFileSync(filePath, JSON.stringify(chatData, null, 4));
+
+        // 4. إرسال للطرف الآخر إذا كان متصلاً (اختياري)
+        io.emit(`private_msg_${targetFriend}`, newMessage);
     });
 
     socket.on('create_group', async (data) => {
@@ -138,24 +187,33 @@ io.on('connection', async (socket) => {
     socket.on('disconnect', () => { activeUsers--; });
 });
 
-// --- [4] مسارات الـ API (المستخدمون والسوق) ---
+// --- [4] مسارات الـ API ---
 app.get('/api/users', async (req, res) => {
     try {
-        // 1. جلب المستخدمين من ملف JSON
         const fileUsers = getUsersFromFile();
-        
-        // 2. جلب المستخدمين من MongoDB
         const dbUsers = await User.find({}, 'username role friends');
-
-        // 3. دمج البيانات ومنع التكرار
         const allUsersMap = new Map();
         fileUsers.forEach(u => allUsersMap.set(u.username, { ...u, friends: u.friends || [] }));
         dbUsers.forEach(u => allUsersMap.set(u.username, u));
-
         const finalUsers = Array.from(allUsersMap.values());
         res.json(finalUsers);
     } catch (err) {
         res.status(500).json({ error: "فشل جلب المستخدمين" });
+    }
+});
+
+// 🆕 مسار جلب المحادثة الخاصة بملف JSON
+app.get('/api/private-chat/:friendName', async (req, res) => {
+    const { friendName } = req.params;
+    const { currentUser } = req.query;
+    const chatFileName = [currentUser, friendName].sort().join('_') + '.json';
+    const filePath = path.join(CHATS_DIR, chatFileName);
+
+    if (fs.existsSync(filePath)) {
+        const data = fs.readFileSync(filePath, 'utf-8');
+        res.json(JSON.parse(data));
+    } else {
+        res.json({ messages: [] });
     }
 });
 
@@ -173,21 +231,6 @@ app.post('/api/market/upload', upload.array('marketImages', 5), async (req, res)
         console.error(err);
         res.status(500).json({ success: false }); 
     }
-});
-
-app.delete('/api/market/delete/:id', async (req, res) => {
-    try {
-        const postId = req.params.id;
-        const requester = req.body.username;
-        const post = await MarketPost.findById(postId);
-        if (!post) return res.status(404).json({ success: false, message: "المنشور غير موجود" });
-        if (post.uploader === requester || requester === 'Admin_Mostafa') {
-            await MarketPost.findByIdAndDelete(postId);
-            res.json({ success: true, message: "تم الحذف بنجاح" });
-        } else {
-            res.status(403).json({ success: false, message: "ليس لديك صلاحية" });
-        }
-    } catch (err) { res.status(500).json({ success: false }); }
 });
 
 const PORT = process.env.PORT || 7860; 
