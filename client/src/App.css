@@ -84,36 +84,31 @@ body, html {
 /* --- 3. الهيدر المطور --- */
 .ouro-header { 
   position: relative; 
-  height: 80px;
-  background: rgba(0, 0, 0, 0.95);
-  color: white; 
   display: flex; 
-  justify-content: space-between; 
+  justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: 15px 30px;
-  border-bottom: 4px solid var(--gold-primary);
-  box-shadow: 0 5px 25px rgba(212, 175, 55, 0.2);
+  padding: 0 30px;
+  background: rgba(0, 0, 0, 0.95);
+  border-bottom: 5px solid var(--gold-primary);
   box-sizing: border-box;
   z-index: 1000;
-  overflow: visible !important; /* للسماح للوجو بالبروز للخارج */
-  padding-top: 400px;
-  margin-top: 5px;
-  margin-bottom: 600px; /* المسافة بين الهيدر وشريط الإعلانات
+  height: 100px; /* زيادة ارتفاع الهيدر للتناسب مع الفخامة الجديدة */
+  overflow: visible !important; /* ضروري لبروز اللوجو الضخم */
 }
 
 /* 👑 اللوجو العائم الكبير بين الهيدر والإعلانات */
 .royal-floating-logo {
   position: absolute;
   left: 50%;
-  top: 90px; /* يستقر بالضبط على الخط الفاصل */
-  transform: translate(-50%, -50%); /* يمركز اللوجو */
-  height: 400px; /* حجم كبير كما طلبت */
+  top: 70px; /* تموضعه ليبدأ من منتصف الهيدر وينزل لأسفل */
+  transform: translateX(-50%);
+  height: 400px; /* الحجم الذي طلبته */
   width: auto;
-  z-index: 1100; /* فوق الهيدر وفوق شريط الإعلانات */
-  filter: drop-shadow(0 0 25px var(--gold-primary));
-  transition: transform 0.4s ease;
-  pointer-events: none; /* لكي لا يعيق الضغط على العناصر خلفه */
+  z-index: 2000; /* ليكون فوق كل شيء */
+  filter: drop-shadow(0 0 40px var(--gold-primary));
+  pointer-events: none; /* لضمان القدرة على الضغط على ما خلفه */
+  transition: all 0.5s ease-in-out;
 }
 
 .header-center {
@@ -130,9 +125,9 @@ body, html {
 
 .welcome-msg {
     color: var(--gold-glow);
-    font-size: 1.2rem;
+    font-size: 1.5rem;
     font-weight: bold;
-    text-shadow: 0 0 10px var(--gold-primary);
+    text-shadow: 0 0 15px var(--gold-primary);
     text-align: center;
 }
 
@@ -184,7 +179,7 @@ body, html {
 
 /* حاوية الإعلانات الرئيسية أسفل الهيدر */
 .ads-slider-wrapper {
-  margin-top: 280px !important; /* مسافة كافية لكي يظهر اللوجو بوضوح */
+  margin-top: 350px !important; /* مسافة كافية لكي يظهر اللوجو بوضوح */
   background: rgba(15, 15, 15, 0.9);
   border-top: 1px solid rgba(212, 175, 55, 0.3);
   border-bottom: 2px solid var(--bronze-border);
