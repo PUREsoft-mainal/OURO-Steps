@@ -723,3 +723,20 @@ body, html {
   font-size: 10px;
   color: #666; 
 }
+
+.discovery-trigger-btn {
+  background: linear-gradient(45deg, #d4af37, #8e6d45);
+  color: #000;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 11px;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+  transition: 0.3s;
+}
+.discovery-trigger-btn:hover {
+  transform: scale(1.05);
+  background: #f9e295;
+}
