@@ -1,0 +1,21 @@
+.royal-user-card {
+  background: rgba(20, 20, 20, 0.9);
+  border: 1px solid var(--gold-primary);
+  padding: 10px 20px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-icon { font-size: 20px; }
+
+.username-label { font-size: 9px; color: #8e6d45; display: block; }
+
+.username-value { color: var(--gold-primary); font-weight: bold; }
+
+.royal-logout-btn {
+  background: #c0392b; color: white; border: none;
+  padding: 5px 12px; border-radius: 20px; cursor: pointer;
+  font-size: 11px; transition: 0.3s;
+}
