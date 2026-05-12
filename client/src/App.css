@@ -740,3 +740,29 @@ body, html {
   transform: scale(1.05);
   background: #f9e295;
 }
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  background: rgba(212, 175, 55, 0.1);
+}
+.delete-post-btn {
+  background: #ff4d4d;
+  border: none;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.post-images-container {
+  display: flex;
+  overflow-x: auto; /* للسماح بالتمرير بين الصور المتعددة */
+  gap: 5px;
+}
+.market-img-slide {
+  width: 100%;
+  flex-shrink: 0;
+  height: 200px;
+  object-fit: cover;
+}
