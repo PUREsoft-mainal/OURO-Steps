@@ -46,8 +46,17 @@ const DiscoveryStore = ({ user, socket, API_BASE, onClose }) => {
   }, [API_BASE, socket, user.username]);
 
   // تصفية القوائم (يمين ويسار)
-  const usersToDiscover = allUsers.filter(u => u.username !== user.username && !u.friends?.includes(user.username));
-  const myFriends = allUsers.filter(u => u.username !== user.username && u.friends?.includes(user.username));
+  // قائمة الاستكشاف: أي مستخدم ليس أنا وليس في قائمة أصدقائي
+  const usersToDiscover = allUsers.filter(u => 
+    u.username !== user.username && 
+    !(u.friends && u.friends.includes(user.username))
+  );
+
+  // قائمة أصدقائي: أي مستخدم أنا موجود في مصفوفة أصدقائه
+  const myFriends = allUsers.filter(u => 
+    u.username !== user.username && 
+    (u.friends && u.friends.includes(user.username))
+  );
 
   // دالة الرفع للسوق
   const handleMarketUpload = async (e) => {
