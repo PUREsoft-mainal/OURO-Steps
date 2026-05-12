@@ -21,24 +21,27 @@ body, html {
 
 /* --- 2. الحاويات والخلفية الرسمية --- */
 .app-container { 
-  min-height: 250px; 
+  width: 100%;
+  min-height: 100vh; /* الحد الأدنى هو طول الشاشة */
   background-size: cover; 
   background-attachment: fixed; 
   background-position: center;
   height: auto !important; /* يسمح لها بالتمدد للأسفل */
   background-color: #000;
-  display: flex !important; /* إلغاء الـ flex الأم لكي لا يضغط العناصر */
+  display: block !important; /* ترتيب العناصر بشكل رأسي طبيعي */
   overflow-y: visible !important; /* السماح بالتمرير الجانبي للمتصفح */
   flex-direction: column; 
 }
 
 .app-overlay {
-  min-height: 200vh;
+  min-height: 100vh;
+  width: 100%;
   background: rgba(0, 0, 0, 0.7); 
   height: auto !important;
   overflow-y: visible;  /* يضمن ظهور شريط التمرير الجانبي */
-  display: block !important;
   position: relative;
+  padding-bottom: 100px; /* مساحة أمان في نهاية الصفحة */
+  display: flex;
   flex-direction: column;
 }
 
@@ -502,11 +505,12 @@ body, html {
 .main-content { 
   display: flex !important; /* العودة للـ flex هنا فقط لتوزيع (يمين - وسط - يسار) */
   flex-grow: 5;
+  flex-shrink: 0; /* يمنع هذا الجزء من تقليص حجم اللوجو أو الهيدر */
   height: auto;
   overflow: hidden; 
   height: auto !important;
   padding: 5px;   /*التحكم فى حجم القائمتين الجانبيتين*/  margin-top: 50px;
-  margin-top: 5px;     /* هذه القيمة تبعد الشات والجانبين عن الهيدر والسقف */
+  margin-top: 50px;     /* هذه القيمة تبعد الشات والجانبين عن الهيدر والسقف */
   min-height: 800px; /* طول منطقة الشات لضمان الفخامة */
   gap: 20px;
 }
