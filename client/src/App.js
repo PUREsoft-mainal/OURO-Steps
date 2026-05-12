@@ -119,10 +119,11 @@ function App() {
           onOpenDiscovery={() => setShowDiscovery(true)} 
         />
         
-        {/* 🛠️ تم تصحيح zIndex هنا لضمان قبول Vercel للكود */}
-        <div className="ads-section-wrapper" style={{ marginTop: '320px', position: 'relative', zIndex: 50 }}>
+          {/* حذفنا الـ style المباشر واكتفينا بالكلاس */}
+        <div className="ads-section-wrapper">
           <AdSlider ads={ads} /> 
         </div>
+
 
         <main className="main-content" style={{ marginTop: '20px', display: 'flex', flexGrow: 1, gap: '20px', padding: '0 20px' }}>
           <GroupsSidebar 
