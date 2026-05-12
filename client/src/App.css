@@ -119,8 +119,8 @@ body, html {
 /* 👑 اللوجو العائم الكبير بين الهيدر والإعلانات */
 .royal-floating-logo {
   position: absolute !important;
-  left: 50%;
-  top: 70px; /* تموضعه ليبدأ من منتصف الهيدر وينزل لأسفل */
+  left: 50% !important;
+  top: 70px;  !important;/* تموضعه ليبدأ من منتصف الهيدر وينزل لأسفل */
   transform: translate(-50%, -50%) !important;
   height: 400px !important;  /* الحجم الذي طلبته */
   width: auto !important;
@@ -131,7 +131,7 @@ body, html {
   display: block !important;
   flex-shrink: 0 !important; /* يمنع المكونات الأخرى من تصغيره */
   min-height: 400px !important; /* يضمن بقاء الحجم كما طلبت */
-  z-index: 2500 !important; /* ليكون فوق الهيدر وشريط الإعلانات */
+  z-index: 2000 !important; /* ليكون فوق الهيدر وشريط الإعلانات */
 }
 
 .login-box .main-logo {
