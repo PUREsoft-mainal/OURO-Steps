@@ -10,7 +10,7 @@ const cors = require('cors');
 const app = express();
 const server = http.createServer(app);
 
-// 1. إعدادات السحاب (Cloudinary)
+// --- إعدادات السحاب (Cloudinary) ---
 cloudinary.config({
   cloud_name: 'Root', 
   api_key: '613142389192978',
@@ -26,31 +26,35 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage });
 
-// 2. الاتصال بقاعدة البيانات (MongoDB)
+// --- الاتصال بقاعدة البيانات (MongoDB) ---
 const mongoURI = "mongodb+srv://mostafa:01027411921@cluster0.kgw7td9.mongodb.net/ouro_db?retryWrites=true&w=majority";
 mongoose.connect(mongoURI).then(() => console.log("✅ متصل بـ MongoDB Atlas")).catch(err => console.log("❌ خطأ اتصال:", err));
 
-// 3. تعريف "الجداول" (Schemas)
-const User = mongoose.model('User', { username: String, password: String, role: String });
+// --- تعريف الجداول (Schemas) ---
+const User = mongoose.model('User', { 
+    username: String, 
+    password: String, 
+    role: String, 
+    friends: [String] // مصفوفة لأسماء الأصدقاء
+});
 const Chat = mongoose.model('Chat', { user: String, role: String, text: String, time: String });
 const Ad = mongoose.model('Ad', { imgUrl: String, phone: String, whatsapp: String, telegram: String, email: String });
+const Group = mongoose.model('Group', { name: String, owner: String, members: [String], createdAt: { type: Date, default: Date.now } });
 
-const Group = mongoose.model('Group', { 
-    name: String, 
-    owner: String, 
-    members: [String], 
-    createdAt: { type: Date, default: Date.now } 
+// جدول السوق الجديد
+const MarketPost = mongoose.model('MarketPost', {
+    uploader: String,
+    imgUrl: String,
+    description: String,
+    price: String,
+    createdAt: { type: Date, default: Date.now }
 });
 
 app.use(cors());
 app.use(express.json());
 
 const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-    credentials: true
-  },
+  cors: { origin: "*", methods: ["GET", "POST"], credentials: true },
   allowEIO3: true
 });
 
@@ -58,148 +62,90 @@ let activeUsers = 0;
 
 io.on('connection', async (socket) => {
     activeUsers++;
-    console.log("📡 مستخدم جديد حاول الاتصال...");
-
-    // 1. تسجيل الدخول والاشتراك
+    
+    // --- [1] نظام الدخول والبيانات ---
     socket.on('join', async (data) => {
-        console.log(`🔑 محاولة دخول للمستخدم: ${data.username}`);
         let user = await User.findOne({ username: data.username, password: data.password });
-        
         if (!user && data.username === 'Admin_Mostafa' && data.password === '123') {
-            user = await User.create({ username: 'Admin_Mostafa', password: '123', role: 'Admin' });
+            user = await User.create({ username: 'Admin_Mostafa', password: '123', role: 'Admin', friends: [] });
         }
-
         if (user) {
-            socket.user = user; // تخزين بيانات المستخدم في جلسة السوكيت
-            console.log(`✅ تم تأكيد هوية: ${user.username}`);
-            
+            socket.user = user;
             const ads = await Ad.find();
             const chatHistory = await Chat.find().limit(50);
             const totalUsers = await User.countDocuments();
             const userGroups = await Group.find({ members: user.username });
+            const marketPosts = await MarketPost.find().sort({ createdAt: -1 });
 
             socket.emit('login_success', user); 
-            socket.emit('init_data', { ads, chatHistory, user, stats: { totalUsers, activeUsers }, groups: userGroups });
-            io.emit('update_stats', { totalUsers, activeUsers }); // تحديث الجميع بالعدد الجديد
-        } else {
-            socket.emit('error_msg', 'خطأ في اسم المستخدم أو كلمة السر!');
+            socket.emit('init_data', { ads, chatHistory, user, stats: { totalUsers, activeUsers }, groups: userGroups, marketPosts });
         }
     });
 
-    socket.on('register', async (data) => {
-        try {
-            const existingUser = await User.findOne({ username: data.username });
-            if (existingUser) return socket.emit('error_msg', 'عذراً، هذا الاسم محجوز مسبقاً!');
-
-            const newUser = await User.create({ 
-                username: data.username, 
-                password: data.password, 
-                role: data.role || 'مستخدم' 
-            });
-
-            if (newUser) {
-                console.log(`🆕 مستخدم جديد سجل في المنصة: ${newUser.username}`);
-                socket.emit('register_success', newUser); 
-                const totalUsers = await User.countDocuments();
-                io.emit('update_stats', { totalUsers, activeUsers });
-            }
-        } catch (err) {
-            socket.emit('error_msg', 'حدث خطأ فني أثناء التسجيل');
-        }
-    });
-    // 3. إنشاء شات جديد (نسخة مطورة ومضمونة التفاعل)
+    // --- [2] نظام المجموعات (تعديل الانتقال التلقائي) ---
     socket.on('create_group', async (data) => {
-        console.log("🛠 استلام طلب إنشاء مجموعة باسم:", data.groupName);
         try {
-            let currentUser = socket.user;
-
-            // إجراء احتياطي: إذا فقد السوكيت بيانات المستخدم، نحاول استعادتها
-            if (!currentUser) {
-                console.log("⚠️ بيانات الجلسة مفقودة، نحاول البحث عن المستخدم...");
-                // نفترض أنك سترسل اسم المستخدم مع الطلب في المرات القادمة لزيادة الأمان
-                // لكن حالياً سنخبر المستخدم بالمشكلة بدلاً من الصمت
-                return socket.emit('error_msg', 'انتهت جلسة الدخول، يرجى إعادة تحميل الصفحة.');
-            }
-
+            if (!socket.user) return;
             const newGroup = await Group.create({
                 name: data.groupName,
-                owner: currentUser.username,
-                members: [currentUser.username]
+                owner: socket.user.username,
+                members: [socket.user.username]
             });
-
-            console.log(`✅ نجاح الإنشاء في MongoDB: ${newGroup.name}`);
-            
-            // جعل المنشئ ينضم للغرفة برمجياً
             socket.join(newGroup._id.toString());
-            
-            // إرسال النجاح للمنشئ
+            // نرسل الـ Group كامل للمنشئ ليعمل الانتقال في App.js
             socket.emit('new_group_success', newGroup);
-            
-            // تحديث القائمة عند الجميع فوراً ليروا المجموعة الجديدة
-            io.emit('added_to_group', { 
-                groupId: newGroup._id, 
-                groupName: newGroup.name, 
-                targetUser: currentUser.username 
-            });
-
-        } catch (err) {
-            console.error("❌ خطأ في السيرفر أثناء الإنشاء:", err);
-            socket.emit('error_msg', 'فشل تقني في إنشاء المجموعة');
-        }
+        } catch (err) { socket.emit('error_msg', 'فشل إنشاء المجموعة'); }
     });
 
-    socket.on('add_member', async (data) => {
+    // --- [3] نظام الأصدقاء (جديد) ---
+    socket.on('toggle_friend', async (data) => {
         try {
-            const group = await Group.findById(data.groupId);
-            if (group && !group.members.includes(data.targetUser)) {
-                group.members.push(data.targetUser);
-                await group.save();
-                
-                io.emit('added_to_group', { groupId: group._id, groupName: group.name, targetUser: data.targetUser });
-                socket.emit('error_msg', `تمت إضافة ${data.targetUser} بنجاح!`);
+            if (!socket.user) return;
+            const currentUser = await User.findOne({ username: socket.user.username });
+            const targetUser = data.targetUser;
+
+            if (currentUser.friends.includes(targetUser)) {
+                // إلغاء الصداقة
+                currentUser.friends = currentUser.friends.filter(name => name !== targetUser);
+                await currentUser.save();
+                socket.emit('friend_updated', { targetUser, status: 'add', message: 'تم إلغاء الصداقة' });
+            } else {
+                // إضافة صديق
+                currentUser.friends.push(targetUser);
+                await currentUser.save();
+                socket.emit('friend_updated', { targetUser, status: 'remove', message: 'تمت إضافة الصديق' });
             }
-        } catch (err) {
-            socket.emit('error_msg', 'فشل إضافة العضو');
-        }
+        } catch (err) { console.error(err); }
     });
 
+    // ... (بقية أكواد الرسائل كما هي) ...
     socket.on('sendMessage', async (data) => {
         if (!socket.user) return;
-        const msgText = typeof data === 'string' ? data : data.text;
-        const msg = { 
-            user: socket.user.username, 
-            role: socket.user.role, 
-            text: msgText, 
-            time: new Date().toLocaleTimeString() 
-        };
+        const msg = { user: socket.user.username, role: socket.user.role, text: data.text || data, time: new Date().toLocaleTimeString() };
         await Chat.create(msg);
         io.emit('message', msg);
     });
 
-    socket.on('disconnect', () => { 
-        activeUsers--; 
-        io.emit('update_stats', { activeUsers }); // تحديث العدد عند الجميع عند الخروج
-    });
+    socket.on('disconnect', () => { activeUsers--; });
 });
 
-app.post('/api/upload-ad', upload.single('adImage'), async (req, res) => {
+// --- [4] مسارات الـ API للسوق والمستخدمين ---
+app.get('/api/users', async (req, res) => {
+    const users = await User.find({}, 'username role friends');
+    res.json(users);
+});
+
+app.post('/api/market/upload', upload.single('marketImage'), async (req, res) => {
     try {
-        const newAd = await Ad.create({
+        const newPost = await MarketPost.create({
+            uploader: req.body.username,
             imgUrl: req.file.path,
-            phone: req.body.phone,
-            whatsapp: req.body.whatsapp,
-            telegram: req.body.telegram,
-            email: req.body.email
+            description: req.body.description,
+            price: req.body.price
         });
-        const allAds = await Ad.find();
-        io.emit('update_ads', allAds);
-        res.json({ success: true, ad: newAd });
-    } catch (err) { 
-        res.status(500).json({ success: false }); 
-    }
+        res.json({ success: true, post: newPost });
+    } catch (err) { res.status(500).json({ success: false }); }
 });
 
 const PORT = process.env.PORT || 7860; 
-server.listen(PORT, "0.0.0.0", () => {
-    console.log(`🚀 السيرفر يعمل الآن على بورت ${PORT}`);
-});
+server.listen(PORT, "0.0.0.0", () => { console.log(`🚀 السيرفر يعمل على بورت ${PORT}`); });
