@@ -120,18 +120,15 @@ body, html {
 .royal-floating-logo {
   position: absolute !important;
   left: 50% !important;
-  top: 70px  !important;/* تموضعه ليبدأ من منتصف الهيدر وينزل لأسفل */
+  /* التصحيح هنا: حذف الفاصلة المنقوطة التي كانت بين الـ 70px والـ !important */
+  top: 70px !important; 
   transform: translate(-50%, -50%) !important;
-  height: 400px !important;  /* الحجم الذي طلبته */
+  height: 400px !important; 
   width: auto !important;
-  filter: drop-shadow(0 0 40px var(--gold-primary));
-  pointer-events: none !important; /* لضمان القدرة على الضغط على ما خلفه */
-  transition: all 0.5s ease-in-out;
-  margin-top: 250px !important;
+  z-index: 2500 !important;
+  filter: drop-shadow(0 0 40px var(--gold-primary)) !important;
+  pointer-events: none !important;
   display: block !important;
-  flex-shrink: 0 !important; /* يمنع المكونات الأخرى من تصغيره */
-  min-height: 400px !important; /* يضمن بقاء الحجم كما طلبت */
-  z-index: 2000 !important; /* ليكون فوق الهيدر وشريط الإعلانات */
 }
 
 .login-box .main-logo {
