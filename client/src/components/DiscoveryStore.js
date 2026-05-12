@@ -44,6 +44,7 @@ const DiscoveryStore = ({ user, socket, API_BASE, onClose }) => {
     if (!newPost.file) return alert("الرجاء اختيار صورة المنتج");
 
     const formData = new FormData();
+    Array.from(newPost.files).forEach(file => formData.append('marketImages', file));
     formData.append('marketImage', newPost.file);
     formData.append('description', newPost.description);
     formData.append('price', newPost.price);
@@ -59,7 +60,43 @@ const DiscoveryStore = ({ user, socket, API_BASE, onClose }) => {
     } catch (err) { alert("❌ فشل الرفع للسوق"); }
   };
 
+  const handleDeletePost = async (postId) => {
+  if (!window.confirm("هل أنت متأكد من حذف هذا المنشور؟")) return;
+  try {
+    const res = await axios.delete(`${API_BASE}/api/market/delete/${postId}`, { data: { username: user.username } });
+    if (res.data.success) {
+      setMarketPosts(prev => prev.filter(p => p._id !== postId));
+    }
+  } catch (err) { alert("فشل الحذف"); }
+};
+
   return (
+    <form className="market-upload-form" onSubmit={handleMarketUpload}>
+  <textarea placeholder="وصف البضاعة..." required onChange={e => setNewPost({...newPost, description: e.target.value})} />
+  <input type="text" placeholder="السعر..." required onChange={e => setNewPost({...newPost, price: e.target.value})} />
+  <input type="file" multiple accept="image/*" onChange={e => setNewPost({...newPost, files: e.target.files})} />
+  <button type="submit" className="gold-btn">نشر</button>
+</form>
+
+<div className="market-grid">
+  {marketPosts.map(post => (
+    <div key={post._id} className="market-item-card">
+      <div className="post-header">
+        <span className="post-uploader">👤 {post.uploader}</span>
+        {(post.uploader === user.username || user.username === 'Admin_Mostafa') && (
+          <button className="delete-post-btn" onClick={() => handleDeletePost(post._id)}>حذف</button>
+        )}
+      </div>
+      <div className="post-images-container">
+         {post.images.map((img, idx) => <img key={idx} src={img} className="market-img-slide" />)}
+      </div>
+      <div className="market-info">
+        <p>{post.description}</p>
+        <span className="market-price">💰 {post.price}</span>
+      </div>
+    </div>
+  ))}
+</div>
     <div className="discovery-overlay" onClick={onClose}>
       <div className="discovery-window gold-border" onClick={e => e.stopPropagation()}>
         
