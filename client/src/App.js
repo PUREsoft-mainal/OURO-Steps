@@ -81,6 +81,20 @@ function App() {
     socket.emit(action, { username: user.username, password: password, role: user.role || 'مستخدم' });
   };
 
+  const addFriendAndStartChat = async (friendInfo) => {
+    try {
+        const response = await fetch('http://localhost:5000/api/add-friend', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(friendInfo)
+        });
+        const data = await response.json();
+        console.log("خطة الدردشة الفردية بدأت:", data.message);
+    } catch (error) {
+        console.error("خطأ في بدء الإعداد:", error);
+    }
+};
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
