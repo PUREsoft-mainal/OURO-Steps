@@ -126,6 +126,13 @@ io.on('connection', async (socket) => {
 app.get('/api/users', async (req, res) => {
     const users = await User.find({}, 'username role friends');
     res.json(users);
+      try {
+        // جلب كل المستخدمين مع الحقول المطلوبة فقط للأمان
+        const users = await User.find({}, 'username role friends');
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ error: "فشل جلب المستخدمين" });
+    }
 });
 
 // 🆕 مسار رفع بضاعة جديدة (يدعم حتى 5 صور)
