@@ -10,7 +10,7 @@ const cors = require('cors');
 const app = express();
 const server = http.createServer(app);
 
-// --- إعدادات السحاب (Cloudinary) ---
+// --- [1] إعدادات السحاب (Cloudinary) ---
 cloudinary.config({
   cloud_name: 'Root', 
   api_key: '613142389192978',
@@ -26,25 +26,25 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage });
 
-// --- الاتصال بقاعدة البيانات (MongoDB) ---
+// --- [2] الاتصال بقاعدة البيانات (MongoDB Atlas) ---
 const mongoURI = "mongodb+srv://mostafa:01027411921@cluster0.kgw7td9.mongodb.net/ouro_db?retryWrites=true&w=majority";
 mongoose.connect(mongoURI).then(() => console.log("✅ متصل بـ MongoDB Atlas")).catch(err => console.log("❌ خطأ اتصال:", err));
 
-// --- تعريف الجداول (Schemas) ---
+// --- [3] تعريف الجداول (Schemas) ---
 const User = mongoose.model('User', { 
     username: String, 
     password: String, 
     role: String, 
-    friends: [String] // مصفوفة لأسماء الأصدقاء
+    friends: [String] 
 });
 const Chat = mongoose.model('Chat', { user: String, role: String, text: String, time: String });
 const Ad = mongoose.model('Ad', { imgUrl: String, phone: String, whatsapp: String, telegram: String, email: String });
 const Group = mongoose.model('Group', { name: String, owner: String, members: [String], createdAt: { type: Date, default: Date.now } });
 
-// جدول السوق الجديد
+// 🆕 تطوير جدول السوق ليدعم مصفوفة من الصور
 const MarketPost = mongoose.model('MarketPost', {
     uploader: String,
-    imgUrl: String,
+    images: [String], // مصفوفة لتخزين روابط الصور المتعددة
     description: String,
     price: String,
     createdAt: { type: Date, default: Date.now }
@@ -63,7 +63,6 @@ let activeUsers = 0;
 io.on('connection', async (socket) => {
     activeUsers++;
     
-    // --- [1] نظام الدخول والبيانات ---
     socket.on('join', async (data) => {
         let user = await User.findOne({ username: data.username, password: data.password });
         if (!user && data.username === 'Admin_Mostafa' && data.password === '123') {
@@ -82,7 +81,6 @@ io.on('connection', async (socket) => {
         }
     });
 
-    // --- [2] نظام المجموعات (تعديل الانتقال التلقائي) ---
     socket.on('create_group', async (data) => {
         try {
             if (!socket.user) return;
@@ -92,12 +90,10 @@ io.on('connection', async (socket) => {
                 members: [socket.user.username]
             });
             socket.join(newGroup._id.toString());
-            // نرسل الـ Group كامل للمنشئ ليعمل الانتقال في App.js
             socket.emit('new_group_success', newGroup);
         } catch (err) { socket.emit('error_msg', 'فشل إنشاء المجموعة'); }
     });
 
-    // --- [3] نظام الأصدقاء (جديد) ---
     socket.on('toggle_friend', async (data) => {
         try {
             if (!socket.user) return;
@@ -105,12 +101,10 @@ io.on('connection', async (socket) => {
             const targetUser = data.targetUser;
 
             if (currentUser.friends.includes(targetUser)) {
-                // إلغاء الصداقة
                 currentUser.friends = currentUser.friends.filter(name => name !== targetUser);
                 await currentUser.save();
                 socket.emit('friend_updated', { targetUser, status: 'add', message: 'تم إلغاء الصداقة' });
             } else {
-                // إضافة صديق
                 currentUser.friends.push(targetUser);
                 await currentUser.save();
                 socket.emit('friend_updated', { targetUser, status: 'remove', message: 'تمت إضافة الصديق' });
@@ -118,7 +112,6 @@ io.on('connection', async (socket) => {
         } catch (err) { console.error(err); }
     });
 
-    // ... (بقية أكواد الرسائل كما هي) ...
     socket.on('sendMessage', async (data) => {
         if (!socket.user) return;
         const msg = { user: socket.user.username, role: socket.user.role, text: data.text || data, time: new Date().toLocaleTimeString() };
@@ -129,22 +122,48 @@ io.on('connection', async (socket) => {
     socket.on('disconnect', () => { activeUsers--; });
 });
 
-// --- [4] مسارات الـ API للسوق والمستخدمين ---
+// --- [4] مسارات الـ API (المستخدمون والسوق) ---
 app.get('/api/users', async (req, res) => {
     const users = await User.find({}, 'username role friends');
     res.json(users);
 });
 
-app.post('/api/market/upload', upload.single('marketImage'), async (req, res) => {
+// 🆕 مسار رفع بضاعة جديدة (يدعم حتى 5 صور)
+app.post('/api/market/upload', upload.array('marketImages', 5), async (req, res) => {
     try {
+        const imageUrls = req.files.map(file => file.path); // جلب روابط كل الصور المرفوعة
         const newPost = await MarketPost.create({
             uploader: req.body.username,
-            imgUrl: req.file.path,
+            images: imageUrls,
             description: req.body.description,
             price: req.body.price
         });
         res.json({ success: true, post: newPost });
-    } catch (err) { res.status(500).json({ success: false }); }
+    } catch (err) { 
+        console.error(err);
+        res.status(500).json({ success: false }); 
+    }
+});
+
+// 🆕 مسار حذف منشور من السوق (للصاحب أو الأدمن فقط)
+app.delete('/api/market/delete/:id', async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const requester = req.body.username;
+        const post = await MarketPost.findById(postId);
+        
+        if (!post) return res.status(404).json({ success: false, message: "المنشور غير موجود" });
+
+        // التحقق من الصلاحية
+        if (post.uploader === requester || requester === 'Admin_Mostafa') {
+            await MarketPost.findByIdAndDelete(postId);
+            res.json({ success: true, message: "تم الحذف بنجاح" });
+        } else {
+            res.status(403).json({ success: false, message: "ليس لديك صلاحية لحذف هذا المنشور" });
+        }
+    } catch (err) { 
+        res.status(500).json({ success: false }); 
+    }
 });
 
 const PORT = process.env.PORT || 7860; 
