@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import StatsBar from './StatsBar';
+import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
 const Header = ({ activeUsers, totalUsers, user, onOpenDiscovery }) => {
   const [showCS, setShowCS] = useState(false);
