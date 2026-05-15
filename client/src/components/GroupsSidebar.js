@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
 const GroupsSidebar = ({ groups, user, socket, currentGroup, onJoinRoom, triggerCreate }) => {
   // حالة لتخزين بيانات التواصل الاختيارية (الإعلانات)
