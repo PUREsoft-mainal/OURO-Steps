@@ -1,5 +1,6 @@
 import React from 'react';
 import axios from 'axios';
+import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
 const GroupsSidebar = ({ groups, onCreateGroup, user, socket, currentGroup, onJoinRoom }) => {
   
