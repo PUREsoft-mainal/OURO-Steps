@@ -446,7 +446,7 @@ body, html {
   flex-direction: column; 
   align-items: center; 
   gap: 4px; 
-  width: 350px; 
+  width: 250px; 
   border: 5px solid var(--gold-primary);
   box-shadow: 0 0 60px rgba(212, 175, 55, 0.3);
   text-align: center;
