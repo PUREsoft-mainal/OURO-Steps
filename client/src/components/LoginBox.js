@@ -1,4 +1,5 @@
 import React from 'react';
+import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
 const LoginBox = ({ isSignUp, setIsSignUp, user, setUser, password, setPassword, handleAction }) => {
   
