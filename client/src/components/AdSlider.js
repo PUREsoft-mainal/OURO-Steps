@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
 const AdSlider = ({ ads }) => {
   const [selectedAd, setSelectedAd] = useState(null);
