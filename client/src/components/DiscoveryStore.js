@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
 const DiscoveryStore = ({ user, socket, API_BASE, onClose }) => {
   const [activeTab, setActiveTab] = useState('friends'); 
