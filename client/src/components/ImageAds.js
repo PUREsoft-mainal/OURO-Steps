@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
 const ImageAds = ({ ads }) => {
   const scrollRef = useRef(null);
