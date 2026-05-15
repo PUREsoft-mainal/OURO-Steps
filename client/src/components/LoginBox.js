@@ -12,7 +12,7 @@ const LoginBox = ({ isSignUp, setIsSignUp, user, setUser, password, setPassword,
 
   return (
     <div className="login-box" style={{ zIndex: 100, position: 'relative' }}>
-      <img src="/assets/logo.png" className="login-box-logo" alt="OURO" />
+      <img src="/assets/logo.png" className="login-box" alt="OURO" />
       <h2 style={{color: '#d4af37'}}>{isSignUp ? "إنشاء حساب جديد" : "دخول المنصة الملكية"}</h2>
       
       <form onSubmit={onFormSubmit}>
