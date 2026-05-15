@@ -1,4 +1,5 @@
 import React from 'react';
+import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
 const StatsBar = ({ activeCount, totalCount }) => {
   return (
