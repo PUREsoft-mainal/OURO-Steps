@@ -3,18 +3,11 @@ import axios from 'axios';
 import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
 const PrayerWidget = ({ socket }) => {
-// 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
-const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
+  // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
+  const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
-// تفعيل اتصال السوكت المشفر (WSS) ليعمل مع جدار الحماية السحابي
-const socket = io(API_BASE, { 
-  transports: ['polling', 'websocket'],
-  secure: true,
-  path: '/socket.io', // التأكيد على مسار البروكسي السحابي
-  reconnectionAttempts: 10,
-  reconnectionDelay: 2000,
-  rejectUnauthorized: false
-});
+  // 🔥 [تم التطهير والإصلاح] تم حذف كود حجز السوكت المكرر (const socket = io) نهائياً لمنع الكراش وحظر الـ CORS
+  // المكون سيعتمد الآن مباشرة وبسلاسة على الـ socket الممرر بالأعلى والمشفر من الـ App.js
   
   const [times, setTimes] = useState({ fajr: '', dhuhr: '', asr: '', maghrib: '', isha: '' });
   const [currentAdhan, setCurrentAdhan] = useState(""); 
@@ -29,23 +22,25 @@ const socket = io(API_BASE, {
         const res = await axios.get(`${API_BASE}/api/prayer-times`);
         setTimes(res.data || {});
       } catch (err) {
-        console.error("خطأ جلب المواقيت الفلكية:", err);
+        console.error("خطأ جلب المواقيت الفلكية السحابية:", err);
       }
     };
     fetchTimes();
 
-    // 🔊 الاستماع اللحظي لإشارة البث الفوري وتشغيل الأذان عند الجميع معاً
-    socket.on('trigger_adhan_broadcast', (data) => {
-        setCurrentAdhan(data.prayerName);
-        if (audioRef.current) {
-            audioRef.current.currentTime = 0;
-            audioRef.current.volume = isMuted ? 0 : volume;
-            audioRef.current.play().catch(e => console.log("نقرة المستخدم تضمن تفعيل تشغيل الأذان تلقائياً."));
-        }
-    });
+    // 🔊 الاستماع اللحظي لإشارة البث الفوري وتشغيل الأذان عند الجميع معاً سحابياً
+    if (socket) {
+      socket.on('trigger_adhan_broadcast', (data) => {
+          setCurrentAdhan(data.prayerName);
+          if (audioRef.current) {
+              audioRef.current.currentTime = 0;
+              audioRef.current.volume = isMuted ? 0 : volume;
+              audioRef.current.play().catch(e => console.log("نقرة المستخدم تضمن تفعيل تشغيل الأذان تلقائياً."));
+          }
+      });
+    }
 
     return () => {
-        socket.off('trigger_adhan_broadcast');
+        if (socket) socket.off('trigger_adhan_broadcast');
     };
   }, [socket, isMuted, volume]);
 
@@ -117,6 +112,4 @@ const socket = io(API_BASE, {
   );
 };
 
-// 🔥 [السطر الجوهري لحل مشكلة الـ undefined واختفاء الخطأ كلياً]
-export default PrayerWidget; 
-
+export default PrayerWidget;
