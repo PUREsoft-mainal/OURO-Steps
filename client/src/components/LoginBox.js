@@ -3,24 +3,25 @@ import '../App.css'; // استدعاء ملف التنسيق الشامل ليع
 
 const LoginBox = ({ isSignUp, setIsSignUp, user, setUser, password, setPassword, handleAction }) => {
   
-  // دالة وسيطة للتأكد من أن الضغط يعمل
+  // دالة وسيطة للتأكد من أن الضغط يعمل واختبار المدخلات محلياً
   const onFormSubmit = (e) => {
     e.preventDefault();
-    console.log("الزر استجاب! البيانات المرسلة:", user.username, password);
-    handleAction(e); // استدعاء الدالة الأصلية من App.js
+    console.log("🚀 تم الضغط على زر الدخول المحلي! البيانات المستهدفة:", user.username);
+    handleAction(e); // استدعاء الدالة الأصلية من App.js لتوجيه إشارة السوكيت المحلي
   };
 
   return (
-    <div className="login-box" style={{ zIndex: 100, position: 'relative' }}>
-      <img src="/assets/logo.png" className="login-box" alt="OURO" />
-      <h2 style={{color: '#d4af37'}}>{isSignUp ? "إنشاء حساب جديد" : "دخول المنصة الملكية"}</h2>
+    <div className="login-box-wrapper">
+<img src="/assets/logo.png" className="main-logo" alt="OURO" style={{ width: '320px', height: 'auto' }} />
+
+      <h2 className="login-title">{isSignUp ? "إنشاء حساب ملكي جديد" : "دخول المنصة المحلية"}</h2>
       
       <form onSubmit={onFormSubmit}>
-        <div style={{display:'flex', flexDirection:'column', gap:'15px'}}>
+        <div className="login-fields-container">
             <input 
               type="text"
               placeholder="اسم المستخدم" 
-              value={user.username || ''}
+              value={user?.username || ''}
               onChange={e => setUser({...user, username: e.target.value})} 
               required 
             />
@@ -34,29 +35,28 @@ const LoginBox = ({ isSignUp, setIsSignUp, user, setUser, password, setPassword,
             
             {isSignUp && (
               <select 
-                value={user.role || ''} 
+                value={user?.role || ''} 
                 onChange={e => setUser({...user, role: e.target.value})} 
                 required
               >
                 <option value="">اختر التخصص</option>
                 <option value="مبرمج">💻 مبرمج</option>
                 <option value="تاجر">💰 تاجر</option>
-                <option value="other">✍️ أخرى</option>
+                <option value="مستخدم">✍️ مستخدم عام</option>
               </select>
             )}
 
             <button 
               type="submit" 
               className="login-btn"
-              style={{cursor: 'pointer', pointerEvents: 'auto'}}
             >
-              {isSignUp ? "تأكيد التسجيل السحابي" : "دخول آمن للمنصة"}
+              {isSignUp ? "تأكيد التسجيل المحلي" : "دخول آمن للمنصة"}
             </button>
         </div>
       </form>
 
-      <p onClick={() => setIsSignUp(!isSignUp)} style={{cursor:'pointer', color:'#d4af37', marginTop:'20px'}}>
-        {isSignUp ? "لديك حساب؟ سجل دخولك" : "ليس لديك حساب؟ أنشئ هويتك"}
+      <p onClick={() => setIsSignUp(!isSignUp)} className="login-toggle-text">
+        {isSignUp ? "لديك حساب بالفعل؟ سجل دخولك من هنا" : "ليس لديك حساب؟ أنشئ هويتك الآن"}
       </p>
     </div>
   );

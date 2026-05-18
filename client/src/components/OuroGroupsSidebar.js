@@ -2,8 +2,9 @@ import React from 'react';
 import axios from 'axios';
 import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
-const GroupsSidebar = ({ groups, onCreateGroup, user, socket, currentGroup, onJoinRoom }) => {
-  
+const GroupsSidebar = ({ groups, onCreateGroup, user, currentGroup, onJoinRoom }) => {
+  const API_BASE = "http://127.0.0.1:5050";
+
   // دالة التعامل مع رفع صورة الإعلان
   const handleAdUpload = async (e) => {
     const file = e.target.files[0];
@@ -16,13 +17,16 @@ const GroupsSidebar = ({ groups, onCreateGroup, user, socket, currentGroup, onJo
     formData.append('link', link);
 
     try {
-      // إرسال الصورة للسيرفر عبر المسار الذي أنشأناه
-      await axios.post('https://puresoft-mainal-ouro-steps.hf.space', formData, {
+      // تصحيح المسار ليتجه إلى api/upload-ad المعتمد بالسيرفر المحلي
+      const response = await axios.post(`${API_BASE}/api/upload-ad`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      alert("✅ تم رفع الإعلان بنجاح وسيظهر للجميع فوراً!");
+      if (response.data && response.data.success) {
+        alert("✅ تم رفع الإعلان بنجاح وسيظهر للجميع فوراً!");
+        e.target.value = ""; 
+      }
     } catch (error) {
-      console.error("خطأ في رفع الإعلان:", error);
+      console.error("خطأ في رفع الإعلان المحلي:", error);
       alert("❌ فشل رفع الإعلان، تأكد من اتصال السيرفر.");
     }
   };
@@ -36,22 +40,21 @@ const GroupsSidebar = ({ groups, onCreateGroup, user, socket, currentGroup, onJo
       </button>
 
       <div className="groups-list">
-        {groups.map((g, i) => (
+        {(groups || []).map((g, i) => (
           <div 
             key={g.id || i} 
             className={`group-item ${currentGroup === g.id ? 'active-group' : ''}`}
-            onClick={() => onJoinRoom(g.id)}
+            onClick={() => onJoinRoom && onJoinRoom(g.id)}
           >
             {g.name}
           </div>
         ))}
       </div>
 
-      {/* قسم الأدمن المطور لرفع الصور */}
-      {user && user.username === 'Admin_Mostafa' && (
-        <div className="admin-controls" style={{ marginTop: '20px', borderTop: '1px solid var(--bronze-border)', paddingTop: '15px' }}>
+      {/* حماية كائن الأدمن لضمان عدم توقف الصفحة وفحص الاسم والرتبة معاً */}
+      {user && (user.username === 'Admin_Mostafa' || user.role === 'Admin') && (
+        <div className="admin-controls" style={{ marginTop: '20px', borderTop: '1px solid var(--border-glass)', paddingTop: '15px' }}>
           
-          {/* حقل رفع ملف مخفي */}
           <input 
             type="file" 
             id="ad-upload-input" 
@@ -65,7 +68,7 @@ const GroupsSidebar = ({ groups, onCreateGroup, user, socket, currentGroup, onJo
           </button>
           
           <p style={{ fontSize: '10px', color: '#8e6d45', marginTop: '5px' }}>
-            (سيظهر الإعلان في المربعات العلوية 20×20)
+            (سيظهر الإعلان في شريط الإعلانات التفاعلي علوياً)
           </p>
         </div>
       )}
