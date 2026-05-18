@@ -3,7 +3,15 @@ import '../App.css'; // استدعاء ملف التنسيق الشامل ليع
 
 const ChatArea = ({ chat, currentUser, msg, setMsg, socket, currentGroup }) => {
   const messagesEndRef = useRef(null);
-  const API_BASE = "http://127.0.0.1:5050";
+// 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
+const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
+
+// تفعيل اتصال السوكت المشفر (WSS) ليعمل مع جدار الحماية السحابي
+const socket = io(API_BASE, { 
+  transports: ['websocket', 'polling'],
+  secure: true,
+  rejectUnauthorized: false
+});
 
   // دالة للنزول التلقائي إلى أسفل المحادثة عند استقبال رسالة جديدة
   const scrollToBottom = () => {
