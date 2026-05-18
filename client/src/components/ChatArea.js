@@ -113,8 +113,10 @@ const ChatArea = ({ chat, currentUser, msg, setMsg, socket, currentGroup }) => {
               <span className="msg-time">{m.time}</span>
             </div>
             <div className="msg-text-content" style={{ paddingRight: '36px', wordBreak: 'break-word' }}>
-              {m.text}
+              {/* 👑 حماية وفطنة برمجية: نتحقق هل text عبارة عن كائن أم نص صافي، لنطبع الحقل الداخلي الصافي بدقة بدون كراش */}
+              {typeof m.text === 'object' && m.text !== null ? m.text.text : m.text}
             </div>
+
           </div>
         ))}
         {/* مرجع وهمي في نهاية القائمة لتوجيه خاصية النزول التلقائي */}
