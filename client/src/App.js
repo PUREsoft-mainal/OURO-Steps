@@ -71,7 +71,15 @@ function App() {
     socket.on('init_data', (data) => { 
       if (data.user) {
         setAds(data.ads || []); 
-        setChat(data.chatHistory || []);
+        
+        // 👑 فِطنة الفرز الملكية: تصفية وتطهير تاريخ المحادثة بالكامل قبل حقنه في الـ State لمنع خطأ #31 نهائياً
+        const sanitizedHistory = (data.chatHistory || []).map(m => ({
+          ...m,
+          // التحقق برمجياً: لو النص مخزن كـ كائن Object، نقوم بفك ضغطه واستخراج النص الصافي منه لحماية الـ React
+          text: typeof m.text === 'object' && m.text !== null ? (m.text.text || JSON.stringify(m.text)) : m.text
+        }));
+        
+        setChat(sanitizedHistory); // حقن التاريخ المصفى والمأمن سحابياً بنجاح
         setUser(data.user);
         if (data.groups) setGroups(data.groups); 
         if (data.stats) { 
@@ -81,6 +89,7 @@ function App() {
         setIsLogged(true); 
       }
     });
+
 
     socket.on('update_stats', (data) => { 
       setTotalUsers(data.totalUsers); 
