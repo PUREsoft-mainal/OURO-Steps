@@ -109,10 +109,6 @@ app.use(cors({ origin: "*", methods: ["GET", "POST", "DELETE"], credentials: tru
 app.use(express.json());
 app.use('/uploads', express.static(UPLOADS_DIR));
 
-const io = new Server(server, {
-    cors: { origin: "*", methods: ["GET", "POST"], credentials: true },
-    allowEIO3: true
-});
 
 let activeUsers = 0;
 
