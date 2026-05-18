@@ -1,15 +1,19 @@
 FROM node:18
 WORKDIR /app
 
-# نسخ كل الملفات
-COPY . .
+# نسخ ملف الإعدادات من داخل مجلد السيرفر
+COPY server/package*.json ./
 
 # تثبيت المكتبات
 RUN npm install
 
-# إعدادات البورت
+# نسخ كل ملفات المشروع
+COPY . .
+
+# تشغيل السيرفر من مساره الصحيح
+# Hugging Face يستخدم بورت 7860 تلقائياً
 ENV PORT=7860
 EXPOSE 7860
 
-# أمر تشغيل مرن: سيبحث عن server.js في المجلد الرئيسي أولاً، ثم داخل مجلد server
-CMD ["sh", "-c", "if [ -f server.js ]; then node server.js; else node server/server.js; fi"]
+CMD ["node", "server/server.js"]
+
