@@ -30,11 +30,16 @@ const UPLOADS_DIR = path.join('/tmp', 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 app.use('/uploads', express.static(UPLOADS_DIR));
 
+// السطور من 33 إلى 36 تقريباً (أعلى الملف)
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, UPLOADS_DIR),
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
 });
-const upload = multer({ storage });
+const upload = multer({ storage }); // تأكيد تفعيل الحزمة هنا مرة واحدة فقط في رأس الملف
+
 
 // تهيئة السوكيت (Socket.io) ليدعم الاتصالات السحابية والـ WebSockets المشفرة (WSS)
 const io = new Server(server, {
@@ -99,15 +104,6 @@ const checkAndCleanChatSize = (filePath) => {
     }
 };
 
-// إعداد جلب وحفظ الملفات المرفوعة محلياً داخل مجلد uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, UPLOADS_DIR),
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-});
-const upload = multer({ storage });
 
 app.use(cors({ origin: "*", methods: ["GET", "POST", "DELETE"], credentials: true }));
 app.use(express.json());
