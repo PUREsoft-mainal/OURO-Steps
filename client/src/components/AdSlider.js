@@ -1,8 +1,16 @@
 import React, { useState, useRef } from 'react';
 import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
-// النطاق المحلي المعتمد للمشروع
-const API_BASE = "http://127.0.0.1:5050";
+// 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
+const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
+
+// تفعيل اتصال السوكت المشفر (WSS) ليعمل مع جدار الحماية السحابي
+const socket = io(API_BASE, { 
+  transports: ['websocket', 'polling'],
+  secure: true,
+  rejectUnauthorized: false
+});
+
 
 const AdSlider = ({ ads }) => {
   const [selectedAd, setSelectedAd] = useState(null);
