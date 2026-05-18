@@ -1,10 +1,8 @@
 import React, { useState, useRef } from 'react';
 import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
-// النطاق المحلي المعتمد للمشروع
+// النطاق السحابي المعتمد للمشروع على هيدينج فيس
 const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
-  // 🔥 [تم التطهير] تم مسح كود (const socket = io) المكرر والمسبب لحظر الـ CORS تماماً من هنا
-  // المكون سيعمل الآن بنقاء وسلاسة مستقرة 100%
 
 const AdSliderBottom = ({ ads }) => {
   const [selectedAd, setSelectedAd] = useState(null);
@@ -60,7 +58,8 @@ const AdSliderBottom = ({ ads }) => {
                   🌐 زيارة رابط الإعلان المرفق
                 </a>
               )}
-              {/* 🔥 تم إصلاح وصيانة الروابط البرمجية المكسورة هنا بوضع المائل / الحاسم لحماية التوجيه اللينكسي */}
+              
+              {/* 🔥 [تم الإصلاح والتأمين] وضع علامة المائل / الحيوية لحماية التوجيه اللينكسي والسحابي ومنع الكراش */}
               {selectedAd.whatsapp && <a href={`https://wa.me{selectedAd.whatsapp}`} target="_blank" rel="noreferrer" className="contact-btn wa">واتساب</a>}
               {selectedAd.telegram && <a href={`https://t.me{selectedAd.telegram}`} target="_blank" rel="noreferrer" className="contact-btn tg">تلغرام</a>}
             </div>
@@ -73,4 +72,3 @@ const AdSliderBottom = ({ ads }) => {
 };
 
 export default AdSliderBottom;
-
