@@ -3,18 +3,16 @@ import '../App.css'; // استدعاء ملف التنسيق الشامل ليع
 
 const ChatArea = ({ chat, currentUser, msg, setMsg, socket, currentGroup }) => {
   const messagesEndRef = useRef(null);
-// 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
+  
+  // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
   const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
-// تفعيل اتصال السوكت المشفر (WSS) ليعمل مع جدار الحماية السحابي
-  const socket = io(API_BASE, { 
-    transports: ['polling', 'websocket'],
-    secure: true,
-    path: '/socket.io', // التأكيد على مسار البروكسي السحابي
-    reconnectionAttempts: 10,
-    reconnectionDelay: 2000,
-    rejectUnauthorized: false
-  });
+  // 🔥 [تم التطهير والإصلاح] تم حذف كود تعريف السوكت المكرر (const socket = io) من هنا نهائياً لحل الكراش السحابي
+  // المكون سيعتمد الآن مباشرة وبسلاسة على الـ socket الممرر بالأعلى والمشفر سحابياً من الـ App.js
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   // دالة للنزول التلقائي إلى أسفل المحادثة عند استقبال رسالة جديدة
   const scrollToBottom = () => {
