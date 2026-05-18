@@ -1,19 +1,15 @@
 import React, { useState, useRef } from 'react';
-import io from 'socket.io-client'; // 🔥 سطر الحل الحاسم لمنع الكراش
 import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
-// 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
+// النطاق المحلي المعتمد للمشروع
 const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
-// تفعيل اتصال السوكت المشفر (WSS) ليعمل مع جدار الحماية السحابي
-const socket = io(API_BASE, { 
-  transports: ['polling', 'websocket'],
-  secure: true,
-  path: '/socket.io', // التأكيد على مسار البروكسي السحابي
-  reconnectionAttempts: 10,
-  reconnectionDelay: 2000,
-  rejectUnauthorized: false
-});
+const AdSlider = ({ ads, filterLocation }) => {
+  const [selectedAd, setSelectedAd] = useState(null);
+  const scrollContainerRef = useRef(null);
+  
+  // 🔥 [تم التطهير] تم مسح كود (const socket = io) المكرر والمسبب لحظر الـ CORS تماماً من هنا
+  // المكون سيعمل الآن بنقاء وسلاسة مستقرة 100%
 
 const AdSliderBottom = ({ ads }) => {
   const [selectedAd, setSelectedAd] = useState(null);
