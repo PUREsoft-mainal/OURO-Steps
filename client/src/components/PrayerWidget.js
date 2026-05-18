@@ -8,10 +8,11 @@ const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
 // تفعيل اتصال السوكت المشفر (WSS) ليعمل مع جدار الحماية السحابي
 const socket = io(API_BASE, { 
-  transports: ['websocket', 'polling'],
+  transports: ['polling', 'websocket'],
   secure: true,
   rejectUnauthorized: false
 });
+  
   const [times, setTimes] = useState({ fajr: '', dhuhr: '', asr: '', maghrib: '', isha: '' });
   const [currentAdhan, setCurrentAdhan] = useState(""); 
   const [volume, setVolume] = useState(0.8); 
