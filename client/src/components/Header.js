@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import io from 'socket.io-client'; // 🔥 سطر الحل الحاسم لمنع الكراش
 import StatsBar from './StatsBar';
 import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
