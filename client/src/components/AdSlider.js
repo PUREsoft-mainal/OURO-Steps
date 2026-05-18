@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import io from 'socket.io-client'; // 🔥 سطر الحل الحاسم لمنع الكراش
 import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
 // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
