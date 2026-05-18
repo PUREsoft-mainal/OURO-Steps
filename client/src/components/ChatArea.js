@@ -4,17 +4,17 @@ import '../App.css'; // استدعاء ملف التنسيق الشامل ليع
 const ChatArea = ({ chat, currentUser, msg, setMsg, socket, currentGroup }) => {
   const messagesEndRef = useRef(null);
 // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
-const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
+  const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
 // تفعيل اتصال السوكت المشفر (WSS) ليعمل مع جدار الحماية السحابي
-const socket = io(API_BASE, { 
-  transports: ['polling', 'websocket'],
-  secure: true,
-  path: '/socket.io', // التأكيد على مسار البروكسي السحابي
-  reconnectionAttempts: 10,
-  reconnectionDelay: 2000,
-  rejectUnauthorized: false
-});
+  const socket = io(API_BASE, { 
+    transports: ['polling', 'websocket'],
+    secure: true,
+    path: '/socket.io', // التأكيد على مسار البروكسي السحابي
+    reconnectionAttempts: 10,
+    reconnectionDelay: 2000,
+    rejectUnauthorized: false
+  });
 
   // دالة للنزول التلقائي إلى أسفل المحادثة عند استقبال رسالة جديدة
   const scrollToBottom = () => {
