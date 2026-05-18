@@ -58,18 +58,16 @@ const UploadSidebar = ({ files, serverUrl, user }) => {
         </div>
 
         {/* صندوق الكتابة الذكي والتعليقات المشترك */}
+        {/* 👑 صندوق الكتابة الذكي والتعليقات المشترك المصفى والمحمّي من الكراش السحابي */}
         <textarea 
-  className="story-caption-textarea" // إضافة اسم الكلاس هنا للتحكم الكامل
-  value={statusText}
-  onChange={(e) => setStatusText(e.target.value)}
-  placeholder={isTextStatus ? "اكتب حالتك النصية الملكية هنا..." : "أضف تعليقاً ووصفاً يظهر مع القصة..."}
-  required={isTextStatus}
+          className="story-caption-textarea" 
           value={statusText}
           onChange={(e) => setStatusText(e.target.value)}
           placeholder={isTextStatus ? "اكتب حالتك النصية الملكية هنا..." : "أضف تعليقاً ووصفاً يظهر أسفل القصة..."}
           style={{ width: '100%', minHeight: '60px', background: '#0a0a0a', border: '1px solid var(--border-glass)', borderRadius: '8px', color: '#fff', padding: '10px', fontSize: '13px', outline: 'none', resize: 'none', fontFamily: 'inherit' }}
           required={isTextStatus}
         />
+
 
         {/* عرض عناصر الاختيار التفاعلية بناءً على التبويب النشط */}
         {!isTextStatus ? (
