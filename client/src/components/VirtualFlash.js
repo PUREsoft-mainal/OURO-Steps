@@ -3,18 +3,11 @@ import axios from 'axios';
 import '../App.css';
 
 const VirtualFlash = ({ user, socket }) => {
-// 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
-const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
+  // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
+  const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
-// تفعيل اتصال السوكت المشفر (WSS) ليعمل مع جدار الحماية السحابي
-const socket = io(API_BASE, { 
-  transports: ['polling', 'websocket'],
-  secure: true,
-  path: '/socket.io', // التأكيد على مسار البروكسي السحابي
-  reconnectionAttempts: 10,
-  reconnectionDelay: 2000,
-  rejectUnauthorized: false
-});
+  // 🔥 [تم التطهير والإصلاح] تم حذف كود حجز السوكت المكرر (const socket = io) نهائياً لمنع الكراش وحظر الـ CORS
+  // المكون سيعتمد الآن مباشرة وبسلاسة على الـ socket الممرر بالأعلى والمشفر من الـ App.js
   
   const [myFiles, setMyFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -31,20 +24,22 @@ const socket = io(API_BASE, {
     };
     fetchFlashFiles();
 
-    // الاستماع لتحديثات الفلاشة الفورية عند الرفع أو الإعادة الآلية
-    socket.on('flash_db_updated', (data) => {
-        const userFiles = data.filter(f => f.owner === user?.username);
-        setMyFiles(userFiles);
-    });
+    // الاستماع لتحديثات الفلاشة الفورية عند الرفع أو الإعادة الآلية عبر السوكت المركزي
+    if (socket) {
+      socket.on('flash_db_updated', (data) => {
+          const userFiles = data.filter(f => f.owner === user?.username);
+          setMyFiles(userFiles);
+      });
+    }
 
     return () => {
-        socket.off('flash_db_updated');
+        if (socket) socket.off('flash_db_updated');
     };
   }, [user?.username, socket]);
 
   // دالة التعامل مع رفع الملفات أو المجلدات البرمجية المدمجة والمضغوطة
   const handleFlashUpload = async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files ? e.target.files[0] : null;
     if (!file) return;
 
     const formData = new FormData();
@@ -63,7 +58,7 @@ const socket = io(API_BASE, {
       e.target.value = ""; // إعادة تهيئة حقل الإدخال
     } catch (err) {
       console.error(err);
-      alert("❌ فشل إيداع الملف بالفلاشة، تحقق من السيرفر المحلي.");
+      alert("❌ فشل إيداع الملف بالفلاشة، تحقق من السيرفر السحابي.");
       setUploading(false);
     }
   };
@@ -79,7 +74,10 @@ const socket = io(API_BASE, {
         <button 
           className="action-bar-btn gold-glow-btn" 
           style={{ width: '100%', maxWidth: '100%' }}
-          onClick={() => document.getElementById('vFlashUp').click()}
+          onClick={() => {
+            const inputEl = document.getElementById('vFlashUp');
+            if (inputEl) inputEl.click();
+          }}
           disabled={uploading}
         >
           {uploading ? "⏳ جاري إيداع وحفظ الملف بالفلاشة..." : "📤 إيداع ملف / مجلد برمي مدمج بالفلاشة"}
@@ -116,4 +114,3 @@ const socket = io(API_BASE, {
 };
 
 export default VirtualFlash;
-
