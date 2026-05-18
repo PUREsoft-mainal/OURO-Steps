@@ -57,7 +57,12 @@ function App() {
 
     socket.on('group_message', (data) => {
       if (data.roomId === currentGroup.id) {
-        setChat(prev => [...prev, data.msg]);
+        // 👑 تفكيك الفطنة: حماية كاملة للتأكد من صب الحقول نصياً داخل حزمة مصفوفة الدردشة
+        const cleanMsg = {
+          ...data.msg,
+          text: typeof data.msg.text === 'object' && data.msg.text !== null ? data.msg.text.text : data.msg.text
+        };
+        setChat(prev => [...prev, cleanMsg]);
       }
     });
 
