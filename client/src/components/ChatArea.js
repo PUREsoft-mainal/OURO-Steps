@@ -9,12 +9,7 @@ const ChatArea = ({ chat, currentUser, msg, setMsg, socket, currentGroup }) => {
 
   // 🔥 [تم التطهير والإصلاح] تم حذف كود تعريف السوكت المكرر (const socket = io) من هنا نهائياً لحل الكراش السحابي
   // المكون سيعتمد الآن مباشرة وبسلاسة على الـ socket الممرر بالأعلى والمشفر سحابياً من الـ App.js
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  // دالة للنزول التلقائي إلى أسفل المحادثة عند استقبال رسالة جديدة
+ // دالة للنزول التلقائي إلى أسفل المحادثة عند استقبال رسالة جديدة
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
