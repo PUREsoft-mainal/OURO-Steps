@@ -6,8 +6,11 @@ const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
 // تفعيل اتصال السوكت المشفر (WSS) ليعمل مع جدار الحماية السحابي
 const socket = io(API_BASE, { 
-  transports: ['websocket', 'polling'],
+  transports: ['polling', 'websocket'],
   secure: true,
+  path: '/socket.io', // التأكيد على مسار البروكسي السحابي
+  reconnectionAttempts: 10,
+  reconnectionDelay: 2000,
   rejectUnauthorized: false
 });
 
