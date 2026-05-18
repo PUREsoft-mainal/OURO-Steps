@@ -258,6 +258,11 @@ function App() {
         {/* 👑 2. حاوية بقية الأدوات السفلية المستقرة بانتظام ممتد */}
         <div className="spacer-wrapper-zone" style={{ padding: '0 20px', width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '15px' }}> 
 
+          {/* 👑 [تفعيل الاستخدام] شريط الإعلانات التفاعلي السلس المطور السفلي المنفصل يوضع هنا لحل خطأ unused-vars */}
+          <div style={{ width: '100%', boxSizing: 'border-box' }}>
+            <AdSliderBottom ads={ads} />
+          </div>
+
           {/* 🕋 ب) منظومة مواقيت الصلاة والأذان المتزامن مع صورة الكعبة متمركزة يميناً بارتفاع 120px */}
           <PrayerWidget socket={socket} />
 
