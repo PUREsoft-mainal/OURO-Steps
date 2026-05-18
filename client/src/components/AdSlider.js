@@ -1,15 +1,8 @@
 import React, { useState, useRef } from 'react';
 import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
-// النطاق المحلي المعتمد للمشروع
+// النطاق السحابي المعتمد للمشروع على هيدينج فيس
 const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
-
-const AdSlider = ({ ads, filterLocation }) => {
-  const [selectedAd, setSelectedAd] = useState(null);
-  const scrollContainerRef = useRef(null);
-  
-  // 🔥 [تم التطهير] تم مسح كود (const socket = io) المكرر والمسبب لحظر الـ CORS تماماً من هنا
-  // المكون سيعمل الآن بنقاء وسلاسة مستقرة 100%
 
 const AdSlider = ({ ads }) => {
   const [selectedAd, setSelectedAd] = useState(null);
@@ -94,4 +87,3 @@ const AdSlider = ({ ads }) => {
 };
 
 export default AdSlider;
-
