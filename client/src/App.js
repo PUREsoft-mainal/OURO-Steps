@@ -21,6 +21,9 @@ const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 const socket = io(API_BASE, { 
   transports: ['websocket', 'polling'],
   secure: true,
+  path: '/socket.io', // التأكيد على مسار البروكسي السحابي
+  reconnectionAttempts: 10,
+  reconnectionDelay: 2000,
   rejectUnauthorized: false
 });
 
