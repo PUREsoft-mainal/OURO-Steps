@@ -14,19 +14,8 @@ import PrayerWidget from './components/PrayerWidget';
 import AdSliderBottom from './components/AdSliderBottom';
 import './App.css';
 
-// 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
-const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
-
-// تفعيل اتصال السوكت المشفر (WSS) ليعمل مع جدار الحماية السحابي
-const socket = io(API_BASE, { 
-  transports: ['polling', 'websocket'],
-  secure: true,
-  path: '/socket.io', // التأكيد على مسار البروكسي السحابي
-  reconnectionAttempts: 10,
-  reconnectionDelay: 2000,
-  rejectUnauthorized: false
-});
-
+const API_BASE = "http://127.0.0.1:5050";
+const socket = io(API_BASE, { transports: ['polling', 'websocket'] });
 
 function App() {
   const [isLogged, setIsLogged] = useState(false);
@@ -57,12 +46,7 @@ function App() {
 
     socket.on('group_message', (data) => {
       if (data.roomId === currentGroup.id) {
-        // 👑 تفكيك الفطنة: حماية كاملة للتأكد من صب الحقول نصياً داخل حزمة مصفوفة الدردشة
-        const cleanMsg = {
-          ...data.msg,
-          text: typeof data.msg.text === 'object' && data.msg.text !== null ? data.msg.text.text : data.msg.text
-        };
-        setChat(prev => [...prev, cleanMsg]);
+        setChat(prev => [...prev, data.msg]);
       }
     });
 
@@ -71,15 +55,7 @@ function App() {
     socket.on('init_data', (data) => { 
       if (data.user) {
         setAds(data.ads || []); 
-        
-        // 👑 فِطنة الفرز الملكية: تصفية وتطهير تاريخ المحادثة بالكامل قبل حقنه في الـ State لمنع خطأ #31 نهائياً
-        const sanitizedHistory = (data.chatHistory || []).map(m => ({
-          ...m,
-          // التحقق برمجياً: لو النص مخزن كـ كائن Object، نقوم بفك ضغطه واستخراج النص الصافي منه لحماية الـ React
-          text: typeof m.text === 'object' && m.text !== null ? (m.text.text || JSON.stringify(m.text)) : m.text
-        }));
-        
-        setChat(sanitizedHistory); // حقن التاريخ المصفى والمأمن سحابياً بنجاح
+        setChat(data.chatHistory || []);
         setUser(data.user);
         if (data.groups) setGroups(data.groups); 
         if (data.stats) { 
@@ -89,7 +65,6 @@ function App() {
         setIsLogged(true); 
       }
     });
-
 
     socket.on('update_stats', (data) => { 
       setTotalUsers(data.totalUsers); 
@@ -272,11 +247,6 @@ function App() {
         {/* 👑 2. حاوية بقية الأدوات السفلية المستقرة بانتظام ممتد */}
         <div className="spacer-wrapper-zone" style={{ padding: '0 20px', width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '15px' }}> 
 
-          {/* 👑 [تفعيل الاستخدام] شريط الإعلانات التفاعلي السلس المطور السفلي المنفصل يوضع هنا لحل خطأ unused-vars */}
-          <div style={{ width: '100%', boxSizing: 'border-box' }}>
-            <AdSliderBottom ads={ads} />
-          </div>
-
           {/* 🕋 ب) منظومة مواقيت الصلاة والأذان المتزامن مع صورة الكعبة متمركزة يميناً بارتفاع 120px */}
           <PrayerWidget socket={socket} />
 
@@ -296,3 +266,4 @@ function App() {
 }
 
 export default App;
+
