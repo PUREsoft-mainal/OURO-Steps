@@ -14,8 +14,16 @@ import PrayerWidget from './components/PrayerWidget';
 import AdSliderBottom from './components/AdSliderBottom';
 import './App.css';
 
-const API_BASE = "http://127.0.0.1:5050";
-const socket = io(API_BASE, { transports: ['polling', 'websocket'] });
+// 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
+const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
+
+// تفعيل اتصال السوكت المشفر (WSS) ليعمل مع جدار الحماية السحابي
+const socket = io(API_BASE, { 
+  transports: ['websocket', 'polling'],
+  secure: true,
+  rejectUnauthorized: false
+});
+
 
 function App() {
   const [isLogged, setIsLogged] = useState(false);
