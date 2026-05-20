@@ -82,7 +82,7 @@ const Header = ({ activeUsers, totalUsers, user }) => {
           />
         </div>
         
-        <span className="user-info-text">👤 {user && user.username ? user.username : "جاري التحميل..."}</span>
+        <span className="user-info-text"> {user && user.username ? user.username : "جاري التحميل..."}</span>
         <button onClick={() => window.location.reload()} className="logout-btn">خروج</button>
       </div>
 
