@@ -192,7 +192,7 @@ function App() {
         </div>
         
         {/* 3. شريط الإعلانات التفاعلي المربوط بمسافات الـ CSS (العلوى الحصري) */}
-        <div className="ads-slider-wrapper">
+        <div className="ads-section-wrapper">
           <AdSlider ads={ads} filterLocation="top" /> 
         </div>
 
@@ -202,10 +202,6 @@ function App() {
           setDiscoveryTab={setDiscoveryTab} 
         />
 
-        {/* ✨ تم تطهير وحذف الرموز القديمة للفلاشة ومواقيت الصلاة من هذا المربع العلوي بنجاح لتوسيع الرؤية الشاهقة */}
-
-        {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص */}
-        {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص المأمن من التداخل */}
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
         <div className="main-content">
           
@@ -250,9 +246,9 @@ function App() {
           />
         )}
 
-        {/* 👑 1. [الموضع الاحترافي الصحيح] شريط الإعلانات التفاعلي السلس المكتمل بجميع المواصفات والحركة التلقائية متموضع بعرض الصفحة كلياً تحت الشات */}
-        <div className="ads-section-wrapper" style={{ marginTop: '15px', marginBottom: '15px', width: '100%', boxSizing: 'border-box' }}>
-          <AdSlider ads={ads} filterLocation="bottom" />
+        {/* 👑 1. [الموضع الاحترافي المكتمل] استدعاء المكون المنفصل الحصري للشريط السفلي بكافة خصائصه الفخمة والمربعات المذهبة */}
+        <div style={{ padding: '0 20px', width: '100%', boxSizing: 'border-box', marginTop: '15px', marginBottom: '15px' }}>
+          <AdSliderBottom ads={ads} />
         </div>
 
         {/* 👑 2. حاوية بقية الأدوات السفلية المستقرة بانتظام ممتد */}
