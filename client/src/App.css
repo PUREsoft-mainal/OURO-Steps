@@ -1322,4 +1322,29 @@ body, html {
   text-align: center;
 }
 
+/* --- شارة الحذف النيونية المذهبة للإعلانات بالزاوية --- */
+.delete-ad-x-badge {
+  position: absolute !important;
+  top: 4px !important;
+  left: 4px !important;
+  background: rgba(192, 41, 43, 0.9) !important; /* لون أحمر ناري مأمن */
+  color: #fff !important;
+  border: 1px solid #ff9999 !important;
+  border-radius: 50% !important;
+  width: 20px !important;
+  height: 20px !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10 !important;
+  box-shadow: 0 0 8px #ff4d4d !important;
+  transition: 0.2s ease-in-out;
+}
+.delete-ad-x-badge:hover {
+  background: #e74c3c !important;
+  transform: scale(1.15);
+}
 
