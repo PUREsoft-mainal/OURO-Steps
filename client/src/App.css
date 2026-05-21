@@ -1425,3 +1425,55 @@ body, html {
   transform: scale(1.15);
   box-shadow: 0 0 8px #ff4d4d;
 }
+
+/* --- 👑 هندسة قائمة خيارات الرسائل العائمة (...) تعديل وحذف --- */
+.msg-dots-btn {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-muted) !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  transition: 0.2s;
+}
+.msg-dots-btn:hover {
+  color: var(--gold-primary) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.msg-dropdown-menu {
+  position: absolute !important;
+  top: 22px !important;
+  right: 0 !important;
+  background: #0d0d0d !important;
+  border: 1px solid var(--gold-primary) !important;
+  border-radius: 6px !important;
+  padding: 4px 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 80px !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.9) !important;
+  z-index: 100 !important;
+}
+
+.msg-dropdown-menu button {
+  background: transparent !important;
+  border: none !important;
+  color: #fff !important;
+  padding: 6px 12px !important;
+  font-size: 11px !important;
+  text-align: right !important;
+  cursor: pointer !important;
+  width: 100% !important;
+  transition: 0.2s;
+}
+.msg-dropdown-menu button:hover {
+  background: rgba(212, 175, 55, 0.1) !important;
+  color: var(--gold-primary) !important;
+}
+
+.msg-dropdown-menu button.delete-item-btn:hover {
+  background: rgba(231, 76, 60, 0.1) !important;
+  color: #ff4d4d !important;
+}
