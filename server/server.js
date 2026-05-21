@@ -188,6 +188,36 @@ initGroupChatFile('public'); // تهيئة ملف المجموعة العامة
         io.to(data.roomId).emit('group_message', { roomId: data.roomId, msg });
     });
 
+      // 📝 استقبال ومعالجة تعديل الرسائل بملفات المجموعات سحابياً
+    socket.on('edit_group_message', (data) => {
+        try {
+            const chatFilePath = path.join(__dirname, 'groups_chats', `${data.roomId}.json`);
+            if (!fs.existsSync(chatFilePath)) return;
+            let messages = JSON.parse(fs.readFileSync(chatFilePath, 'utf8'));
+            
+            messages = messages.map(m => m.id === data.msgId ? { ...m, text: data.newText } : m);
+            fs.writeFileSync(chatFilePath, JSON.stringify(messages, null, 2), 'utf8');
+            
+            // بث سجل المحادثة المحدث بالكامل للغرفة فوراً لتحديث شاشات المشتركين
+            io.to(data.roomId).emit('group_chat_history', { roomId: data.roomId, history: messages });
+        } catch (err) { console.error(err); }
+    });
+
+    // 🗑️ استقبال ومعالجة حذف الرسائل بملفات المجموعات سحابياً
+    socket.on('delete_group_message', (data) => {
+        try {
+            const chatFilePath = path.join(__dirname, 'groups_chats', `${data.roomId}.json`);
+            if (!fs.existsSync(chatFilePath)) return;
+            let messages = JSON.parse(fs.readFileSync(chatFilePath, 'utf8'));
+            
+            messages = messages.filter(m => m.id !== data.msgId);
+            fs.writeFileSync(chatFilePath, JSON.stringify(messages, null, 2), 'utf8');
+            
+            io.to(data.roomId).emit('group_chat_history', { roomId: data.roomId, history: messages });
+        } catch (err) { console.error(err); }
+    });
+
+
     // 4. تعيين المشرفين (المشرف الأول والمشرف الثاني) من قبل منشئ المجموعة
     socket.on('assign_group_moderator', (data) => {
         const groups = readJson(GROUPS_LIST_FILE);
