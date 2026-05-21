@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react';
+import axios from 'axios'; // استدعاء حزمة الاتصال لإرسال إشارة الحذف للسيرفر
 import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
 // النطاق السحابي المعتمد للمشروع على هيدينج فيس
 const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
-const AdSliderBottom = ({ ads }) => {
+const AdSliderBottom = ({ ads, user }) => { // 👑 استقبال جلسة الـ user للتحقق من هوية الأدمن
   const [selectedAd, setSelectedAd] = useState(null);
   const scrollContainerRef = useRef(null);
 
@@ -18,6 +19,20 @@ const AdSliderBottom = ({ ads }) => {
     }
   };
 
+  // دالة إرسال طلب حذف الإعلان للسيرفر السحابي فوراً
+  const handleDeleteAd = async (e, adId) => {
+    e.stopPropagation(); // منع فتح نافذة تفاصيل الإعلان عند الضغط على زر الحذف
+    if (window.confirm("⚠️ هل أنت متأكد من حذف هذا الإعلان نهائياً من شريط المنصة؟")) {
+      try {
+        await axios.delete(`${API_BASE}/api/delete-ad/${adId}`);
+        alert("🗑️ تم حذف الإعلان وتطهيره بنجاح!");
+      } catch (err) {
+        console.error("خطأ حذف الإعلان:", err);
+        alert("❌ فشل الحذف، تحقق من اتصال السيرفر السحابي.");
+      }
+    }
+  };
+
   // 👑 تصفية حصرية صارمة: جلب الإعلانات المخصصة للشريط السفلي فقط
   const bottomAds = (ads || []).filter(ad => ad.location === 'bottom');
 
@@ -27,10 +42,26 @@ const AdSliderBottom = ({ ads }) => {
       
       <div className="ads-scroll-container-bottom" ref={scrollContainerRef}>
         <div className="ads-track-bottom">
-          {(bottomAds.length > 0 ? [...bottomAds, ...bottomAds] : []).map((ad, i) => {
+          {/* 👑 [تعديلك العبقري] عرض المصفوفة الصافية مباشرة لمنع تكرار الإعلان الواحد في نفس الشريط */}
+          {(bottomAds.length > 0 ? [...bottomAds] : []).map((ad, i) => {
             const fullImgUrl = ad.imgUrl ? (ad.imgUrl.startsWith('http') ? ad.imgUrl : `${API_BASE}${ad.imgUrl}`) : '';
             return (
-              <div key={`bottom-ad-${ad.id || i}-${i}`} className="ad-card-item-bottom" onClick={() => setSelectedAd(ad)}>
+              <div 
+                key={`bottom-ad-${ad.id || i}-${i}`} 
+                className="ad-card-item-bottom" 
+                style={{ position: 'relative' }} // لتثبيت موقع شارة الحذف بالزاوية بدقة
+                onClick={() => setSelectedAd(ad)}
+              >
+                {/* 👑 زر الحذف (×) للأدمن مستقر في الزاوية العلوية اليسرى بدقة */}
+                {user && user.username === 'Admin_Mostafa' && (
+                  <button 
+                    className="delete-ad-x-badge" 
+                    type="button" 
+                    onClick={(e) => handleDeleteAd(e, ad.id)}
+                  >
+                    ×
+                  </button>
+                )}
                 {fullImgUrl && <img src={fullImgUrl} alt="ad" className="ad-image-content-bottom" />}
               </div>
             );
@@ -59,7 +90,7 @@ const AdSliderBottom = ({ ads }) => {
                 </a>
               )}
               
-              {/* 🔥 [تم الإصلاح والتأمين] وضع علامة المائل / الحيوية لحماية التوجيه اللينكسي والسحابي ومنع الكراش */}
+              {/* 🔥 تم تصحيح مسار روابط الدمج النصي للسوشيال ميديا ووضع علامة المائل / لمنع كسر التوجيه */}
               {selectedAd.whatsapp && <a href={`https://wa.me{selectedAd.whatsapp}`} target="_blank" rel="noreferrer" className="contact-btn wa">واتساب</a>}
               {selectedAd.telegram && <a href={`https://t.me{selectedAd.telegram}`} target="_blank" rel="noreferrer" className="contact-btn tg">تلغرام</a>}
             </div>
