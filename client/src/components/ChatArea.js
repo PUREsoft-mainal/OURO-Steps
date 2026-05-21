@@ -8,8 +8,7 @@ const ChatArea = ({ chat, currentUser, msg, setMsg, socket, currentGroup }) => {
   const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
   // 🔥 [تم التطهير والإصلاح] تم حذف كود تعريف السوكت المكرر (const socket = io) من هنا نهائياً لحل الكراش السحابي
-  // المكون سيعتمد الآن مباشرة وبسلاسة على الـ socket الممرر بالأعلى والمشفر سحابياً من الـ App.js
- // دالة للنزول التلقائي إلى أسفل المحادثة عند استقبال رسالة جديدة
+  // دالة للنزول التلقائي إلى أسفل المحادثة عند استقبال رسالة جديدة
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -21,7 +20,7 @@ const ChatArea = ({ chat, currentUser, msg, setMsg, socket, currentGroup }) => {
   const send = (e) => {
     e.preventDefault();
     if(msg.trim() && currentGroup) {
-      // إرسال الرسالة حصرياً لملف المجموعة المفتوحة حالياً بالسيرفر المحلي
+      // إرسال الرسالة حصرياً لملف المجموعة المفتوحة حالياً بالسيرفر السحابي
       socket.emit('sendGroupMessage', { 
         roomId: currentGroup.id, 
         text: msg.trim() 
@@ -109,7 +108,43 @@ const ChatArea = ({ chat, currentUser, msg, setMsg, socket, currentGroup }) => {
               </div>
 
               <span className={`badge ${m.role === 'Admin' ? 'admin-badge' : 'user-badge'}`}>{m.role}</span>
-              <span className="user-name" style={{ color: m.role === 'Admin' ? 'var(--gold-glow)' : '#fff', fontWeight: 'bold' }}>{m.user}</span>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span className="user-name" style={{ color: m.role === 'Admin' ? 'var(--gold-glow)' : '#fff', fontWeight: 'bold' }}>{m.user}</span>
+                
+                {/* 👑 أزرار العلاقات الاجتماعية (إضافة وحذف الأصدقاء لحظياً بمقاس 15 بكسل) */}
+                {m.user !== currentUser && (
+                  <div className="chat-relationship-controls" style={{ display: 'inline-flex', gap: '4px', alignItems: 'center' }}>
+                    <button 
+                      className="add-friend-chat-btn" 
+                      type="button" 
+                      title={`إضافة ${m.user} للأصدقاء`}
+                      onClick={() => {
+                        if (window.confirm(`👥 هل تود إضافة ${m.user} إلى أصدقائك في عالم OURO Steps؟`)) {
+                          socket.emit('toggle_friend', { currentUser: currentUser, targetUser: m.user });
+                          alert(`🎉 تم إضافة ${m.user} بنجاح!`);
+                        }
+                      }}
+                    >
+                      +
+                    </button>
+                    <button 
+                      className="remove-friend-chat-btn" 
+                      type="button" 
+                      title={`حذف ${m.user} من الأصدقاء`}
+                      onClick={() => {
+                        if (window.confirm(`⚠️ هل تود حذف ${m.user} وإزالته من قائمة أصدقائك بالكامل؟`)) {
+                          socket.emit('toggle_friend', { currentUser: currentUser, targetUser: m.user });
+                          alert(`🗑️ تم إزالة ${m.user} من الأصدقاء بنجاح!`);
+                        }
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <span className="msg-time">{m.time}</span>
             </div>
             <div className="msg-text-content" style={{ paddingRight: '36px', wordBreak: 'break-word' }}>
@@ -137,4 +172,3 @@ const ChatArea = ({ chat, currentUser, msg, setMsg, socket, currentGroup }) => {
 };
 
 export default ChatArea;
-
