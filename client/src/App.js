@@ -193,7 +193,8 @@ function App() {
         
         {/* 3. شريط الإعلانات التفاعلي المربوط بمسافات الـ CSS (العلوى الحصري) */}
         <div className="ads-section-wrapper">
-          <AdSlider ads={ads} filterLocation="top" /> 
+          {/* 👑 تمرير الـ user ليفهم المكون أنك الأدمن فيظهر لك زر الحذف في الأعلى */}
+          <AdSlider ads={ads} filterLocation="top" user={user} /> 
         </div>
 
         {/* 4. استدعاء شريط الأزرار المستقل والمطور ديناميكياً */}
@@ -246,9 +247,10 @@ function App() {
           />
         )}
 
-        {/* 👑 1. [الموضع الاحترافي المكتمل] استدعاء المكون المنفصل الحصري للشريط السفلي بكافة خصائصه الفخمة والمربعات المذهبة */}
+        {/* [موضع الشريط السفلي الصحيح أفقياً] */}
         <div style={{ padding: '0 20px', width: '100%', boxSizing: 'border-box', marginTop: '15px', marginBottom: '15px' }}>
-          <AdSliderBottom ads={ads} />
+          {/* 👑 تمرير الـ user ليفهم المكون السفلي أنك الأدمن فيظهر لك زر الحذف في الأسفل */}
+          <AdSliderBottom ads={ads} user={user} />
         </div>
 
         {/* 👑 2. حاوية بقية الأدوات السفلية المستقرة بانتظام ممتد */}
