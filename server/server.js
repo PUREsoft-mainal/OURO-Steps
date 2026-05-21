@@ -401,6 +401,25 @@ app.post('/api/upload-ad', upload.single('adImage'), (req, res) => {
     }
 });
 
+// 🗑️ مسار API الملكي لحذف الإعلانات المرفوعة بالخطأ من السحابة وقاعدة البيانات
+app.delete('/api/delete-ad/:id', (req, res) => {
+    try {
+        const adsFilePath = path.join(__dirname, 'ads.json');
+        let ads = JSON.parse(fs.readFileSync(adsFilePath, 'utf8'));
+        
+        // تصفية المصفوفة وحذف الإعلان المستهدف عبر الـ ID
+        ads = ads.filter(ad => ad.id !== req.params.id);
+        
+        fs.writeFileSync(adsFilePath, JSON.stringify(ads, null, 2), 'utf8');
+        io.emit('update_ads', ads); // بث التحديث اللحظي لجميع المشتركين
+        res.json({ success: true, message: "تم حذف الإعلان وتطهيره بنجاح" });
+    } catch (err) {
+        console.error("خطأ حذف الإعلان:", err);
+        res.status(500).json({ success: false });
+    }
+});
+
+
 // ⏳ دالة آلية (تشتغل كل ساعة) لتنظيف وتطهير ملف ads.json من الإعلانات المنتهية تلقائياً
 setInterval(() => {
     try {
