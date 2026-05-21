@@ -7,6 +7,11 @@ const ChatArea = ({ chat, currentUser, msg, setMsg, socket, currentGroup }) => {
   // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
   const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
+  const [activeMenuId, setActiveMenuId] = useState(null); // لتحديد القائمة المفتوحة للرسالة
+  const [editingMsgId, setEditingMsgId] = useState(null); // لتحديد الرسالة الجاري تعديلها
+  const [editValue, setEditValue] = useState(""); // لتخزين النص الجديد أثناء التعديل
+
+
   // 🔥 [تم التطهير والإصلاح] تم حذف كود تعريف السوكت المكرر (const socket = io) من هنا نهائياً لحل الكراش السحابي
   // دالة للنزول التلقائي إلى أسفل المحادثة عند استقبال رسالة جديدة
   const scrollToBottom = () => {
@@ -48,6 +53,24 @@ const ChatArea = ({ chat, currentUser, msg, setMsg, socket, currentGroup }) => {
     currentUser === 'Admin_Mostafa' || 
     chat.some(m => m.user === currentUser && m.role === 'Admin')
   );
+
+    // 🗑️ دالة إطلاق إشارة حذف الرسالة
+  const handleDeleteMessage = (msgId) => {
+    if (window.confirm("⚠️ هل أنت متأكد من حذف هذه الرسالة نهائياً؟")) {
+      socket.emit('delete_group_message', { roomId: currentGroup.id, msgId });
+      setActiveMenuId(null);
+    }
+  };
+
+  // 📝 دالة حفظ التعديل وإرسال النص الجديد
+  const handleSaveEdit = (msgId) => {
+    if (editValue.trim()) {
+      socket.emit('edit_group_message', { roomId: currentGroup.id, msgId, newText: editValue.trim() });
+      setEditingMsgId(null);
+      setEditValue("");
+    }
+  };
+
 
   return (
     <main className="chat-area">
@@ -94,66 +117,132 @@ const ChatArea = ({ chat, currentUser, msg, setMsg, socket, currentGroup }) => {
       </div>
 
       <div className="messages">
-        {(chat || []).map((m, i) => (
-          <div key={m.id || i} className={`msg ${m.user === currentUser ? 'my-msg' : 'other-msg'}`}>
-            <div className="msg-header" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
-              
-              {/* 🔥 تفعيل كبسولة النيون الدوارة اللانهائية الثلاثية حول صورة المرسل في الشات */}
-              <div className="msg-avatar-container">
-                <img 
-                  src={m.avatar ? `${API_BASE}${m.avatar}` : "/assets/logo.png"} 
-                  className="msg-chat-avatar" 
-                  alt="av" 
-                />
+        {(chat || []).map((m, i) => {
+          const isMyMsg = m.user === currentUser;
+          const isAdmin = currentUser === 'Admin_Mostafa';
+          const isEditing = editingMsgId === m.id;
+
+          return (
+            <div 
+              key={m.id || i} 
+              className={`msg ${isMyMsg ? 'my-msg' : 'other-msg'}`}
+              style={{ position: 'relative' }} // تثبيت عائم للزر النقاط بالزوايا هندسياً
+            >
+              {/* 👑 زر الخيارات (...) العائم عالي الفخامة بالزاوية العلوية */}
+              {(isMyMsg || isAdmin) && !isEditing && (
+                <div className="msg-options-container" style={{ position: 'absolute', top: '5px', left: isMyMsg ? 'auto' : '10px', right: isMyMsg ? '10px' : 'auto', zIndex: 5 }}>
+                  <button 
+                    type="button" 
+                    className="msg-dots-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveMenuId(activeMenuId === m.id ? null : m.id);
+                    }}
+                  >
+                    •••
+                  </button>
+
+                  {/* القائمة المنبثقة التفاعلية لإدارة التعديل والحذف للرسالة المحددة */}
+                  {activeMenuId === m.id && (
+                    <div className="msg-dropdown-menu gold-border">
+                      {isMyMsg && (
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            setEditingMsgId(m.id);
+                            setEditValue(typeof m.text === 'object' && m.text !== null ? m.text.text : m.text);
+                            setActiveMenuId(null);
+                          }}
+                        >
+                          📝 تعديل
+                        </button>
+                      )}
+                      <button 
+                        type="button" 
+                        className="delete-item-btn" 
+                        onClick={() => handleDeleteMessage(m.id)}
+                      >
+                        🗑️ حذف
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="msg-header" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
+                
+                {/* 🔥 كبسولة الأوتار الدوارة اللانهائية حول الأفاتار */}
+                <div className="msg-avatar-container">
+                  <img 
+                    src={m.avatar ? `${API_BASE}${m.avatar}` : "/assets/logo.png"} 
+                    className="msg-chat-avatar" 
+                    alt="av" 
+                  />
+                </div>
+
+                <span className={`badge ${m.role === 'Admin' ? 'admin-badge' : 'user-badge'}`}>{m.role}</span>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span className="user-name" style={{ color: m.role === 'Admin' ? 'var(--gold-glow)' : '#fff', fontWeight: 'bold' }}>{m.user}</span>
+                  
+                  {/* أزرار العلاقات الاجتماعية (+) و (×) بمقاس 15 بكسل للتحكم بالأصدقاء */}
+                  {m.user !== currentUser && (
+                    <div className="chat-relationship-controls" style={{ display: 'inline-flex', gap: '4px', alignItems: 'center' }}>
+                      <button 
+                        className="add-friend-chat-btn" 
+                        type="button" 
+                        title={`إضافة ${m.user} للأصدقاء`}
+                        onClick={() => {
+                          if (window.confirm(`👥 هل تود إضافة ${m.user} إلى أصدقائك في عالم OURO Steps؟`)) {
+                            socket.emit('toggle_friend', { currentUser: currentUser, targetUser: m.user });
+                            alert(`🎉 تم إضافة ${m.user} بنجاح!`);
+                          }
+                        }}
+                      >
+                        +
+                      </button>
+                      <button 
+                        className="remove-friend-chat-btn" 
+                        type="button" 
+                        title={`حذف ${m.user} من الأصدقاء`}
+                        onClick={() => {
+                          if (window.confirm(`⚠️ هل تود حذف ${m.user} وإزالته من قائمة أصدقائك بالكامل؟`)) {
+                            socket.emit('toggle_friend', { currentUser: currentUser, targetUser: m.user });
+                            alert(`🗑️ تم إزالة ${m.user} من الأصدقاء بنجاح!`);
+                          }
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <span className="msg-time">{m.time}</span>
               </div>
 
-              <span className={`badge ${m.role === 'Admin' ? 'admin-badge' : 'user-badge'}`}>{m.role}</span>
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span className="user-name" style={{ color: m.role === 'Admin' ? 'var(--gold-glow)' : '#fff', fontWeight: 'bold' }}>{m.user}</span>
-                
-                {/* 👑 أزرار العلاقات الاجتماعية (إضافة وحذف الأصدقاء لحظياً بمقاس 15 بكسل) */}
-                {m.user !== currentUser && (
-                  <div className="chat-relationship-controls" style={{ display: 'inline-flex', gap: '4px', alignItems: 'center' }}>
-                    <button 
-                      className="add-friend-chat-btn" 
-                      type="button" 
-                      title={`إضافة ${m.user} للأصدقاء`}
-                      onClick={() => {
-                        if (window.confirm(`👥 هل تود إضافة ${m.user} إلى أصدقائك في عالم OURO Steps؟`)) {
-                          socket.emit('toggle_friend', { currentUser: currentUser, targetUser: m.user });
-                          alert(`🎉 تم إضافة ${m.user} بنجاح!`);
-                        }
-                      }}
-                    >
-                      +
-                    </button>
-                    <button 
-                      className="remove-friend-chat-btn" 
-                      type="button" 
-                      title={`حذف ${m.user} من الأصدقاء`}
-                      onClick={() => {
-                        if (window.confirm(`⚠️ هل تود حذف ${m.user} وإزالته من قائمة أصدقائك بالكامل؟`)) {
-                          socket.emit('toggle_friend', { currentUser: currentUser, targetUser: m.user });
-                          alert(`🗑️ تم إزالة ${m.user} من الأصدقاء بنجاح!`);
-                        }
-                      }}
-                    >
-                      ×
-                    </button>
+              {/* منطقة عرض النص التفاعلي: تتحول لحقل إدخال مرن ومذهب عند تفعيل وضع التعديل */}
+              <div className="msg-text-content" style={{ paddingRight: '45px', paddingLeft: '45px', wordBreak: 'break-word' }}>
+                {isEditing ? (
+                  <div className="edit-msg-inline-box" style={{ display: 'flex', gap: '5px', marginTop: '5px', width: '100%' }}>
+                    <input 
+                      type="text" 
+                      className="admin-input" 
+                      style={{ flex: 1, padding: '4px 8px', background: '#000', color: '#fff', border: '1px solid var(--border-glass)', borderRadius: '4px' }}
+                      value={editValue} 
+                      onChange={(e) => setEditValue(e.target.value)} 
+                    />
+                    <button type="button" className="assign-btn-gold" style={{ padding: '2px 10px', fontSize: '11px', cursor: 'pointer' }} onClick={() => handleSaveEdit(m.id)}>حفظ</button>
+                    <button type="button" style={{ padding: '2px 10px', fontSize: '11px', background: '#333', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }} onClick={() => setEditingMsgId(null)}>إلغاء</button>
                   </div>
+                ) : (
+                  typeof m.text === 'object' && m.text !== null ? m.text.text : m.text
                 )}
               </div>
 
-              <span className="msg-time">{m.time}</span>
             </div>
-            <div className="msg-text-content" style={{ paddingRight: '36px', wordBreak: 'break-word' }}>
-              {/* 👑 حماية وفطنة برمجية: نتحقق هل text عبارة عن كائن أم نص صافي، لنطبع الحقل الداخلي الصافي بدقة بدون كراش */}
-              {typeof m.text === 'object' && m.text !== null ? m.text.text : m.text}
-            </div>
-
-          </div>
-        ))}
+          );
+        })}
         {/* مرجع وهمي في نهاية القائمة لتوجيه خاصية النزول التلقائي */}
         <div ref={messagesEndRef} />
       </div>
