@@ -1348,3 +1348,80 @@ body, html {
   transform: scale(1.15);
 }
 
+/* --- 👑 زر (+) لإضافة الأصدقاء من داخل الشات بمقاس مدمج 15 بكسل --- */
+.add-friend-chat-btn {
+  width: 15px !important;
+  height: 15px !important;
+  min-width: 15px !important;
+  max-width: 15px !important;
+  min-height: 15px !important;
+  max-height: 15px !important;
+  background: transparent !important;
+  border: 1px solid var(--gold-primary) !important;
+  color: var(--gold-primary) !important;
+  border-radius: 4px !important; /* مربع صغير منحني الأطراف */
+  font-size: 11px !important;
+  font-weight: bold !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 0 5px rgba(212, 175, 55, 0.2);
+}
+
+.add-friend-chat-btn:hover {
+  background: var(--gold-primary) !important;
+  color: #000 !important;
+  transform: scale(1.15);
+  box-shadow: 0 0 8px var(--gold-primary);
+}
+
+/* --- أزرار إدارة الأصدقاء التفاعلية من داخل الدردشة بمقاس 15 بكسل صارم --- */
+.add-friend-chat-btn, .remove-friend-chat-btn {
+  width: 15px !important;
+  height: 15px !important;
+  min-width: 15px !important;
+  max-width: 15px !important;
+  min-height: 15px !important;
+  max-height: 15px !important;
+  background: transparent !important;
+  border-radius: 4px !important; /* شكل مربع مدمج */
+  font-size: 11px !important;
+  font-weight: bold !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  transition: all 0.2s ease-in-out;
+}
+
+/* 🟢 زر الإضافة التوهجي المذهب */
+.add-friend-chat-btn {
+  border: 1px solid var(--gold-primary) !important;
+  color: var(--gold-primary) !important;
+  box-shadow: 0 0 5px rgba(212, 175, 55, 0.2);
+}
+.add-friend-chat-btn:hover {
+  background: var(--gold-primary) !important;
+  color: #000 !important;
+  transform: scale(1.15);
+  box-shadow: 0 0 8px var(--gold-primary);
+}
+
+/* 🔴 زر الحذف التطهيري الناري */
+.remove-friend-chat-btn {
+  border: 1px solid #ff4d4d !important;
+  color: #ff4d4d !important;
+  box-shadow: 0 0 5px rgba(255, 77, 77, 0.2);
+}
+.remove-friend-chat-btn:hover {
+  background: #ff4d4d !important;
+  color: #fff !important;
+  transform: scale(1.15);
+  box-shadow: 0 0 8px #ff4d4d;
+}
