@@ -1477,3 +1477,25 @@ body, html {
   background: rgba(231, 76, 60, 0.1) !important;
   color: #ff4d4d !important;
 }
+
+/* --- 👑 ستايل فخامة نافذة مواقيت الصلاة المنبثقة الشاملة --- */
+.prayer-modal-override .prayer-widget-box {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+.prayer-zone-trigger-btn {
+  background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%) !important;
+  border: 1px solid var(--gold-primary) !important;
+  animation: pulse-gold-glow 3s infinite ease-in-out;
+}
+
+@keyframes pulse-gold-glow {
+  0% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.2); }
+  50% { box-shadow: 0 0 15px rgba(212, 175, 55, 0.6); border-color: #fff; }
+  100% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.2); }
+}
+
