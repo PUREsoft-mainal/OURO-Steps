@@ -1479,12 +1479,25 @@ body, html {
 }
 
 /* --- 👑 ستايل فخامة نافذة مواقيت الصلاة المنبثقة الشاملة --- */
+/* --- 👑 التحكم الصارم والدقيق في عرض مربع مواقيت الصلاة داخل النافذة العائمة --- */
+.prayer-modal-override {
+  /* 👇 يمكنك تغيير هذا الرقم (مثلاً لـ 750px لو تريده عريضاً وممتداً، أو لـ 500px لو تريده كبسولة مدمجة ونحيفة) */
+  max-width: 680px !important; 
+  width: 90% !important; /* ضمان استجابة وأبعاد مرنة على شاشات الموبايل والتابلت */
+  margin: 0 auto !important;
+  border-radius: 14px !important;
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.4) !important; /* التوهج المذهب المحيط بالنافذة */
+}
+
+/* تأمين تمدد محتوى الصندوق الداخلي ليملأ الأبعاد الجديدة للنافذة بنقاء */
 .prayer-modal-override .prayer-widget-box {
+  width: 100% !important;
+  max-width: 100% !important;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  padding: 0 !important;
-  width: 100% !important;
+  padding: 10px !important;
+  box-sizing: border-box !important;
 }
 
 .prayer-zone-trigger-btn {
