@@ -2,30 +2,37 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
-const PrayerWidget = ({ socket }) => {
-  // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
-  const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
+// 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
+const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
-  // 🔥 [تم التطهير والإصلاح] تم حذف كود حجز السوكت المكرر (const socket = io) نهائياً لمنع الكراش وحظر الـ CORS
-  // المكون سيعتمد الآن مباشرة وبسلاسة على الـ socket الممرر بالأعلى والمشفر من الـ App.js
-  
+const PrayerWidget = ({ socket, user }) => { // 👑 استقبال متغير جلسة الـ user للتحقق من الأدمن
   const [times, setTimes] = useState({ fajr: '', dhuhr: '', asr: '', maghrib: '', isha: '' });
   const [currentAdhan, setCurrentAdhan] = useState(""); 
   const [volume, setVolume] = useState(0.8); 
   const [isMuted, setIsMuted] = useState(false); 
+  
+  // 🕋 أصول الرفع السحابية المستلمة حية من MongoDB Atlas (لوجو افتراضي وصوت افتراضي)
+  const [assets, setAssets] = useState({ kaabaImgUrl: '/assets/kaaba.png', adhanAudioUrl: '/assets/adhan.mp3' });
 
   const audioRef = useRef(null);
+  const isAdmin = user && user.username === 'Admin_Mostafa'; // جدار حماية الأدمن الصارم
 
   useEffect(() => {
-    const fetchTimes = async () => {
+    const fetchTimesAndAssets = async () => {
       try {
-        const res = await axios.get(`${API_BASE}/api/prayer-times`);
-        setTimes(res.data || {});
+        const resTimes = await axios.get(`${API_BASE}/api/prayer-times`);
+        setTimes(resTimes.data || {});
+        
+        // جلب آخر صور وأصوات أذان تم رفعها وتخزينها بالأطلس
+        const resAssets = await axios.get(`${API_BASE}/api/prayer/assets`);
+        if (resAssets.data) {
+          setAssets(resAssets.data);
+        }
       } catch (err) {
-        console.error("خطأ جلب المواقيت الفلكية السحابية:", err);
+        console.error("خطأ جلب البيانات السحابية لمواقيت الصلاة:", err);
       }
     };
-    fetchTimes();
+    fetchTimesAndAssets();
 
     // 🔊 الاستماع اللحظي لإشارة البث الفوري وتشغيل الأذان عند الجميع معاً سحابياً
     if (socket) {
@@ -37,12 +44,62 @@ const PrayerWidget = ({ socket }) => {
               audioRef.current.play().catch(e => console.log("نقرة المستخدم تضمن تفعيل تشغيل الأذان تلقائياً."));
           }
       });
+
+      // الاستماع الفوري لإشارات تحديث الأصول الإدارية من الأدمن
+      socket.on('prayer_assets_updated', (updatedData) => {
+          setAssets(prev => ({ ...prev, ...updatedData }));
+      });
     }
 
     return () => {
-        if (socket) socket.off('trigger_adhan_broadcast');
+        if (socket) {
+          socket.off('trigger_adhan_broadcast');
+          socket.off('prayer_assets_updated');
+        }
     };
   }, [socket, isMuted, volume]);
+
+  // 📤 دالة رفع صورة الكعبة أو المربع الجانبي للأدمن
+  const handleKaabaUpload = async (e) => {
+    const file = e.target.files ? e.target.files[0] : null;
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('kaabaImage', file);
+
+    try {
+      const res = await axios.post(`${API_BASE}/api/prayer/upload-kaaba`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (res.data.success) {
+        alert("📸 🎉 تم رفع وتحديث الصورة السحابية الجانبية بنجاح ساحق!");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("❌ فشل رفع الصورة الشخصية للكعبة.");
+    }
+  };
+
+  // 🎵 دالة رفع وتعيين صوت الآذان السحابي الموحد للأدمن
+  const handleAdhanUpload = async (e) => {
+    const file = e.target.files ? e.target.files[0] : null;
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('adhanAudio', file);
+
+    try {
+      const res = await axios.post(`${API_BASE}/api/prayer/upload-adhan`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (res.data.success) {
+        alert("👑 🎉 تم تحديث وصيانة صوت الأذان المركزي الموحد لجميع الزوار فوراً!");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("❌ فشل رفع ملف صوت الأذان الجديد.");
+    }
+  };
 
   const handleVolumeChange = (e) => {
     const newVol = parseFloat(e.target.value);
@@ -60,25 +117,66 @@ const PrayerWidget = ({ socket }) => {
   };
 
   return (
-    <div className="prayer-widget-box gold-border">
+    <div className="prayer-widget-box">
       
-      {/* مشغل صوت الأذان المدمج التفاعلي */}
-      <audio ref={audioRef} src="/assets/adhan.mp3" onEnded={() => setCurrentAdhan("")} />
+      {/* مشغل صوت الأذان الديناميكي المربوط بمسار الرفع السحابي للأدمن */}
+      <audio 
+        ref={audioRef} 
+        src={assets.adhanAudioUrl.startsWith('http') ? assets.adhanAudioUrl : `${API_BASE}${assets.adhanAudioUrl}`} 
+        onEnded={() => setCurrentAdhan("")} 
+      />
 
       {/* 🕋 الهيكل المرن: دمج صورة الكعبة مع حقول الأوقات والتحكم */}
       <div className="prayer-flex-container">
         
-        {/* جهة اليمين: صورة الكعبة بارتفاع 120px وعرض متناسب ثابت */}
-        <div className="kaaba-image-wrapper">
-          <img src="/assets/kaaba.png" className="kaaba-img-glow" alt="الكعبة المشرفة" />
+        {/* جهة اليمين: حقل مربع عرض الصورة الشخصية المتصل بـ input رفع للأدمن */}
+        <div className="kaaba-image-wrapper" style={{ position: 'relative' }}>
+          {isAdmin && (
+            <input 
+              type="file" 
+              id="kaabaImageUpInput" 
+              accept="image/*" 
+              hidden 
+              onChange={handleKaabaUpload} 
+            />
+          )}
+          <img 
+            src={assets.kaabaImgUrl.startsWith('http') ? assets.kaabaImgUrl : `${API_BASE}${assets.kaabaImgUrl}`} 
+            className={`kaaba-img-glow ${isAdmin ? 'admin-editable-asset' : ''}`} 
+            alt="الكعبة المشرفة" 
+            onClick={() => isAdmin && document.getElementById('kaabaImageUpInput').click()}
+            title={isAdmin ? "👑 حساب ملكي: انقر هنا لرفع وتعديل الصورة الجانبية فوراً" : ""}
+          />
         </div>
 
         {/* جهة اليسار: جدول الصلوات وأزرار التحكم خفض ورفع الصوت */}
         <div className="prayer-content-side">
-          <div className="prayer-widget-header">
+          <div className="prayer-widget-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
             <h4>🕋 مواقيت الصلاة والآذان اللحظي التلقائي</h4>
-            {currentAdhan && <div className="adhan-live-neon">⚡ حان الآن موعد رفع آذان صلاة {currentAdhan} بـ OURO Steps...</div>}
+            
+            {/* 🛡️ زر رفع صوت الأذان الجديد يظهر فقط وحصرياً لحساب الأدمن الملكي */}
+            {isAdmin && (
+              <div className="admin-audio-trigger-zone">
+                <input 
+                  type="file" 
+                  id="adhanAudioUpInput" 
+                  accept="audio/*" 
+                  hidden 
+                  onChange={handleAdhanUpload} 
+                />
+                <button 
+                  type="button" 
+                  className="assign-btn-gold" 
+                  style={{ fontSize: '10px', padding: '4px 10px', cursor: 'pointer' }}
+                  onClick={() => document.getElementById('adhanAudioUpInput').click()}
+                >
+                  🎵 تعيين صوت الآذان
+                </button>
+              </div>
+            )}
           </div>
+
+          {currentAdhan && <div className="adhan-live-neon">⚡ حان الآن موعد رفع آذان صلاة {currentAdhan} بـ OURO Steps...</div>}
 
           <div className="prayer-times-grid">
             <div className="prayer-time-card"><span>الفجر</span><strong>{times.fajr}</strong></div>
@@ -90,12 +188,14 @@ const PrayerWidget = ({ socket }) => {
 
           <div className="audio-control-panel">
             <button type="button" className={`mute-btn-gold ${isMuted ? 'muted-active' : ''}`} onClick={toggleMute}>
-              {isMuted ? "🔇 صامت الآن" : "🔊 كتم الصوت"}
+              {isMuted ? "🔇 صامت" : "🔊 كتم الصوت"}
             </button>
             
-            <div className="volume-slider-wrapper">
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>مستوى الصوت:</span>
+            {/* 👑 شريط التحكم المطور الحاضن لعلامات الصوت الذكية الذوقية (-) و (+) على الجانبين */}
+            <div className="volume-slider-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="volume-sign-indicator subtract-vol-icon" style={{ color: 'var(--gold-primary)', fontWeight: 'bold', fontSize: '14px', userSelect: 'none' }}>-</span>
               <input type="range" min="0" max="1" step="0.05" value={volume} onChange={handleVolumeChange} className="gold-volume-slider" />
+              <span className="volume-sign-indicator add-vol-icon" style={{ color: 'var(--gold-primary)', fontWeight: 'bold', fontSize: '14px', userSelect: 'none' }}>+</span>
             </div>
 
             {currentAdhan && (
