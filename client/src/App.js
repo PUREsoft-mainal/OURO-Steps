@@ -43,6 +43,8 @@ function App() {
   const [discoveryTab, setDiscoveryTab] = useState('friends'); 
   const [currentGroup, setCurrentGroup] = useState({ id: 'public', name: 'المجموعة العامة' });
   const [groups, setGroups] = useState([{ id: 'public', name: 'المجموعة العامة' }]);
+  const [showPrayerModal, setShowPrayerModal] = useState(false); // حالة فتح وإغلاق نافذة الصلاة
+
 
   useEffect(() => {
     const fetchInitialFiles = async () => {
