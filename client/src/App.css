@@ -1286,7 +1286,7 @@ body, html {
   display: flex !important;
   gap: 10px !important;
   width: max-content !important;
-  animation: scroll-ads-bottom 40s linear infinite !important;
+  animation: scroll-ads-bottom 20s linear infinite !important;
 }
 
 /* 🛑 التجميد والوقوف الفوري عند تمرير الماوس على المربع السفلي */
