@@ -201,6 +201,7 @@ function App() {
         <ActionBar 
           setShowDiscovery={setShowDiscovery} 
           setDiscoveryTab={setDiscoveryTab} 
+          setShowPrayerModal={setShowPrayerModal} // 👑 تمرير دالة فتح نافذة مواقيت الصلاة لشريط الأزرار
         />
 
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
@@ -253,11 +254,22 @@ function App() {
           <AdSliderBottom ads={ads} user={user} />
         </div>
 
+        {/* 👑 نافذة مواقيت الصلاة المنبثقة الشاملة (تظهر فور النقر على زر مواقيت الصلاة بشريط الأزرار) */}
+        {showPrayerModal && (
+          <div className="ad-modal-overlay" onClick={() => setShowPrayerModal(false)}>
+            <div className="ad-modal-content prayer-modal-override" onClick={e => e.stopPropagation()} style={{ padding: '20px', maxWidth: '650px', background: 'rgba(10, 10, 10, 0.95)' }}>
+              <h3 style={{ color: '#d4af37', marginBottom: '20px', textAlign: 'center' }}>🕋 مواقيت الصلاة والآذان اللحظي</h3>
+              
+              {/* استدعاء المنظومة الفلكية وصورة الكعبة داخل النافذة المنبثقة بأمان كامل */}
+              <PrayerWidget socket={socket} />
+              
+              <button className="close-ad-btn" onClick={() => setShowPrayerModal(false)} style={{ marginTop: '20px', width: '100%', cursor: 'pointer' }}>إغلاق النافذة</button>
+            </div>
+          </div>
+        )}
+
         {/* 👑 2. حاوية بقية الأدوات السفلية المستقرة بانتظام ممتد */}
         <div className="spacer-wrapper-zone" style={{ padding: '0 20px', width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '15px' }}> 
-
-          {/* 🕋 ب) منظومة مواقيت الصلاة والأذان المتزامن مع صورة الكعبة متمركزة يميناً بارتفاع 120px */}
-          <PrayerWidget socket={socket} />
 
           {/* 📟 ج) الفلاشة الافتراضية الموقوتة بـ 72 ساعة مستقرة في موضعها السفلي الاحترافي بنجاح وثبات كامل */}
           <VirtualFlash user={user} socket={socket} />
