@@ -263,7 +263,7 @@ function App() {
               <h3 style={{ color: '#d4af37', marginBottom: '20px', textAlign: 'center' }}>🕋 مواقيت الصلاة والآذان اللحظي</h3>
               
               {/* استدعاء المنظومة الفلكية وصورة الكعبة داخل النافذة المنبثقة بأمان كامل */}
-              <PrayerWidget socket={socket} />
+              <PrayerWidget socket={socket} user={user} />
               
               <button className="close-ad-btn" onClick={() => setShowPrayerModal(false)} style={{ marginTop: '20px', width: '100%', cursor: 'pointer' }}>إغلاق النافذة</button>
             </div>
