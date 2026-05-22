@@ -23,6 +23,46 @@ app.use(cors({
     methods: ["GET", "POST", "DELETE"]
 }));
 
+// 👑 معيار حفظ الأصول الإدارية لمواقيت الصلاة بـ MongoDB Atlas
+const PrayerAssetSchema = new mongoose.Schema({
+    id: { type: String, default: 'config' },
+    kaabaImgUrl: { type: String, default: '/assets/kaaba.png' }, // الصورة الافتراضية
+    adhanAudioUrl: { type: String, default: '/assets/adhan.mp3' } // صوت الأذان الافتراضي
+});
+const PrayerAssetModel = mongoose.model('PrayerAsset', PrayerAssetSchema);
+
+// مسار API لرفع وتحديث صورة الكعبة المنبثقة من صفحة الأدمن
+app.post('/api/prayer/upload-kaaba', upload.single('kaabaImage'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ success: false });
+        const imgUrl = `/uploads/${req.file.filename}`;
+        
+        await PrayerAssetModel.updateOne({ id: 'config' }, { $set: { kaabaImgUrl: imgUrl } }, { upsert: true });
+        io.emit('prayer_assets_updated', { kaabaImgUrl: imgUrl });
+        res.json({ success: true, kaabaImgUrl: imgUrl });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
+
+// مسار API لرفع وتعيين ملف صوت الأذان الجديد من صفحة الأدمن
+app.post('/api/prayer/upload-adhan', upload.single('adhanAudio'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ success: false });
+        const audioUrl = `/uploads/${req.file.filename}`;
+        
+        await PrayerAssetModel.updateOne({ id: 'config' }, { $set: { adhanAudioUrl: audioUrl } }, { upsert: true });
+        io.emit('prayer_assets_updated', { adhanAudioUrl: audioUrl });
+        res.json({ success: true, adhanAudioUrl: audioUrl });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
+
+// مسار API لجلب الأصول الحالية عند فتح النافذة
+app.get('/api/prayer/assets', async (req, res) => {
+    let config = await PrayerAssetModel.findOne({ id: 'config' });
+    if (!config) config = { kaabaImgUrl: '/assets/kaaba.png', adhanAudioUrl: '/assets/adhan.mp3' };
+    res.json(config);
+});
+
+
 // 👑 معيار معمارية الحسابات الملكية والأصدقاء بـ MongoDB
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
