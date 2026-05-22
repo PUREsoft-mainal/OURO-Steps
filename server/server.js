@@ -23,6 +23,42 @@ app.use(cors({
     methods: ["GET", "POST", "DELETE"]
 }));
 
+// 👑 معيار معمارية الحسابات الملكية والأصدقاء بـ MongoDB
+const UserSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    role: { type: String, default: 'مستخدم' },
+    avatar: { type: String, default: '' },
+    friends: { type: [String], default: [] }
+});
+const UserModel = mongoose.model('User', UserSchema);
+
+// 👑 معيار حفظ الإعلانات الثنائية الموقوتة والموجهة بـ MongoDB
+const AdSchema = new mongoose.Schema({
+    id: { type: String, required: true },
+    imgUrl: { type: String, required: true },
+    link: { type: String, default: '#' },
+    phone: { type: String, default: '' },
+    whatsapp: { type: String, default: '' },
+    telegram: { type: String, default: '' },
+    email: { type: String, default: '' },
+    expiryDate: { type: Number, required: true },
+    location: { type: String, default: 'top' }
+});
+const AdModel = mongoose.model('Ad', AdSchema);
+
+// 👑 معيار حفظ رسائل المجموعات التاريخية ومنع مسح الشات بـ MongoDB
+const GroupMessageSchema = new mongoose.Schema({
+    id: { type: String, required: true },
+    roomId: { type: String, required: true },
+    user: { type: String, required: true },
+    role: { type: String, default: 'مستخدم' },
+    avatar: { type: String, default: '' },
+    text: { type: String, required: true },
+    time: { type: String, required: true }
+});
+const GroupMessageModel = mongoose.model('GroupMessage', GroupMessageSchema);
+
 app.use(express.json());
 
 // إعداد ملتر لرفع الملفات والستوريات (Hugging Face يتيح مجلد /tmp للتخزين المؤقت المستقر)
