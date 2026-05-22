@@ -436,33 +436,64 @@ io.on('connection', (socket) => {
 app.get('/api/users', (req, res) => res.json(readJson(USERS_FILE)));
 app.get('/api/market', (req, res) => res.json(readJson(MARKET_FILE)));
 
-// جلب سجل شات الغرفة الفرعية المستقلة المكتوب يدوياً لحظياً
-app.get('/api/private-chat-history/:roomId', (req, res) => {
-    const chatFilePath = path.join(CONVERSATIONS_DIR, `${req.params.roomId}.json`);
-    if (fs.existsSync(chatFilePath)) {
-        res.json(JSON.parse(fs.readFileSync(chatFilePath, 'utf8')));
-    } else {
+// ==========================================================================
+// 🕋 المخطط الهيكلي للشات الخاص (Private Conversations) بـ MongoDB Atlas
+// ==========================================================================
+const PrivateMessageSchema = new mongoose.Schema({
+    id: { type: String, required: true },
+    roomId: { type: String, required: true },
+    sender: { type: String, required: true },
+    text: { type: String, required: true },
+    time: { type: String, required: true },
+    participants: { type: [String], default: [] }
+});
+const PrivateMessageModel = mongoose.model('PrivateMessage', PrivateMessageSchema);
+
+
+// ==========================================================================
+// 📡 تحديث مسارات الـ API العامة والخاصة لخدمات المنصة السحابية
+// ==========================================================================
+
+// 1️⃣ [تحديث سحابي] جلب سجل شات الغرفة الخاصة المستقلة من MongoDB Atlas منعاً للمسح
+app.get('/api/private-chat-history/:roomId', async (req, res) => {
+    try {
+        // جلب المحادثات الخاصة بالغرفة الفرعية مرتبة تصاعدياً
+        const history = await PrivateMessageModel.find({ roomId: req.params.roomId }).sort({ _id: 1 });
+        
+        // تطهير النص برمجياً من أي كائنات مكسورة قديمة لمنع كراش الـ React
+        const sanitizedHistory = history.map(m => ({
+            id: m.id,
+            roomId: m.roomId,
+            sender: m.sender,
+            time: m.time,
+            participants: m.participants,
+            text: typeof m.text === 'object' && m.text !== null ? (m.text.text || JSON.stringify(m.text)) : m.text
+        }));
+
+        res.json(sanitizedHistory);
+    } catch (err) {
+        console.error("خطأ جلب الشات الخاص سحابياً:", err);
         res.json([]);
     }
 });
 
-// مسار رفع الإعلانات المطور مع تحديد مدة العرض (أقل شيء شهر)
-app.post('/api/upload-ad', upload.single('adImage'), (req, res) => {
+// 2️⃣ [تحديث سحابي] مسار رفع الإعلانات المطور وحفظها الدائم بـ MongoDB Atlas دون فقدان
+app.post('/api/upload-ad', upload.single('adImage'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ success: false, message: "الصورة مطلوبة" });
         
         // جلب الأيام المدخلة من الأدمن وتحويلها لرقم (إذا لم تدخل نحتسبها شهر = 30 يوم)
         let durationDays = parseInt(req.body.duration) || 30;
         
-        // التحقق الأمني: إذا حاول الأدمن التحايل وإدخال أقل من 30 يوم (شهر) نرفعها تلقائياً لشهر
+        // التحقق الأمني لضمان عدم التحايل وإدخال أقل من 30 يوم
         if (durationDays < 30) durationDays = 30;
 
-        // حساب تاريخ انتهاء الإعلان بالملي ثانية (التاريخ الحالي + عدد الأيام)
+        // حساب تاريخ انتهاء الإعلان بالملي ثانية
         const expiryTimestamp = Date.now() + (durationDays * 24 * 60 * 60 * 1000);
-
-        const ads = readJson(ADS_FILE);
         const publishLocation = req.body.location === 'bottom' ? 'bottom' : 'top';
-        const newAd = { 
+
+        // 👑 صب حزمة البيانات وحفظها أزلياً داخل قلب المونجو أطلس السحابي
+        const newAd = new AdModel({
             id: Date.now().toString(), 
             imgUrl: `/uploads/${req.file.filename}`, 
             link: req.body.link || '#',
@@ -470,20 +501,22 @@ app.post('/api/upload-ad', upload.single('adImage'), (req, res) => {
             whatsapp: req.body.whatsapp || '',
             telegram: req.body.telegram || '',
             email: req.body.email || '',
-            expiryDate: expiryTimestamp, // حفظ وقت الانتهاء محلياً
-            location: publishLocation // حفظ كلاس توجيه الشريط ('top' أو 'bottom')
-        };
+            expiryDate: expiryTimestamp, // حفظ وقت الانتهاء سحابياً للفرز الآلي
+            location: publishLocation // توجيه شريط النشر الحصري ('top' أو 'bottom')
+        });
+        await newAd.save(); // تم الحفظ بأمان مطلق في خزائن الـ Cloud الخارجي للأبد
         
-        ads.push(newAd);
-        writeJson(ADS_FILE, ads);
+        // جلب الإعلانات النشطة وغير منتهية الصلاحية فقط وبثها لحظياً لجميع المشتركين
+        const allAds = await AdModel.find({ expiryDate: { $gt: Date.now() } });
+        io.emit('update_ads', allAds);
         
-        io.emit('update_ads', ads);
         res.json({ success: true, ad: newAd });
     } catch (err) {
-        console.error("خطأ أثناء رفع الإعلان الموقوت:", err);
+        console.error("خطأ أثناء رفع الإعلان الموقوت السحابي:", err);
         res.status(500).json({ success: false });
     }
 });
+
 
 // 🗑️ مسار API الملكي لحذف الإعلانات المرفوعة بالخطأ من السحابة وقاعدة البيانات
 app.delete('/api/delete-ad/:id', (req, res) => {
