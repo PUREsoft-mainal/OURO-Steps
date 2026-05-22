@@ -1,7 +1,8 @@
 import React from 'react';
 import '../App.css';
 
-const ActionBar = ({ setShowDiscovery, setDiscoveryTab }) => {
+// 👑 استقبال setShowPrayerModal لتوجيه نقرة زر الكعبة المشرفة نافذياً
+const ActionBar = ({ setShowDiscovery, setDiscoveryTab, setShowPrayerModal }) => {
   
   // دالة ذكية للتحكم في فتح النافذة وتوجيه التبويب في نفس اللحظة
   const handleButtonClick = (tabName) => {
@@ -24,6 +25,14 @@ const ActionBar = ({ setShowDiscovery, setDiscoveryTab }) => {
       >
         🤝 الأصدقاء
       </button>
+
+      {/* 👑 زرع منظومة مواقيت الصلاة والأذان المنبثقة الفاخرة متمركزة في قلب شريط الأزرار */}
+      <button 
+        className="action-bar-btn gold-glow-btn prayer-zone-trigger-btn" 
+        onClick={() => setShowPrayerModal(true)}
+      >
+        🕋 مواقيت الصلاة
+      </button>
       
       <button 
         className="action-bar-btn gold-glow-btn" 
@@ -36,4 +45,3 @@ const ActionBar = ({ setShowDiscovery, setDiscoveryTab }) => {
 };
 
 export default ActionBar;
-
