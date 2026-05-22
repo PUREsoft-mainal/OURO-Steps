@@ -148,110 +148,128 @@ app.use('/uploads', express.static(UPLOADS_DIR));
 
 let activeUsers = 0;
 
+// ==========================================================================
+// 🕋 المخطط الهيكلي القياسي للمجموعات وغرف الشات بـ MongoDB Atlas (بديل الـ JSON)
+// ==========================================================================
+const GroupSchema = new mongoose.Schema({
+    id: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
+    creator: { type: String, required: true },
+    mod1: { type: String, default: '' },
+    mod2: { type: String, default: '' }
+});
+const GroupModel = mongoose.model('Group', GroupSchema);
+
+// تأكيد إنشاء الغرفة العامة تلقائياً في السحاب الخارجي عند إقلاع السيرفر أول مرة
+GroupModel.findOne({ id: 'public' }).then(async (group) => {
+    if (!group) {
+        const publicRoom = new GroupModel({ id: 'public', name: 'المجموعة العامة', creator: 'System' });
+        await publicRoom.save();
+    }
+});
+
+// ==========================================================================
+// 📡 إدارة مستمعات السوكت والأحداث الخمسة المحدثة سحابياً بنقاء 100%
+// ==========================================================================
 io.on('connection', (socket) => {
     activeUsers++;
-    io.emit('update_stats', { totalUsers: readJson(USERS_FILE).length, activeUsers });
-// --- إعداد مسار مجلد المجموعات المستقلة على الهارد ---
-const GROUPS_DIR = path.join(__dirname, 'groups_chats');
-const GROUPS_LIST_FILE = path.join(__dirname, 'groups.json');
-
-if (!fs.existsSync(GROUPS_DIR)) fs.mkdirSync(GROUPS_DIR, { recursive: true });
-initJsonFile(GROUPS_LIST_FILE, [{ id: 'public', name: 'المجموعة العامة', creator: 'System', mod1: '', mod2: '' }]);
-
-// دالة مساعدة لإنشاء ملف مستقل للمجموعة فوراً
-const initGroupChatFile = (roomId) => {
-    const filePath = path.join(GROUPS_DIR, `${roomId}.json`);
-    if (!fs.existsSync(filePath)) fs.writeFileSync(filePath, JSON.stringify([], null, 2), 'utf8');
-};
-initGroupChatFile('public'); // تهيئة ملف المجموعة العامة
-
-// --- داخل كتلة io.on('connection', (socket) => { ... }) قم بالتحديث التالي ---
-
-    // 1. مستمع إنشاء مجموعة جديدة بملفها المستقل وحفظ منشئها وصلاحياتها
-    socket.on('create_group', (data) => {
-        if (!data || !data.name || !data.name.trim() || !socket.user) return;
-        
-        const groups = readJson(GROUPS_LIST_FILE);
-        const roomId = 'group_' + Date.now().toString();
-        
-        const newGroup = {
-            id: roomId,
-            name: data.name.trim(),
-            creator: socket.user.username, // حفظ اسم المنشئ تلقائياً
-            mod1: '', // المشرف الأول (يضاف لاحقاً)
-            mod2: ''  // المشرف الثاني (يضاف لاحقاً)
-        };
-        
-        groups.push(newGroup);
-        writeJson(GROUPS_LIST_FILE, groups);
-        initGroupChatFile(roomId); // إنشاء ملف الـ JSON المخصص للمحادثة فوراً على الهارد
-        
-        io.emit('new_group_added', newGroup); // بث المجموعة لجميع المستخدمين لحظياً
+    
+    // المزامنة الفورية للإحصائيات الحية بجلب إجمالي الأعضاء المسجلين من السحاب
+    UserModel.countDocuments().then(total => {
+        io.emit('update_stats', { totalUsers: total, activeUsers });
     });
 
-    // 2. مستمع الانضمام لغرفة مجموعة محددة وجلب تاريخ رسائلها من ملفها المنفصل
-    socket.on('join_group_room', (data) => {
-        socket.join(data.roomId);
-        const chatFilePath = path.join(GROUPS_DIR, `${data.roomId}.json`);
-        let history = [];
-        if (fs.existsSync(chatFilePath)) history = JSON.parse(fs.readFileSync(chatFilePath, 'utf8'));
-        
-        // إرسال تاريخ المحادثة المنفصلة فقط للمستخدم الذي دخل الغرفة حالياً
-        socket.emit('group_chat_history', { roomId: data.roomId, history });
-    });
-
-    // 3. مستمع إرسال رسالة بداخل ملف المجموعة المنفصلة المفتوحة
-    socket.on('sendGroupMessage', (data) => {
-        if (!socket.user || !data.roomId) return;
-        
-        const chatFilePath = path.join(GROUPS_DIR, `${data.roomId}.json`);
-        if (!fs.existsSync(chatFilePath)) return;
-
-        const messages = JSON.parse(fs.readFileSync(chatFilePath, 'utf8'));
-        const msg = {
-            id: Date.now().toString(),
-            user: socket.user.username,
-            role: socket.user.role,
-            avatar: socket.user.avatar || '', // تمرير رابط الصورة الشخصية مع حزمة الرسالة
-            text: data.text,
-            time: new Date().toLocaleTimeString('ar-EG')
-        };
-
-        messages.push(msg);
-        fs.writeFileSync(chatFilePath, JSON.stringify(messages, null, 2), 'utf8');
-
-        // بث الرسالة لحظياً فقط لأعضاء هذه المجموعة المفتوحة بالثانية
-        io.to(data.roomId).emit('group_message', { roomId: data.roomId, msg });
-    });
-
-      // 📝 استقبال ومعالجة تعديل الرسائل بملفات المجموعات سحابياً
-    socket.on('edit_group_message', (data) => {
+    // 1️⃣ مستمع إنشاء مجموعة مخصصة جديدة وحفظها الدائم في السحاب الأزلي
+    socket.on('create_group', async (data) => {
         try {
-            const chatFilePath = path.join(__dirname, 'groups_chats', `${data.roomId}.json`);
-            if (!fs.existsSync(chatFilePath)) return;
-            let messages = JSON.parse(fs.readFileSync(chatFilePath, 'utf8'));
+            if (!data || !data.name || !data.name.trim() || !socket.user) return;
             
-            messages = messages.map(m => m.id === data.msgId ? { ...m, text: data.newText } : m);
-            fs.writeFileSync(chatFilePath, JSON.stringify(messages, null, 2), 'utf8');
+            const roomId = 'group_' + Date.now().toString();
+            const newGroup = new GroupModel({
+                id: roomId,
+                name: data.name.trim(),
+                creator: socket.user.username,
+                mod1: '',
+                mod2: ''
+            });
+            await newGroup.save(); // حُفظت للأبد في MongoDB Atlas ولا تتأثر بالتحديثات
             
-            // بث سجل المحادثة المحدث بالكامل للغرفة فوراً لتحديث شاشات المشتركين
-            io.to(data.roomId).emit('group_chat_history', { roomId: data.roomId, history: messages });
-        } catch (err) { console.error(err); }
+            io.emit('new_group_added', newGroup); // بث الغرفة الجديدة للجميع فوراً
+        } catch (err) { console.error("خطأ إنشاء المجموعة سحابياً:", err); }
     });
 
-    // 🗑️ استقبال ومعالجة حذف الرسائل بملفات المجموعات سحابياً
-    socket.on('delete_group_message', (data) => {
+    // 2️⃣ مستمع الانضمام للغرفة وجلب تاريخ الرسائل المأمن من الكراش من Cloud
+    socket.on('join_group_room', async (data) => {
         try {
-            const chatFilePath = path.join(__dirname, 'groups_chats', `${data.roomId}.json`);
-            if (!fs.existsSync(chatFilePath)) return;
-            let messages = JSON.parse(fs.readFileSync(chatFilePath, 'utf8'));
+            if (!data.roomId) return;
+            socket.join(data.roomId);
             
-            messages = messages.filter(m => m.id !== data.msgId);
-            fs.writeFileSync(chatFilePath, JSON.stringify(messages, null, 2), 'utf8');
+            // جلب رسائل الغرفة المحددة من السحاب مرتبة تصاعدياً لتوليد السجل التاريخي
+            const messages = await GroupMessageModel.find({ roomId: data.roomId }).sort({ _id: 1 });
             
-            io.to(data.roomId).emit('group_chat_history', { roomId: data.roomId, history: messages });
-        } catch (err) { console.error(err); }
+            // تنظيف الفرز والتطهير من أي كائنات تالفة قديمة لمنع خطأ #31
+            const sanitizedHistory = messages.map(m => ({
+                id: m.id,
+                roomId: m.roomId,
+                user: m.user,
+                role: m.role,
+                avatar: m.avatar,
+                time: m.time,
+                text: typeof m.text === 'object' && m.text !== null ? (m.text.text || JSON.stringify(m.text)) : m.text
+            }));
+
+            // إرسال تاريخ الدردشة للشخص الذي دخل الغرفة بالثانية وبأمان كامل
+            socket.emit('group_chat_history', { roomId: data.roomId, history: sanitizedHistory });
+        } catch (err) { console.error("خطأ جلب سجل الغرفة من السحاب:", err); }
     });
+
+    // 3️⃣ مستمع استقبال وحفظ الرسائل الجديدة بـ MongoDB Atlas وبثها لحظياً للمجموعة
+    socket.on('sendGroupMessage', async (data) => {
+        try {
+            if (!socket.user || !data.roomId || !data.text) return;
+
+            const msgData = new GroupMessageModel({
+                id: Date.now().toString(),
+                roomId: data.roomId,
+                user: socket.user.username,
+                role: socket.user.role,
+                avatar: socket.user.avatar || '', // تمرير رابط الصورة المحدثة سحابياً
+                text: data.text.trim(),
+                time: new Date().toLocaleTimeString('ar-EG')
+            });
+            await msgData.save(); // الرسالة آمنة وراسخة في السحاب الخارجي للأبد
+
+            io.to(data.roomId).emit('group_message', { roomId: data.roomId, msg: msgData });
+        } catch (err) { console.error("خطأ إرسال الرسالة سحابياً:", err); }
+    });
+
+    // 4️⃣ مستمع تعديل الرسائل سحابياً ولحظياً بـ MongoDB Atlas
+    socket.on('edit_group_message', async (data) => {
+        try {
+            if (!data.roomId || !data.msgId || !data.newText) return;
+            
+            // تحديث الحقل السحابي للرسالة المستهدفة
+            await GroupMessageModel.updateOne({ id: data.msgId }, { $set: { text: data.newText.trim() } });
+            
+            // إعادة جلب السجل المحدث وبثه لإنعاش شاشات الجميع لحظياً
+            const history = await GroupMessageModel.find({ roomId: data.roomId }).sort({ _id: 1 });
+            io.to(data.roomId).emit('group_chat_history', { roomId: data.roomId, history });
+        } catch (err) { console.error("خطأ تعديل الرسالة سحابياً:", err); }
+    });
+
+    // 5️⃣ مستمع تدمير وإبادة الرسائل سحابياً ولحظياً من الـ Cloud
+    socket.on('delete_group_message', async (data) => {
+        try {
+            if (!data.roomId || !data.msgId) return;
+            
+            // حذف السجل من قاعدة البيانات السحابية الحية
+            await GroupMessageModel.deleteOne({ id: data.msgId });
+            
+            const history = await GroupMessageModel.find({ roomId: data.roomId }).sort({ _id: 1 });
+            io.to(data.roomId).emit('group_chat_history', { roomId: data.roomId, history });
+        } catch (err) { console.error("خطأ حذف الرسالة سحابياً:", err); }
+    });
+
 
 
     // 4. تعيين المشرفين (المشرف الأول والمشرف الثاني) من قبل منشئ المجموعة
