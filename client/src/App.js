@@ -260,7 +260,7 @@ function App() {
         {showPrayerModal && (
           <div className="ad-modal-overlay" onClick={() => setShowPrayerModal(false)}>
             <div className="ad-modal-content prayer-modal-override" onClick={e => e.stopPropagation()} style={{ padding: '20px', maxWidth: '650px', background: 'rgba(10, 10, 10, 0.95)' }}>
-              <h3 style={{ color: '#d4af37', marginBottom: '20px', textAlign: 'center' }}>🕋 مواقيت الصلاة والآذان اللحظي</h3>
+              <h3 style={{ color: '#d4af37', marginBottom: '20px', textAlign: 'center' }}>🕋 مواقيت الصلاة والآذان على حسب التوقيت المحلى لمدينة القاهرة</h3>
               
               {/* استدعاء المنظومة الفلكية وصورة الكعبة داخل النافذة المنبثقة بأمان كامل */}
               <PrayerWidget socket={socket} user={user} />
