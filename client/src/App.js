@@ -160,7 +160,7 @@ function App() {
         socket.off('error_msg');
       }
     };
-  }, [currentGroup.id]);
+  }, [isLogged, currentGroup.id, socket]); // 👑 [تم التطهير] قفل المصفوفة الشامل المأمن سحابياً لمنع كراش الـ Token
 
   const handleAction = (e) => {
     e.preventDefault();
