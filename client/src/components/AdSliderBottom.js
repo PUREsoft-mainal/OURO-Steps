@@ -42,12 +42,13 @@ const AdSliderBottom = ({ ads, user }) => { // 👑 استقبال جلسة ال
       
       <div className="ads-scroll-container-bottom" ref={scrollContainerRef}>
         <div className="ads-track-bottom">
-          {/* 👑 [تعديلك العبقري] عرض المصفوفة الصافية مباشرة لمنع تكرار الإعلان الواحد في نفس الشريط */}
+          {/* 👑 عرض المصفوفة الصافية مباشرة دون تكرار قسري للإعلان الواحد */}
           {(bottomAds.length > 0 ? [...bottomAds] : []).map((ad, i) => {
             const fullImgUrl = ad.imgUrl ? (ad.imgUrl.startsWith('http') ? ad.imgUrl : `${API_BASE}${ad.imgUrl}`) : '';
             return (
+              /* 👑 [مفتاح الحل القاطع] قفل المعرّف على الـ id الثابت لإبقاء بقية الإعلانات السفلية منسابة دون اختفاء فور الحذف */
               <div 
-                key={`bottom-ad-${ad.id || i}-${i}`} 
+                key={ad.id || `bottom-ad-${i}`} 
                 className="ad-card-item-bottom" 
                 style={{ position: 'relative' }} // لتثبيت موقع شارة الحذف بالزاوية بدقة
                 onClick={() => setSelectedAd(ad)}
@@ -62,7 +63,7 @@ const AdSliderBottom = ({ ads, user }) => { // 👑 استقبال جلسة ال
                     ×
                   </button>
                 )}
-                {fullImgUrl && <img src={fullImgUrl} alt="ad" className="ad-image-content-bottom" />}
+                {fullImgUrl && <img src={fullImgUrl} alt="ad" className="ad-image-content-bottom" crossOrigin="anonymous" />}
               </div>
             );
           })}
@@ -84,13 +85,13 @@ const AdSliderBottom = ({ ads, user }) => { // 👑 استقبال جلسة ال
                 <a 
                   href={selectedAd.link.startsWith('http') ? selectedAd.link : `http://${selectedAd.link}`} 
                   target="_blank" rel="noreferrer" className="contact-btn"
-                  style={{background: 'var(--gold-primary)', color:'#000', borderRadius:'5px', padding:'8px', fontWeight:'bold', textDecoration:'none'}}
+                  style={{background: 'var(--gold-primary)', color:'#000', borderRadius:'5px', padding:'8px', fontWeight:'bold', textDecoration:'none', textAlign: 'center'}}
                 >
                   🌐 زيارة رابط الإعلان المرفق
                 </a>
               )}
               
-              {/* 🔥 تم تصحيح مسار روابط الدمج النصي للسوشيال ميديا ووضع علامة المائل / لمنع كسر التوجيه */}
+              {/* 🔥 [تم الإصلاح والتأمين] وضع علامة المائل / الحيوية لحماية التوجيه ومنع كسر التوجيه السحابي */}
               {selectedAd.whatsapp && <a href={`https://wa.me{selectedAd.whatsapp}`} target="_blank" rel="noreferrer" className="contact-btn wa">واتساب</a>}
               {selectedAd.telegram && <a href={`https://t.me{selectedAd.telegram}`} target="_blank" rel="noreferrer" className="contact-btn tg">تلغرام</a>}
             </div>
