@@ -1296,7 +1296,7 @@ body, html {
 
 @keyframes scroll-ads-bottom {
   0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  100% { transform: translateX(-40%); }
 }
 
 /* صب قالب المربعات المذهبة القديمة بالبكسل الصارم والمطابق تماماً للشريط العلوي */
