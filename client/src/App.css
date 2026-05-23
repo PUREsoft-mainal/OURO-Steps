@@ -1301,7 +1301,7 @@ body, html {
 
 /* صب قالب المربعات المذهبة القديمة بالبكسل الصارم والمطابق تماماً للشريط العلوي */
 .ad-card-item-bottom {
-  flex: 0 0 auto !important;
+  flex: 0 0 200px !important;
   width: 200px !important;
   height: 90px !important;
   border: 2px solid var(--gold-primary) !important; /* نفس ستايل المربعات المذهبة الحاد */
