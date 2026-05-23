@@ -46,8 +46,8 @@ function App() {
   const [showPrayerModal, setShowPrayerModal] = useState(false); // حالة فتح وإغلاق نافذة الصلاة
 
 
+  // 👑 المنظومة المركزية الحاكمة لمستمعات السوكت وجلب البيانات مأمنة ومغلقة هندسياً بالملي
   useEffect(() => {
-    // 👑 1. [تأمين وحماية جلب الحالات] لا يتم الاستدعاء إلا إذا سجل المستخدم دخوله بنجاح لمنع الـ 404
     const fetchInitialFiles = async () => {
       if (!isLogged) return;
       try {
@@ -55,16 +55,15 @@ function App() {
         setFiles(res.data || []);
       } catch (err) {
         console.warn("⚠️ تنبيه لوجستي: مسار الستوريات فارغ حالياً بالسيرفر السحابي، جاري المتابعة الآمنة.");
-        setFiles([]); // مصفوفة فارغة مأمنة تمنع الشاشة السوداء
+        setFiles([]);
       }
     };
     fetchInitialFiles();
 
-    // 👑 2. مستمع استقبال وحفظ رسائل المجموعات اللحظي المصفى من الكائنات التالفة
     if (socket) {
+      // استقبال رسائل المجموعات المفتوحة
       socket.on('group_message', (data) => {
         if (data.roomId === currentGroup.id) {
-          // حماية الفطنة: فك الكائنات التالفة وضمان صب النص نصياً صافياً
           const cleanMsg = {
             ...data.msg,
             text: typeof data.msg.text === 'object' && data.msg.text !== null ? data.msg.text.text : data.msg.text
@@ -73,20 +72,20 @@ function App() {
         }
       });
 
+      // استقبال رسائل النظام أو غرف الدردشة العامة التاريخية
       socket.on('message', (m) => setChat(prev => [...prev, m]));
       
-      // 👑 3. مستمع استقبال جلب البيانات التاريخية الأولية والإعلانات المحدث فلكياً لمنع تداخل الـ Objects
+      // استقبال جلب البيانات التاريخية والإعلانات المحدث عند تسجيل الدخول
       socket.on('init_data', (data) => { 
         if (data.user) {
           setAds(data.ads || []); 
           
-          // تطهير سجل الرسائل القديمة المكسورة المخزنة مسبقاً بقاعدة البيانات قبل حشرها في الـ State
           const sanitizedHistory = (data.chatHistory || []).map(m => ({
             ...m,
             text: typeof m.text === 'object' && m.text !== null ? (m.text.text || JSON.stringify(m.text)) : m.text
           }));
           
-          setChat(sanitizedHistory); // حقن التاريخ النقي بأمان كامل لمنع خطأ #31
+          setChat(sanitizedHistory); 
           setUser(data.user);
           if (data.groups) setGroups(data.groups); 
           if (data.stats) { 
@@ -96,16 +95,29 @@ function App() {
           setIsLogged(true); 
         }
       });
+
+      // مستمع جلب وضخ المجموعات الجديدة لحظياً
+      socket.on('new_group_added', (newGroup) => {
+        setGroups(prev => [...prev, newGroup]);
+      });
+
+      // 👑 دمج مستمعات البث اللحظي للإعلانات والأخطاء السحابية بالداخل بأمان
+      socket.on('update_ads', (data) => setAds(data));
+      socket.on('error_msg', (msg) => alert("⚠️ " + msg));
     }
 
+    // إغلاق وتنظيف كافة المستمعات عند مغادرة الجلسة لمنع التضارب وتسريب الذاكرة
     return () => {
       if (socket) {
         socket.off('group_message');
         socket.off('message');
         socket.off('init_data');
+        socket.off('new_group_added');
+        socket.off('update_ads');
+        socket.off('error_msg');
       }
     };
-  }, [isLogged, currentGroup.id, socket]); // 🔥 ربط مصفوفة الاعتماديات لإنعاش التحديث عند تسجيل الدخول
+  }, [isLogged, currentGroup.id, socket]); // 🧱 قفل المصفوفة الشامل المأمن سحابياً لمنع كراش الـ Token كلياً
 
     socket.on('update_stats', (data) => { 
       setTotalUsers(data.totalUsers); 
