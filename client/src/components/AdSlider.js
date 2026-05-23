@@ -46,12 +46,17 @@ const AdSlider = ({ ads, user }) => { // 👑 استقبال جلسة الـ use
       {/* ربط الحاوية بالمرجع الفريد الصارم لمنع تداخل أجهزة الإيقاف والحركة */}
       <div className="ads-scroll-container" ref={scrollContainerRef}>
         <div className="ads-track">
-          {/* 👑 [تعديلك الذكي] عرض المصفوفة الصافية مباشرة دون تكرار قسري للإعلان الواحد */}
+          {/* 👑 عرض المصفوفة الصافية مباشرة دون تكرار قسري للإعلان الواحد */}
           {(topAds.length > 0 ? [...topAds] : []).map((ad, i) => {
-            const fullImgUrl = ad.imgUrl ? `${API_BASE}${ad.imgUrl}` : '';
+            // حماية كسر حظر المتصفح: التأكد من صياغة مسار URL نقي ومتوافق أمنياً
+            const fullImgUrl = ad.imgUrl 
+              ? (ad.imgUrl.startsWith('http') ? ad.imgUrl : `${API_BASE}${ad.imgUrl}`) 
+              : '';
+              
             return (
+              /* 👑 [مفتاح الحل القاطع] ربط الـ key بـ ad.id المعزول بالذاكرة لمنع اختفاء بقية الإعلانات فور الحذف */
               <div 
-                key={`top-ad-${ad.id || i}-${i}`} 
+                key={ad.id || `top-ad-${i}`} 
                 className="ad-card-item" 
                 style={{ position: 'relative' }} // تثبيت المواقع للزر العائم بالزاوية
                 onClick={() => setSelectedAd(ad)}
@@ -67,7 +72,7 @@ const AdSlider = ({ ads, user }) => { // 👑 استقبال جلسة الـ use
                   </button>
                 )}
                 
-                {fullImgUrl && <img src={fullImgUrl} alt="ad" className="ad-image-content" />}
+                {fullImgUrl && <img src={fullImgUrl} alt="ad" className="ad-image-content" crossOrigin="anonymous" />}
               </div>
             );
           })}
@@ -88,13 +93,14 @@ const AdSlider = ({ ads, user }) => { // 👑 استقبال جلسة الـ use
             
             <div className="contact-btns" style={{display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '15px'}}>
               
+              {/* 🔗 الزر الذهبي المطور لعرض وزيارة رابط الإعلان المرفق الخارجي */}
               {selectedAd.link && selectedAd.link !== '#' && (
                 <a 
                   href={selectedAd.link.startsWith('http') ? selectedAd.link : `http://${selectedAd.link}`} 
                   target="_blank" 
                   rel="noreferrer" 
                   className="contact-btn"
-                  style={{background: 'var(--gold-primary)', color:'#000', borderRadius:'5px', padding:'8px', fontWeight:'bold', textDecoration:'none'}}
+                  style={{background: 'var(--gold-primary)', color:'#000', borderRadius:'5px', padding:'8px', fontWeight:'bold', textDecoration:'none', textAlign: 'center'}}
                 >
                   🌐 زيارة رابط الإعلان المرفق
                 </a>
