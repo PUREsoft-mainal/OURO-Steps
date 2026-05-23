@@ -47,37 +47,65 @@ function App() {
 
 
   useEffect(() => {
+    // 👑 1. [تأمين وحماية جلب الحالات] لا يتم الاستدعاء إلا إذا سجل المستخدم دخوله بنجاح لمنع الـ 404
     const fetchInitialFiles = async () => {
+      if (!isLogged) return;
       try {
         const res = await axios.get(`${API_BASE}/api/stories`); 
         setFiles(res.data || []);
       } catch (err) {
-        console.error("خطأ جلب سجل الحالات البثية:", err);
+        console.warn("⚠️ تنبيه لوجستي: مسار الستوريات فارغ حالياً بالسيرفر السحابي، جاري المتابعة الآمنة.");
+        setFiles([]); // مصفوفة فارغة مأمنة تمنع الشاشة السوداء
       }
     };
     fetchInitialFiles();
 
-    socket.on('group_message', (data) => {
-      if (data.roomId === currentGroup.id) {
-        setChat(prev => [...prev, data.msg]);
-      }
-    });
-
-    socket.on('message', (m) => setChat(prev => [...prev, m]));
-    
-    socket.on('init_data', (data) => { 
-      if (data.user) {
-        setAds(data.ads || []); 
-        setChat(data.chatHistory || []);
-        setUser(data.user);
-        if (data.groups) setGroups(data.groups); 
-        if (data.stats) { 
-            setTotalUsers(data.stats.totalUsers); 
-            setActiveUsers(data.stats.activeUsers); 
+    // 👑 2. مستمع استقبال وحفظ رسائل المجموعات اللحظي المصفى من الكائنات التالفة
+    if (socket) {
+      socket.on('group_message', (data) => {
+        if (data.roomId === currentGroup.id) {
+          // حماية الفطنة: فك الكائنات التالفة وضمان صب النص نصياً صافياً
+          const cleanMsg = {
+            ...data.msg,
+            text: typeof data.msg.text === 'object' && data.msg.text !== null ? data.msg.text.text : data.msg.text
+          };
+          setChat(prev => [...prev, cleanMsg]);
         }
-        setIsLogged(true); 
+      });
+
+      socket.on('message', (m) => setChat(prev => [...prev, m]));
+      
+      // 👑 3. مستمع استقبال جلب البيانات التاريخية الأولية والإعلانات المحدث فلكياً لمنع تداخل الـ Objects
+      socket.on('init_data', (data) => { 
+        if (data.user) {
+          setAds(data.ads || []); 
+          
+          // تطهير سجل الرسائل القديمة المكسورة المخزنة مسبقاً بقاعدة البيانات قبل حشرها في الـ State
+          const sanitizedHistory = (data.chatHistory || []).map(m => ({
+            ...m,
+            text: typeof m.text === 'object' && m.text !== null ? (m.text.text || JSON.stringify(m.text)) : m.text
+          }));
+          
+          setChat(sanitizedHistory); // حقن التاريخ النقي بأمان كامل لمنع خطأ #31
+          setUser(data.user);
+          if (data.groups) setGroups(data.groups); 
+          if (data.stats) { 
+              setTotalUsers(data.stats.totalUsers); 
+              setActiveUsers(data.stats.activeUsers); 
+          }
+          setIsLogged(true); 
+        }
+      });
+    }
+
+    return () => {
+      if (socket) {
+        socket.off('group_message');
+        socket.off('message');
+        socket.off('init_data');
       }
-    });
+    };
+  }, [isLogged, currentGroup.id, socket]); // 🔥 ربط مصفوفة الاعتماديات لإنعاش التحديث عند تسجيل الدخول
 
     socket.on('update_stats', (data) => { 
       setTotalUsers(data.totalUsers); 
