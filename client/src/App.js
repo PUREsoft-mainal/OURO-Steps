@@ -112,7 +112,13 @@ function App() {
         socket.off('group_message');
         socket.off('message');
         socket.off('init_data');
+        socket.off('update_stats');
+        socket.off('new_file');
         socket.off('new_group_added');
+        socket.off('register_success');
+        socket.off('update_groups_list');
+        socket.off('group_chat_history');
+        socket.off('group_deleted_success');
         socket.off('update_ads');
         socket.off('error_msg');
       }
