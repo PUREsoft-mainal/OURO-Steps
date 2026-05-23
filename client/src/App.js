@@ -46,7 +46,7 @@ function App() {
   const [showPrayerModal, setShowPrayerModal] = useState(false); // حالة فتح وإغلاق نافذة الصلاة
 
 
-  // 👑 المنظومة المركزية الحاكمة لمستمعات السوكت وجلب البيانات مأمنة ومغلقة هندسياً بالملي
+  // 👑 المنظومة المركزية الشاملة والموحدة لإدارة أحداث السوكت وجلب البيانات (مطهّرة تماماً ومحمية من التكرار والكراش)
   useEffect(() => {
     const fetchInitialFiles = async () => {
       if (!isLogged) return;
@@ -61,7 +61,7 @@ function App() {
     fetchInitialFiles();
 
     if (socket) {
-      // استقبال رسائل المجموعات المفتوحة
+      // 🔊 1. مستمع استقبال وحفظ رسائل المجموعات اللحظي المصفى من الكائنات التالفة
       socket.on('group_message', (data) => {
         if (data.roomId === currentGroup.id) {
           const cleanMsg = {
@@ -72,10 +72,10 @@ function App() {
         }
       });
 
-      // استقبال رسائل النظام أو غرف الدردشة العامة التاريخية
+      // 🔊 2. مستمع استقبال رسائل المحادثات العامة والنظام التاريخية
       socket.on('message', (m) => setChat(prev => [...prev, m]));
       
-      // استقبال جلب البيانات التاريخية والإعلانات المحدث عند تسجيل الدخول
+      // 🔊 3. مستمع المزامنة التاريخية وتطهير سجل قاعدة البيانات من الكائنات التالفة لمنع خطأ #31
       socket.on('init_data', (data) => { 
         if (data.user) {
           setAds(data.ads || []); 
@@ -96,17 +96,64 @@ function App() {
         }
       });
 
-      // مستمع جلب وضخ المجموعات الجديدة لحظياً
+      // 🔊 4. مستمع بث وتحديث الإحصائيات الفورية لعدد المتصلين والمسجلين بالمنصة
+      socket.on('update_stats', (data) => { 
+        if (data) {
+          setTotalUsers(data.totalUsers || 0); 
+          setActiveUsers(data.activeUsers || 0); 
+        }
+      });
+
+      // 🔊 5. مستمع استقبال الحالات والستوريات الجديدة وضخها بالـ Sidebar فوراً
+      socket.on('new_file', (f) => setFiles(prev => [f, ...prev]));
+
+      // 🔊 6. مستمع استقبال إضافة المجموعات الجديدة لحظياً للقائمة الجانبية
       socket.on('new_group_added', (newGroup) => {
         setGroups(prev => [...prev, newGroup]);
       });
+      
+      // 🔊 7. مستمع تأكيد التسجيل الملكي وتوجيه الواجهات
+      socket.on('register_success', (u) => { 
+        alert(`🎉 تم التسجيل بنجاح! يمكنك الآن تسجيل الدخول بحسابك الملكي.`); 
+        setIsSignUp(false); 
+        setPassword("");
+      });
 
-      // 👑 دمج مستمعات البث اللحظي للإعلانات والأخطاء السحابية بالداخل بأمان
+      // 🔊 8. مستمع تحديث وتأمين هيكل غرف المشرفين والصلاحيات
+      socket.on('update_groups_list', (updatedGroups) => {
+        setGroups(updatedGroups);
+        const currentUpdate = updatedGroups.find(g => g.id === currentGroup.id);
+        if (currentUpdate) setCurrentGroup(currentUpdate);
+      });
+
+      // 🔊 9. مستمع بث قنوات تحديث غرف الشات التاريخية عند الحذف والتعديل الفوري
+      socket.on('group_chat_history', (data) => {
+        if (data && data.roomId === currentGroup.id) {
+          const sanitizedHistory = (data.history || []).map(m => ({
+            ...m,
+            text: typeof m.text === 'object' && m.text !== null ? (m.text.text || JSON.stringify(m.text)) : m.text
+          }));
+          setChat(sanitizedHistory);
+        }
+      });
+
+      // 🔊 10. مستمع استقبال إشارة حذف الغرفة الفرعية وتوجيه المستخدمين للمجموعة العامة تلقائياً
+      socket.on('group_deleted_success', (data) => {
+        setGroups(prev => prev.filter(g => g.id !== data.roomId));
+        setChat([]); 
+        setCurrentGroup({ id: 'public', name: 'المجموعة العامة' });
+        socket.emit('join_group_room', { roomId: 'public' });
+        alert("🗑️ تم حذف المجموعة وتطهير سجل محادثتها سحابياً بنجاح!");
+      });
+
+      // 🔊 11. مستمع استقبال جلب وضخ تحديثات الإعلانات اللحظية الحية للأشرطة المزدوجة
       socket.on('update_ads', (data) => setAds(data));
+
+      // 🔊 12. مستمع إشارات الأخطاء والتحذيرات السحابية الواردة
       socket.on('error_msg', (msg) => alert("⚠️ " + msg));
     }
 
-    // إغلاق وتنظيف كافة المستمعات عند مغادرة الجلسة لمنع التضارب وتسريب الذاكرة
+    // 🧹 تصفية وتدمير الجلسات المفتوحة والمستمعات عند مغادرة الصفحة لمنع تسريب الذاكرة والتداخل
     return () => {
       if (socket) {
         socket.off('group_message');
@@ -123,62 +170,8 @@ function App() {
         socket.off('error_msg');
       }
     };
-  }, [isLogged, currentGroup.id, socket]); // 🧱 قفل المصفوفة الشامل المأمن سحابياً لمنع كراش الـ Token كلياً
+  }, [isLogged, currentGroup.id]); // 🧱 جدار حماية هندسي: قفل واحد موحد وصافي بالملي للمنظومة بالكامل
 
-    socket.on('update_stats', (data) => { 
-      setTotalUsers(data.totalUsers); 
-      setActiveUsers(data.activeUsers); 
-    });
-
-    socket.on('new_file', (f) => setFiles(prev => [f, ...prev]));
-    socket.on('new_group_added', (g) => setGroups(prev => [...prev, g]));
-    
-    socket.on('register_success', (u) => { 
-      alert(`🎉 تم التسجيل بنجاح! يمكنك الآن تسجيل الدخول.`); 
-      setIsSignUp(false); 
-      setPassword("");
-    });
-
-    socket.on('update_groups_list', (updatedGroups) => {
-      setGroups(updatedGroups);
-      const currentUpdate = updatedGroups.find(g => g.id === currentGroup.id);
-      if (currentUpdate) setCurrentGroup(currentUpdate);
-    });
-
-    socket.on('group_chat_history', (data) => {
-      if (data.roomId === currentGroup.id) {
-        setChat(data.history || []);
-      }
-    });
-
-    socket.on('group_deleted_success', (data) => {
-      setGroups(prev => prev.filter(g => g.id !== data.roomId));
-      setChat([]); 
-      setCurrentGroup({ id: 'public', name: 'المجموعة العامة' });
-      socket.emit('join_group_room', { roomId: 'public' });
-      alert("🗑️ تم حذف المجموعة وتطهير ملف محادثتها من الهارد بنجاح!");
-    });
-
-    socket.on('update_ads', (data) => setAds(data));
-    socket.on('error_msg', (msg) => alert("⚠️ " + msg));
-
-    return () => {
-      if (socket) {
-        socket.off('group_message');
-        socket.off('message');
-        socket.off('init_data');
-        socket.off('update_stats');
-        socket.off('new_file');
-        socket.off('new_group_added');
-        socket.off('register_success');
-        socket.off('update_groups_list');
-        socket.off('group_chat_history');
-        socket.off('group_deleted_success');
-        socket.off('update_ads');
-        socket.off('error_msg');
-      }
-    };
-  }, [isLogged, currentGroup.id, socket]); // 👑 [تم التطهير] قفل المصفوفة الشامل المأمن سحابياً لمنع كراش الـ Token
 
   const handleAction = (e) => {
     e.preventDefault();
