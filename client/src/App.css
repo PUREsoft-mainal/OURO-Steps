@@ -1974,7 +1974,7 @@ body, html {
   display: flex !important;
   gap: 15px !important;
   width: max-content !important; /* حتمي لمنع انكماش الإعلانات واختفائها */
-  animation: scroll-ads-top-clean 35s linear infinite !important; /* السرعة الرشيقة المطلوبة */
+  animation: scroll-ads-top-clean 60s linear infinite !important; /* السرعة الرشيقة المطلوبة */
   will-change: transform !important;
 }
 
