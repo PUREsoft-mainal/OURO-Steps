@@ -1698,8 +1698,12 @@ body, html {
 }
 
 @keyframes scroll-ads-bottom {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-40%); }
+  0% {
+     transform: translateX(0); 
+  }
+  100% {
+     transform: translateX(-40%); 
+  }
 }
 
 .no-ads-placeholder-bottom {
