@@ -293,43 +293,11 @@ body, html {
 }
 .logout-btn:hover { background: #e74c3c; }
 
-/* --- 5. شريط الإعلانات التفاعلي السلس --- */
-.ads-slider-wrapper {
-  background: rgba(15, 15, 15, 0.9);
-  border-bottom: 2px solid var(--bronze-border);
-  border-top: 2px solid var(--border-glass);
-  padding: 15px 0;
-  position: relative;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  width: 100% !important;
-  box-sizing: border-box !important;
-}
-
 /* ⬆️ تخصيص الهامش العلوي للشريط العلوي فقط لإبراز اللوجو حراً */
 .ads-section-wrapper {
   margin-top: 20px !important;
 }
 
-.ads-scroll-container {
-  display: flex !important;
-  overflow-x: auto !important;
-  scroll-behavior: smooth !important;
-  gap: 15px !important;
-  padding: 0 50px !important;
-  width: 100% !important;
-  scrollbar-width: none !important;
-}
-.ads-scroll-container::-webkit-scrollbar { display: none !important; }
-
-.ads-track {
-  display: flex !important;
-  gap: 10px !important;
-  width: max-content !important;
-  /* سرعة الانسياب الدائري الموحد للشريطين تلقائياً */
-  animation: scroll-ads 60s linear infinite !important;
-}
 .ads-track:hover {
   animation-play-state: paused !important;
 }
@@ -339,23 +307,7 @@ body, html {
   100% { transform: translateX(-50%); }
 }
 
-/* كروت المربعات الإعلانية الموحدة بالبكسل الصارم */
-.ad-card-item, .ad-card {
-  flex: 0 0 auto !important;
-  width: 200px !important;
-  height: 90px !important;
-  border: 2px solid var(--gold-primary) !important;
-  border-radius: 8px !important;
-  overflow: hidden !important;
-  cursor: pointer !important;
-  transition: transform 0.2s ease-in-out !important;
-}
-
-.ad-card-item:hover {
-  transform: scale(1.03) !important;
-}
-
-.ad-image-content, .ad-box-img {
+.ad-box-img {
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
@@ -1251,44 +1203,6 @@ body, html {
   font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s;
 }
 .stop-adhan-btn:hover { background: #e74c3c; box-shadow: 0 0 10px #e74c3c; }
-
-/* ==========================================================================
-   🛍️ التنسيق المستقل للحركة والمربعات المذهبة للشريط السفلي المنفصل
-   ========================================================================== */
-.ads-slider-wrapper-bottom {
-  background: rgba(15, 15, 15, 0.9) !important;
-  border: 2px solid var(--gold-primary) !important; /* التوهج والبريق المذهب القديم الموحد */
-  border-radius: 12px !important;
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.25) !important;
-  padding: 15px 0 !important;
-  position: relative;
-  display: flex !important;
-  align-items: center !important;
-  overflow: hidden !important;
-  width: 100% !important;
-  clear: both !important; /* جدار حماية تمنع المكون من القفز داخل الجوانب اليمنى */
-  box-sizing: border-box !important;
-}
-
-.ads-scroll-container-bottom {
-  display: flex !important;
-  overflow-x: auto !important;
-  scroll-behavior: smooth !important;
-  gap: 15px !important;
-  padding: 0 50px !important;
-  width: 100% !important;
-  scrollbar-width: none !important;
-}
-.ads-scroll-container-bottom::-webkit-scrollbar { display: none !important; }
-
-/* 🚀 تراك الحركة والأنيميشن التلقائي المستقل والمخصص للشريط السفلي */
-.ads-track-bottom {
-  display: flex !important;
-  gap: 10px !important;
-  width: max-content !important;
-  animation: scroll-ads-bottom 20s linear infinite !important;
-}
-
 /* 🛑 التجميد والوقوف الفوري عند تمرير الماوس على المربع السفلي */
 .ads-track-bottom:hover {
   animation-play-state: paused !important;
@@ -1299,22 +1213,6 @@ body, html {
   100% { transform: translateX(-40%); }
 }
 
-/* صب قالب المربعات المذهبة القديمة بالبكسل الصارم والمطابق تماماً للشريط العلوي */
-.ad-card-item-bottom {
-  flex: 0 0 200px !important;
-  width: 200px !important;
-  height: 90px !important;
-  border: 2px solid var(--gold-primary) !important; /* نفس ستايل المربعات المذهبة الحاد */
-  border-radius: 8px !important;
-  overflow: hidden !important;
-  cursor: pointer !important;
-}
-
-.ad-image-content-bottom {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-}
 .no-ads-placeholder-bottom {
   color: var(--gold-primary);
   font-size: 13px;
@@ -1536,5 +1434,96 @@ body, html {
   0% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.2); }
   50% { box-shadow: 0 0 15px rgba(212, 175, 55, 0.6); border-color: #fff; }
   100% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.2); }
+}
+
+/* ==========================================================================
+   👑 الهندسة القياسية الموحدة للأشرطة الإعلانية الثنائية (المحمية من التجمد)
+   ========================================================================== */
+
+/* 1️⃣ الحاوية الخارجية للشريط العلوي والسفلي */
+.ads-slider-wrapper, .ads-slider-wrapper-bottom {
+  position: relative !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  background: rgba(10, 10, 10, 0.6) !important;
+  border-top: 1px solid var(--border-glass) !important;
+  border-bottom: 1px solid var(--border-glass) !important;
+  padding: 10px 0 !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* 2️⃣ صناديق التمرير الداخلية المعزولة كلياً */
+.ads-scroll-container, .ads-scroll-container-bottom {
+  width: 100% !important;
+  overflow-x: auto !important; /* السماح بالتمرير الداخلي حماية للأبعاد */
+  scrollbar-width: none !important; /* إخفاء الاسكرول بار لفايرفوكس قسرياً بنقاء */
+  display: flex !important;
+}
+
+/* تأمين حظر الاسكرول بار لمتصفحات كروم في سطر معزول تماماً لمنع تشويه بقية الملف */
+.ads-scroll-container::-webkit-scrollbar, 
+.ads-scroll-container-bottom::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* 3️⃣ مسار التراك اللانهائي للشريط العلوي (يعمل الآن بنقاء وسلاسة مستقرة) */
+.ads-track {
+  display: flex !important;
+  gap: 15px !important;
+  width: max-content !important; /* حتمي لمنع انكماش الإعلانات واختفائها */
+  animation: scroll-ads-top-clean 35s linear infinite !important; /* السرعة الرشيقة المطلوبة */
+  will-change: transform !important;
+}
+
+/* 4️⃣ مسار التراك اللانهائي للشريط السفلي (يعمل الآن بنقاء وسلاسة مستقرة) */
+.ads-track-bottom {
+  display: flex !important;
+  gap: 15px !important;
+  width: max-content !important;
+  animation: scroll-ads-bottom-clean 35s linear infinite !important;
+  will-change: transform !important;
+}
+
+/* 5️⃣ الكروت الإعلانية المذهبة المفردة وحمايتها الصارمة من الاختفاء البصري */
+.ad-card-item, .ad-card-item-bottom {
+  flex: 0 0 220px !important; /* قفل الأبعاد الصلبة بالملي لمنع انكماش الكروت */
+  width: 220px !important;
+  height: 95px !important;
+  border: 1px solid var(--gold-primary) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  cursor: pointer !important;
+  position: relative !important;
+  background: #000 !important;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.15) !important;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
+}
+
+.ad-card-item:hover, .ad-card-item-bottom:hover {
+  transform: scale(1.03) !important;
+  box-shadow: 0 0 15px var(--gold-primary) !important;
+}
+
+/* 6️⃣ قفل أبعاد الصور الداخلية لمنع تداخل حظر الـ Opaque للمتصفح */
+.ad-image-content, .ad-image-content-bottom {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+/* ==========================================================================
+   ⚙️ محركات الأنيميشن المحدثة والمحمية هندسياً لفايرفوكس (keyframes)
+   ========================================================================== */
+@keyframes scroll-ads-top-clean {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-30%); } /* تحريك مرن يتناسب تماماً مع المصفوفة الصافية */
+}
+
+@keyframes scroll-ads-bottom-clean {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-30%); }
 }
 
