@@ -110,9 +110,11 @@ app.post('/api/prayer/upload-adhan', upload.single('adhanAudio'), async (req, re
 
 // مسار API لجلب الأصول الحالية عند فتح النافذة
 app.get('/api/prayer/assets', async (req, res) => {
-    let config = await PrayerAssetModel.findOne({ id: 'config' });
-    if (!config) config = { kaabaImgUrl: '/assets/kaaba.png', adhanAudioUrl: '/assets/adhan.mp3' };
-    res.json(config);
+    try {
+        let config = await PrayerAssetModel.findOne({ id: 'config' });
+        if (!config) config = { kaabaImgUrl: '/assets/kaaba.png', adhanAudioUrl: '/assets/adhan.mp3' };
+        res.json(config);
+    } catch (err) { res.json({ kaabaImgUrl: '/assets/kaaba.png', adhanAudioUrl: '/assets/adhan.mp3' }); }
 });
 
 // تهيئة السوكيت (Socket.io) ليدعم الاتصالات السحابية والـ WebSockets المشفرة (WSS)
@@ -121,6 +123,7 @@ const io = new Server(server, {
         origin: ["https://ouro-steps.vercel.app", "https://puresoft-mainal-ouro-steps.hf.space"],
         credentials: true
     },
+    transports: ['polling', 'websocket'], // 👑 تأمين التبديل السحابي التلقائي الحامي من الحظر والـ CORS
     allowEIO3: true
 });
 const CONVERSATIONS_DIR = path.join(__dirname, 'conversations'); // مجلد مستقل لحفظ ملفات شات الأصدقاء
