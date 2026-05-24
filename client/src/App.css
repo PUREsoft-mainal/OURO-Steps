@@ -1983,7 +1983,7 @@ body, html {
   display: flex !important;
   gap: 15px !important;
   width: max-content !important;
-  animation: scroll-ads-bottom-clean 35s linear infinite !important;
+  animation: scroll-ads-bottom-clean 80s linear infinite !important;
   will-change: transform !important;
 }
 
