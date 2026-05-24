@@ -1462,8 +1462,9 @@ body, html {
   display: flex !important;
 }
 
-/* تأمين حظر الاسكرول بار لمتصفحات كروم في سطر معزول تماماً لمنع تشويه بقية الملف */
-.ads-scroll-container::-webkit-scrollbar, 
+.ads-scroll-container::-webkit-scrollbar {
+  display: none !important;
+}
 .ads-scroll-container-bottom::-webkit-scrollbar {
   display: none !important;
 }
