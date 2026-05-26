@@ -558,25 +558,40 @@ app.post('/api/upload-ad', upload.single('adImage'), async (req, res) => {
     }
 });
 
-
-// 🗑️ مسار API الملكي لحذف الإعلانات المرفوعة بالخطأ من السحابة وقاعدة البيانات
-app.delete('/api/delete-ad/:id', (req, res) => {
+// 👑 [تطبيق اقتراحك العبقري] مسار API الملكي لقنص وتدمير الإعلان وصورته فيزيائياً دون المساس ببقية مجلد الرفع
+app.delete('/api/delete-ad/:id', async (req, res) => {
     try {
-        const adsFilePath = path.join(__dirname, 'ads.json');
-        let ads = JSON.parse(fs.readFileSync(adsFilePath, 'utf8'));
+        if (!req.params.id) return res.status(400).json({ success: false, message: "المعرف مطلوب" });
+
+        // 1️⃣ قنص الإعلان المستهدف من قلب قاعدة البيانات السحابية MongoDB Atlas لمعرفة اسم ملف صورته
+        const ad = await AdModel.findOne({ id: req.params.id });
         
-        // تصفية المصفوفة وحذف الإعلان المستهدف عبر الـ ID
-        ads = ads.filter(ad => ad.id !== req.params.id);
+        if (ad && ad.imgUrl) {
+            // استخراج اسم الملف الفريد الصافي المولد من ملتر (مثال: 1779457218845-451403952.png)
+            const filename = ad.imgUrl.replace('/uploads/', '');
+            // تحديد مسار الصورة فيزيائياً داخل مجلد التخزين المؤقت السحابي
+            const filePhysicalPath = path.join('/tmp', 'uploads', filename);
+            
+            // 🛡️ تدمير وإبادة الصورة المستهدفة بمفردها فقط وحصرياً من الهارد إذا كانت موجودة دون المساس بأي ملف مجاور
+            if (fs.existsSync(filePhysicalPath)) {
+                fs.unlinkSync(filePhysicalPath);
+                console.log(`🗑️ تم تدمير وإبادة الملف من الهارد السحابي فيزيائياً بنجاح: ${filename}`);
+            }
+        }
+
+        // 2️⃣ محو سجل الإعلان بالكامل وبشكل نهائي من قاعدة بيانات MongoDB Atlas
+        await AdModel.deleteOne({ id: req.params.id });
+
+        // 3️⃣ إعادة جلب الإعلانات النشطة المتبقية وبثها عبر السوكت المشفر لإنعاش شاشات المشتركين فوراً
+        const allAds = await AdModel.find({ expiryDate: { $gt: Date.now() } });
+        io.emit('update_ads', allAds); // بث المصفوفة النظيفة لحظياً لجميع المشتركين
         
-        fs.writeFileSync(adsFilePath, JSON.stringify(ads, null, 2), 'utf8');
-        io.emit('update_ads', ads); // بث التحديث اللحظي لجميع المشتركين
-        res.json({ success: true, message: "تم حذف الإعلان وتطهيره بنجاح" });
+        res.json({ success: true, message: "تم قنص وتطهير الإعلان وصورته فيزيائياً بنجاح ملكي مستقر!" });
     } catch (err) {
-        console.error("خطأ حذف الإعلان:", err);
-        res.status(500).json({ success: false });
+        console.error("خطأ تدمير وقنص الإعلان السحابي الموقوت:", err);
+        res.status(500).json({ success: false, message: "فشل الحذف السحابي" });
     }
 });
-
 
 // ⏳ دالة آلية (تشتغل كل ساعة) لتنظيف وتطهير ملف ads.json من الإعلانات المنتهية تلقائياً
 setInterval(() => {
