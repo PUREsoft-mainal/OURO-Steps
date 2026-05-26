@@ -76,7 +76,34 @@ const ChatArea = ({ chat, currentUser, msg, setMsg, socket, currentGroup }) => {
     <main className="chat-area">
       {/* 👑 شريط رأس الغرفة المطور الحاضن للزرين والبيانات التفاعلية في الأعلى */}
       <div className="chat-room-header" style={{ padding: '12px 20px', background: 'rgba(10, 10, 10, 0.7)', borderBottom: '2px solid var(--border-glass)', fontSize: '13px', color: 'var(--gold-primary)', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        
+
+
+        {/* جهة اليمين: معلومات الغرفة والمنشئ الأصلي للملف + زر إضافة صديق المطور */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <span>📢 غُرفة المحادثة: {currentGroup ? currentGroup.name : "جاري التحميل..."}</span>
+            <small style={{ color: 'var(--text-muted)', fontSize: '10px' }}>المنشئ: {currentGroup?.creator || 'النظام'}</small>
+          </div>
+
+          {/* 👑 زر (+) الفاخر لإضافة صديق للغرفة يظهر فقط للمنشئ أو الأدمن ويدعم المونجو أطلس */}
+          {(currentUser === 'Admin_Mostafa' || currentUser === currentGroup?.creator) && currentGroup?.id !== 'public' && (
+            <button
+              className="assign-btn-gold"
+              style={{ padding: '3px 8px', fontSize: '12px', borderRadius: '4px', cursor: 'pointer', background: 'var(--gold-primary)', color: '#000', fontWeight: 'bold', border: 'none' }}
+              title="إضافة صديق مصرح له بدخول هذه الغرفة المغلقة"
+              onClick={() => {
+                const targetUser = window.prompt("👥 اكتب اسم المستخدم الصارم الذي تود منحه إذن الدخول لهذه الغرفة الحصري:");
+                if (targetUser && targetUser.trim()) {
+                  socket.emit('add_user_to_group', { roomId: currentGroup.id, targetUser: targetUser.trim() });
+                  alert(`🎉 تم إرسال الإذن وتثبيت العضو ${targetUser} سحابياً بالأطلس بنجاح!`);
+                }
+              }}
+            >
+              ➕ إضافة عضو
+            </button>
+          )}
+        </div>
+  
         {/* جهة اليمين: معلومات الغرفة والمنشئ الأصلي للملف */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           <span>📢 غُرفة المحادثة: {currentGroup ? currentGroup.name : "جاري التحميل..."}</span>
