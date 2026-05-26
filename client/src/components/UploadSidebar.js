@@ -47,7 +47,11 @@ const UploadSidebar = ({ files, serverUrl, user }) => {
         alert("👑 🎉 تم إيداع ونشر حالتك الملكية بنجاح في خزائن السحاب لـ 24 ساعة!");
         setCaption(""); // تصفير الصندوق الذكي
         const fileInput = document.getElementById('storyFileInput');
-        if (fileInput) fileInput.value = ""; // تصفير حقل اختيار الملفات
+        if (fileInput) fileInput.value = "";// تصفير حقل اختيار الملفات
+        // تمرير البيانات للمكون الأب لإنعاش الشاشة لحظياً
+        if (onUpload && res.data.file) {
+          onUpload(res.data.file);
+        }   
       }
       setUploading(false);
     } catch (err) {
@@ -56,6 +60,7 @@ const UploadSidebar = ({ files, serverUrl, user }) => {
       setUploading(false);
     }
   };
+
 
   return (
     <aside className="sidebar left-side stories-sidebar">
@@ -70,17 +75,15 @@ const UploadSidebar = ({ files, serverUrl, user }) => {
           <button type="button" className={`cs-btn ${isTextStatus ? 'active' : ''}`} style={{ flex: 1, fontSize:'11px', padding:'6px', borderRadius:'6px' }} onClick={() => setIsTextStatus(true)}>✍️ حالة نصية</button>
         </div>
 
-        {/* صندوق الكتابة الذكي والتعليقات المشترك */}
         {/* 👑 صندوق الكتابة الذكي والتعليقات المشترك المصفى والمحمّي من الكراش السحابي */}
         <textarea 
           className="story-caption-textarea" 
-          value={statusText}
-          onChange={(e) => setStatusText(e.target.value)}
+          value={caption}
+          onChange={(e) => setCaption(e.target.value)}
           placeholder={isTextStatus ? "اكتب حالتك النصية الملكية هنا..." : "أضف تعليقاً ووصفاً يظهر أسفل القصة..."}
           style={{ width: '100%', minHeight: '60px', background: '#0a0a0a', border: '1px solid var(--border-glass)', borderRadius: '8px', color: '#fff', padding: '10px', fontSize: '13px', outline: 'none', resize: 'none', fontFamily: 'inherit' }}
           required={isTextStatus}
         />
-
 
         {/* عرض عناصر الاختيار التفاعلية بناءً على التبويب النشط */}
         {!isTextStatus ? (
@@ -96,16 +99,22 @@ const UploadSidebar = ({ files, serverUrl, user }) => {
             {bgOptions.map(bg => (
               <div 
                 key={bg} 
-                onClick={() => setSelectedBg(bg)}
-                style={{ width: '20px', height: '20px', borderRadius: '50%', background: bg, cursor: 'pointer', border: selectedBg === bg ? '2px solid #fff' : '1px solid #000', flexShrink: 0, transition: '0.2s' }}
+                onClick={() => setTextBg(bg)}
+                style={{ width: '20px', height: '20px', borderRadius: '50%', background: bg, cursor: 'pointer', border: textBg === bg ? '2px solid #fff' : '1px solid #000', flexShrink: 0, transition: '0.2s' }}
               />
             ))}
           </div>
         )}
 
-        {/* زر النشر العام الخاضع لتوحيد الـ CSS المذهب الفاخر */}
-        <button className="gold-btn" type="button" style={{ padding: '10px', fontSize: '13px', width: '100%', marginTop: '4px' }} onClick={handlePublishStatus}>
-          ✨ انشر الحالة التفاعلية
+        {/* زر النشر العام الخاضع لتوحيد الـ CSS المذهب الفاخر المأمن بالـ uploading قفلياً */}
+        <button 
+          className="gold-btn" 
+          type="submit" 
+          style={{ padding: '10px', fontSize: '13px', width: '100%', marginTop: '4px', cursor: uploading ? 'not-allowed' : 'pointer' }} 
+          onClick={handlePublishStatus}
+          disabled={uploading}
+        >
+          {uploading ? "⏳ جاري إيداع وحفظ الستوري..." : "✨ انشر الحالة التفاعلية"}
         </button>
       </div>
 
@@ -113,9 +122,10 @@ const UploadSidebar = ({ files, serverUrl, user }) => {
       <div className="stories-container scrollbar-gold">
         {(files || []).map((f, i) => {
           const fileUrl = f.url ? `${serverUrl}${f.url}` : null;
-          const isVideo = f.name?.match(/\.(mp4|webm|ogg)$/i);
-          const isImage = f.name?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-          const isAudio = f.name?.match(/\.(mp3|wav|ogg)$/i);
+          // صيانة المعرّف ليفحص رابط الـ url السحابي النقي بدقة صلبة من مونجو
+          const isVideo = f.url?.match(/\.(mp4|webm|ogg)$/i);
+          const isImage = f.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+          const isAudio = f.url?.match(/\.(mp3|wav|ogg)$/i);
 
           return (
             <div key={f.id || i} className="story-card">
@@ -132,21 +142,21 @@ const UploadSidebar = ({ files, serverUrl, user }) => {
                 ) : (
                   <>
                     {/* 2. النشر الفعلي للوسائط المتعددة (صور/فيديو/صوت) */}
-                    {isImage && <img src={fileUrl} alt="story" className="story-media" />}
+                    {isImage && <img src={fileUrl} alt="story" className="story-media" crossOrigin="anonymous" />}
                     {isVideo && (
-                      <video controls className="story-media">
+                      <video controls className="story-media" crossOrigin="anonymous">
                         <source src={fileUrl} />
                       </video>
                     )}
                     {isAudio && (
-                      <audio controls className="story-audio">
+                      <audio controls className="story-audio" crossOrigin="anonymous">
                         <source src={fileUrl} />
                       </audio>
                     )}
                     
                     {/* طباعة التعليق والوصف المصاحب للقصة بالأسفل بنقاء ممتاز */}
                     {f.caption && (
-                      <p style={{ padding: '8px 10px', fontSize: '12px', color: '#f0f0f0', wordBreak: 'break-word', lineHeight: '1.4', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', marginTop: '8px', borderRight: '2px solid var(--gold-primary)' }}>
+                      <p style={{ padding: '8px 10px', fontSize: '12px', color: '#f0f0f0', wordBreak: 'break-word', lineHeight: '1.4', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', marginTop: '8px', borderRight: '2px solid var(--gold-primary)', textAlign: 'right' }}>
                         💬 {f.caption}
                       </p>
                     )}
@@ -156,7 +166,7 @@ const UploadSidebar = ({ files, serverUrl, user }) => {
               
               <div className="story-footer">
                 {fileUrl ? (
-                  <a href={fileUrl} download={f.name} target="_blank" rel="noreferrer" className="download-link">💾 حفظ الملف</a>
+                  <a href={fileUrl} download={`story-${f.id}`} target="_blank" rel="noreferrer" className="download-link">💾 حفظ الملف</a>
                 ) : (
                   <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>📝 حالة نصية</span>
                 )}
@@ -176,4 +186,3 @@ const UploadSidebar = ({ files, serverUrl, user }) => {
 };
 
 export default UploadSidebar;
-
