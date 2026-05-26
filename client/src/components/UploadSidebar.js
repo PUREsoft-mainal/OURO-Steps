@@ -86,8 +86,8 @@ const UploadSidebar = ({ files, serverUrl, onUpload, user }) => {
         {/* صندوق الكتابة الذكي والتعليقات المشترك */}
         <textarea 
           className="story-caption-textarea" 
-          value={statusText}
-          onChange={(e) => setStatusText(e.target.value)}
+          value={caption}
+          onChange={(e) => setCaption(e.target.value)}
           placeholder={isTextStatus ? "اكتب حالتك النصية الملكية هنا..." : "أضف تعليقاً ووصفاً يظهر أسفل القصة..."}
           style={{ width: '100%', minHeight: '60px', background: '#0a0a0a', border: '1px solid var(--border-glass)', borderRadius: '8px', color: '#fff', padding: '10px', fontSize: '13px', outline: 'none', resize: 'none', fontFamily: 'inherit' }}
           required={isTextStatus}
@@ -125,8 +125,8 @@ const UploadSidebar = ({ files, serverUrl, onUpload, user }) => {
             {bgOptions.map(bg => (
               <div 
                 key={bg} 
-                onClick={() => setSelectedBg(bg)}
-                style={{ width: '20px', height: '20px', borderRadius: '50%', background: bg, cursor: 'pointer', border: selectedBg === bg ? '2px solid #fff' : '1px solid #000', flexShrink: 0, transition: '0.2s' }}
+                onClick={() => setTextBg(bg)}
+                style={{ width: '20px', height: '20px', borderRadius: '50%', background: bg, cursor: 'pointer', border: textBg === bg ? '2px solid #fff' : '1px solid #000', flexShrink: 0, transition: '0.2s' }}
               />
             ))}
           </div>
