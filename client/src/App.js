@@ -174,22 +174,6 @@ function App() {
       }
     };
 
-      // 👑 [مفتاح الحسم الأزلي] مستمع البث الفوري للإعلانات فور عبور بوابة تسجيل الدخول
-  useEffect(() => {
-    if (socket) {
-      // استقبال حزمة البيانات وضخ الإعلانات فوراً لمنع ثغرة الـ Race Condition
-      socket.on('init_data', (data) => {
-        if (data && data.ads) {
-          setAds(data.ads); // ضخ كروت الذهب والنيون في شاشتك في نفس ثانية الدخول الصارمة
-        }
-      });
-    }
-    return () => {
-      if (socket) socket.off('init_data');
-    };
-  }, [socket]);
-
-
     // الاستدعاء الفوري الأول بمجرد عبور بوابة الدخول لضمان رسم الكروت بلا تأخير
     fetchLiveAdsFromServer();
 
