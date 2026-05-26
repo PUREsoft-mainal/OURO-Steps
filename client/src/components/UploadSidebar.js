@@ -5,7 +5,6 @@ import '../App.css'; // استدعاء ملف التنسيق الشامل ليع
 const UploadSidebar = ({ files, serverUrl, onUpload, user }) => { 
   const [caption, setCaption] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [statusText, setStatusText] = useState(""); // نص الحالة أو تعليق الوسائط
   const [isTextStatus, setIsTextStatus] = useState(false); // تحديد نوع الحالة (نصية أم وسائط)
   const [selectedBg, setSelectedBg] = useState("#8a6f27"); // اللون الافتراضي للحالات النصية
   const [textBg, setTextBg] = useState("#1a1a1a"); // اللون الافتراضي للحالة النصية
@@ -21,7 +20,7 @@ const UploadSidebar = ({ files, serverUrl, onUpload, user }) => {
     const formData = new FormData();
     formData.append('username', user.username);
     formData.append('caption', caption.trim()); // استخدام متغير النص المعتمد بالـ textarea
-
+    
     if (isTextStatus) {
       if (!caption.trim()) return alert("⚠️ الرجاء كتابة نص أولاً لنشره كحالة نصية!");
       formData.append('isTextOnly', 'true');
