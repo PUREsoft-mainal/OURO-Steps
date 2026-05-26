@@ -166,6 +166,12 @@ app.post('/api/upload-story', upload.single('storyFile'), async (req, res) => {
         
         // حساب تاريخ التدمير التلقائي الفلكي بعد 24 ساعة (يوم كامل) لمنع الضغط
         const expiryTimestamp = Date.now() + (24 * 60 * 60 * 1000);
+
+              // هندسة وتأمين رابط الملف السحابي المرفوع (صورة/فيديو/صوت)
+        let storyUrl = "";
+        if (req.file) {
+            storyUrl = `/uploads/${req.file.filename}`; // التقاط الاسم الفريد المولد من ملتر بدقة
+        }
         
         const newStory = new StoryModel({
             id: Date.now().toString(),
@@ -173,7 +179,7 @@ app.post('/api/upload-story', upload.single('storyFile'), async (req, res) => {
             caption: caption || '',
             isTextOnly: isTextOnly === 'true',
             textBg: textBg || '#1a1a1a',
-            url: req.file ? `/uploads/${req.file.filename}` : '', // حفظ اسم ملف الوسائط المولد من ملتر بدقة
+            url: storyUrl, // صب رابط الوسائط النقي لمنع الـ 404 
             time: new Date().toLocaleTimeString('ar-EG'),
             expiryDate: expiryTimestamp
         });
