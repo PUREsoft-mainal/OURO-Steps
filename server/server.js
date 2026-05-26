@@ -132,7 +132,63 @@ const CHAT_FILE = path.join(__dirname, 'chat.json');
 const ADS_FILE = path.join(__dirname, 'ads.json');
 const MARKET_FILE = path.join(__dirname, 'market.json');
 const GROUPS_LIST_FILE = path.join(__dirname, 'groups.json');
-const STORIES_FILE = path.join(__dirname, 'stories.json');
+// ==========================================================================
+// 🕋 [تمت الزراعة والتطهير] المخطط الهيكلي والمسارات السحابية للقصص بـ MongoDB Atlas
+// ==========================================================================
+const StorySchema = new mongoose.Schema({
+    id: { type: String, required: true, unique: true },
+    user: { type: String, required: true },
+    caption: { type: String, default: '' },
+    isTextOnly: { type: Boolean, default: false },
+    textBg: { type: String, default: '#1a1a1a' },
+    url: { type: String, default: '' },
+    time: { type: String, required: true },
+    expiryDate: { type: Number, required: true }
+});
+const StoryModel = mongoose.model('Story', StorySchema);
+
+// 📈 1. مسار جلب القصص والستوريات النشطة (لإنهاء أزمة الـ 404 في الفاحص كلياً)
+app.get('/api/stories', async (req, res) => {
+    try {
+        // جلب القصص التي لم تنتهِ صلاحيتها الـ 24 ساعة بعد من المونجو أطلس
+        const activeStories = await StoryModel.find({ expiryDate: { $gt: Date.now() } }).sort({ _id: -1 });
+        res.json(activeStories);
+    } catch (err) {
+        console.error("خطأ جلب القصص السحابي:", err);
+        res.json([]);
+    }
+});
+
+// 📤 2. مسار استقبال وحفظ القصص (نصية أو وسائط) بـ MongoDB Atlas بدقة تامة
+app.post('/api/upload-story', upload.single('storyFile'), async (req, res) => {
+    try {
+        const { username, caption, isTextOnly, textBg } = req.body;
+        
+        // حساب تاريخ التدمير التلقائي الفلكي بعد 24 ساعة (يوم كامل) لمنع الضغط
+        const expiryTimestamp = Date.now() + (24 * 60 * 60 * 1000);
+        
+        const newStory = new StoryModel({
+            id: Date.now().toString(),
+            user: username || 'مستخدم عام',
+            caption: caption || '',
+            isTextOnly: isTextOnly === 'true',
+            textBg: textBg || '#1a1a1a',
+            url: req.file ? `/uploads/${req.file.filename}` : '', // حفظ اسم ملف الوسائط المولد من ملتر بدقة
+            time: new Date().toLocaleTimeString('ar-EG'),
+            expiryDate: expiryTimestamp
+        });
+        
+        await newStory.save(); // حُفظت للأبد في خزائن الـ Cloud الخارجي المعزول
+
+        // بث التحديث الفوري اللحظي لكافة الأعضاء عبر السوكت لتظهر الحالة فورا
+        io.emit('new_file', newStory);
+        
+        res.json({ success: true, file: newStory });
+    } catch (err) {
+        console.error("خطأ رفع القصة السحابي المحمي:", err);
+        res.status(500).json({ success: false });
+    }
+});
 const FLASH_DRIVE_DIR = path.join(__dirname, 'virtual_flash_drives');
 const FLASH_DB_FILE = path.join(__dirname, 'flash_db.json');
 
