@@ -187,6 +187,7 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
   // تصفية قوائم الأصدقاء والاستكشاف
   const currentUserData = allUsers.find(u => u.username === user?.username);
   const myFriendsList = currentUserData?.friends || [];
+  const myIncomingRequests = currentUserData?.friendRequests || []; // 📩 مصفوفة استقبال الطلبات الواردة الحية
   const usersToDiscover = allUsers.filter(u => u.username !== user?.username && !myFriendsList.includes(u.username));
   const myFriends = allUsers.filter(u => u.username !== user?.username && myFriendsList.includes(u.username));
 
@@ -223,13 +224,11 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                           {/* 👑 [تم التعديل والربط الشرعي] استدعاء handleToggleFriend لتشغيل الحركة والاستجابة الفورية */}
                           <button 
                             className="gold-btn-small" 
-                            /* ✅ التعديل الهندسي القاطع والجاهز للتشغيل فوراً دون الحاجة لدوال علوية: */
+                            /* ✅ التعديل الهندسي الشرعي لإرسال طلب صداقة معلق ينتظر موافقة الطرف الآخر: */
                             onClick={() => {
                               if (socket && user?.username) {
-                                 // ضخ إشارة التحديث لـ MongoDB Atlas فوراً
-                                socket.emit('toggle_friend', { currentUser: user.username, targetUser: u.username });
-                                alert(`👥 تم إرسال طلب الصداقة للمعلن ${u.username} بنجاح!`);
-                                // إنعاش الكاش اختصاراً ليختفي كارت الشخص فوراً أمام عينك
+                                socket.emit('send_friend_request', { currentUser: user.username, targetUser: u.username });
+                                alert(`📩 تم إرسال طلب صداقة ملكي للمعلن ${u.username} بنجاح، بانتظار اعتماده وقبوله!`);
                                 window.location.reload(); 
                               }
                             }}
@@ -240,6 +239,57 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                       ))}
                     </div>
                   </div>
+                                       {/* 👑 [موضع الحقن والزراعة المأمن] جدار استقبال ومعالجة طلبات الصداقة الواردة المطور بأزرار القبول والرفض */}
+                  <div className="requests-column" style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.1)' }}>
+                    <h4 className="column-title" style={{ color: 'var(--gold-primary)', fontSize: '13px', marginBottom: '12px' }}>📩 طلبات الصداقة الواردة المعلقة</h4>
+                    <div className="users-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {/* تدوير مصفوفة الطلبات الواردة التي قمنا بفرزها بالأعلى */}
+                      {(myIncomingRequests || []).map(senderName => (
+                        <div key={senderName} className="mini-user-card" style={{ display: 'flex', alignItems: 'center', justifyRules: 'space-between', padding: '8px', background: 'rgba(0,0,0,0.5)', borderRadius: '6px', border: '1px solid var(--border-glass)' }}>
+                          <span style={{ color: '#fff', fontSize: '12px' }}>👤 {senderName}</span>
+                          
+                          <div style={{ display: 'flex', gap: '5px' }}>
+                            {/* ✔️ زر القبول المذهب الفاخر لدمج هويات الأصدقاء تبادلياً بسجل MongoDB Atlas */}
+                            <button 
+                              className="assign-btn-gold" 
+                              style={{ padding: '3px 8px', fontSize: '11px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                              onClick={() => {
+                                if (socket && user?.username) {
+                                  socket.emit('accept_friend_request', { currentUser: user.username, targetUser: senderName });
+                                  alert(`✔️ 🎉 مبروك! تم قبول الطلب ودمج العضو ${senderName} في قائمة أصدقائك بنجاح ملكي!`);
+                                  window.location.reload();
+                                }
+                              }}
+                            >
+                              قبول ✔️
+                            </button>
+
+                            {/* ❌ زر الرفض القاني لسحب وتطهير طلبات العضو المعلق من قاعدة البيانات */}
+                            <button 
+                              className="assign-btn-gold" 
+                              style={{ padding: '3px 8px', fontSize: '11px', background: '#c0392b', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                              onClick={() => {
+                                if (socket && user?.username) {
+                                  socket.emit('reject_friend_request', { currentUser: user.username, targetUser: senderName });
+                                  alert(`❌ تم رفض طلب الصداقة وسحبه بنجاح وتطهير الذاكرة.`);
+                                  window.location.reload();
+                                }
+                              }}
+                            >
+                              رفض ❌
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      {/* لو قائمة الطلبات الواردة المعلقة صفر يطبع تنبيه الاستقرار التالي */}
+                      {myIncomingRequests.length === 0 && (
+                        <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '11px', padding: '10px 0' }}>صندوق الطلبات الواردة فارغ حالياً...</p>
+                      )}
+                    </div>
+                  </div>
+
+                </div> /* 🧱 إغلاق الـ friends-split-layout الأساسي العازل للكتل بملفك */
+              )}
 
                   <div className="my-friends-column">
                     <h4 className="column-title">🤝 قائمة أصدقائي الحاليين</h4>
