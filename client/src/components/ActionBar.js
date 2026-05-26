@@ -14,14 +14,14 @@ const ActionBar = ({ setShowDiscovery, setDiscoveryTab, setShowPrayerModal }) =>
     <div className="ouro-action-bar">
       <button 
         className="action-bar-btn gold-glow-btn" 
-        onClick={() => handleButtonClick('friends')}
+        onClick={() => { setDiscoveryTab('friends'); setShowDiscovery(true); }} // 🔥 [تعديل الحسم] فتح الاستكشاف فورا 
       >
         🔍 إضافة أصدقاء
       </button>
       
       <button 
         className="action-bar-btn gold-glow-btn" 
-        onClick={() => handleButtonClick('friends')}
+        onClick={() => { setDiscoveryTab('friends'); setShowDiscovery(true); }} // 🔥 [تعديل الحسم] جلب قائمة الأصدقاء فورا
       >
         🤝 الأصدقاء
       </button>
