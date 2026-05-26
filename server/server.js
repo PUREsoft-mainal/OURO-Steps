@@ -37,7 +37,8 @@ const UserSchema = new mongoose.Schema({
     password: { type: String, required: true },
     role: { type: String, default: 'مستخدم' },
     avatar: { type: String, default: '' },
-    friends: { type: [String], default: [] }
+    friends: { type: [String], default: [] },
+    friendRequests: { type: [String], default: [] } // 🔒 [إضافة مأمنة] مصفوفة حفظ طلبات الصداقة المعلقة الواردة
 });
 const UserModel = mongoose.model('User', UserSchema);
 
@@ -524,24 +525,53 @@ io.on('connection', (socket) => {
         io.emit('message', msg);
     });
 
-    // 👥 إدارة منظومة الأصدقاء وحفظها في ملف كل مستخدم مستقل بشكل دائم
-    socket.on('toggle_friend', (data) => {
-        const users = readJson(USERS_FILE);
-        const me = users.find(u => u.username === data.currentUser);
-        if (!me) return;
-        
-        me.friends = me.friends || [];
-        let status = 'add';
-        if (me.friends.includes(data.targetUser)) {
-            me.friends = me.friends.filter(f => f !== data.targetUser);
-            status = 'remove';
-        } else {
-            me.friends.push(data.targetUser);
-        }
-        writeJson(USERS_FILE, users);
-        // بث التحديث الفوري لتعديل واجهات المتصفح لحظياً عند الجميع
-        io.emit('friend_updated', { usersList: users });
+    // 📩 1. مستمع إرسال طلب الصداقة وحفظه معلقاً بالـ Cloud للطرف الآخر
+    socket.on('send_friend_request', async (data) => {
+        try {
+            const { currentUser, targetUser } = data;
+            if (!currentUser || !targetUser) return;
+
+            // تحديث حساب الطرف المستقبل وحقن اسم المرسل في قائمة طلباته الواردة المعلقة
+            await UserModel.updateOne({ username: targetUser }, { $addToSet: { friendRequests: currentUser } });
+            
+            // بث الإشارة اللحظية عبر السيرفر لإشعار الطرف المستقبل فوراً إذا كان متصلاً
+            io.emit('friend_request_received', { from: currentUser, to: targetUser });
+        } catch (err) { console.error(err); }
     });
+
+    // ✔️ 2. مستمع قبول طلب الصداقة والدمج التبادلي الفوري في مصفوفات MongoDB Atlas
+    socket.on('accept_friend_request', async (data) => {
+        try {
+            const { currentUser, targetUser } = data; // currentUser هنا هو المستقبل الذي ضغط قبول، وtargetUser هو المرسل الأصلي
+            if (!currentUser || !targetUser) return;
+
+            // أ) إضافة كل طرف في مصفوفة أصدقاء الآخر بشكل تبادلي أزلي
+            await UserModel.updateOne({ username: currentUser }, { $addToSet: { friends: targetUser } });
+            await UserModel.updateOne({ username: targetUser }, { $addToSet: { friends: currentUser } });
+
+            // ب) تنظيف وتطهير مصفوفة الطلبات الواردة وسحب الطلب بعد معالجته بنجاح
+            await UserModel.updateOne({ username: currentUser }, { $pull: { friendRequests: targetUser } });
+
+            // جلب الحسابات المحدثة بالكامل وبثها لإعادة رسم القوائم الحية فوراً بالمتصفحات
+            const updatedUsers = await UserModel.find({}, { password: 0 }).sort({ username: 1 });
+            io.emit('update_users_catalogue', updatedUsers);
+        } catch (err) { console.error(err); }
+    });
+
+    // ❌ 3. مستمع رفض طلب الصداقة وسحبه وتطهير الذاكرة السحابية
+    socket.on('reject_friend_request', async (data) => {
+        try {
+            const { currentUser, targetUser } = data;
+            if (!currentUser || !targetUser) return;
+
+            // مسح العضو المرسل من قائمة طلبات الطرف الرافض دون إضافة أي صداقة
+            await UserModel.updateOne({ username: currentUser }, { $pull: { friendRequests: targetUser } });
+
+            const updatedUsers = await UserModel.find({}, { password: 0 }).sort({ username: 1 });
+            io.emit('update_users_catalogue', updatedUsers);
+        } catch (err) { console.error(err); }
+    });
+
 
     // 💬 الدخول الانضمامي لغرفة المحادثة الخاصة (فردية أو جماعية مطورة)
     socket.on('join_private_room', (data) => {
