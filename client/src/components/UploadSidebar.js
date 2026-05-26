@@ -102,11 +102,7 @@ const UploadSidebar = ({ files, serverUrl, onUpload, user }) => {
               id="sideUpFiles" 
               accept="image/*,video/*,audio/*" 
               style={{ display: 'none' }} 
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  setSelectedFileName(e.target.files[0].name);
-                }
-              }}
+              onChange={handleFileChange} // 👑 ربط واستدعاء الدالة العلوية باسمها لإنهاء تحذير الـ eslint                if (e.target.files && e.target.files[0])    
             />
             <button className="upload-trigger" type="button" style={{ width: '100%', padding: '8px', fontSize:'12px', cursor: 'pointer' }} onClick={() => document.getElementById('sideUpFiles').click()}>
               📁 اختر الملف من جهازك (صورة/فيديو/صوت)
