@@ -291,22 +291,51 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                 </div> /* 🧱 إغلاق الـ friends-split-layout الأساسي العازل للكتل بملفك */
               )}
 
-                  <div className="my-friends-column">
-                    <h4 className="column-title">🤝 قائمة أصدقائي الحاليين</h4>
-                    <div className="users-scroll">
-                      {myFriends.map(u => (
-                        <div key={u.id} className="mini-user-card friend-active">
-                          <span>👤 {u.username}</span>
-                          <div className="friend-btns">
-                            <button className="gold-btn-small" style={{background:'var(--gold-primary)'}} onClick={() => handleStartChat(u)}>💬 مراسلة</button>
-                            <button className="unfriend-btn" onClick={() => socket.emit('toggle_friend', { currentUser: user?.username, targetUser: u.username })}>إلغاء الصداقة 💔</button>
+
+                  {/* 📩 👑 [موضع الحقن والزراعة المأمن] جدار معالجة طلبات الصداقة الواردة المعلقة بأزرار القبول والرفض النيون */}
+                  <div className="requests-column" style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.1)' }}>
+                    <h4 className="column-title" style={{ color: 'var(--gold-primary)', fontSize: '13px', marginBottom: '12px' }}>📩 طلبات الصداقة الواردة المعلقة</h4>
+                    <div className="users-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {(myIncomingRequests || []).map(senderName => (
+                        <div key={senderName} className="mini-user-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', background: 'rgba(0,0,0,0.5)', borderRadius: '6px', border: '1px solid var(--border-glass)' }}>
+                          <span style={{ color: '#fff', fontSize: '12px' }}>👤 {senderName}</span>
+                          <div style={{ display: 'flex', gap: '5px' }}>
+                            <button 
+                              className="assign-btn-gold" 
+                              style={{ padding: '3px 8px', fontSize: '11px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                              onClick={() => {
+                                if (socket && user?.username) {
+                                  socket.emit('accept_friend_request', { currentUser: user.username, targetUser: senderName });
+                                  alert(`✔️ تم قبول طلب الصداقة من العضو ${senderName} بنجاح!`);
+                                  window.location.reload();
+                                }
+                              }}
+                            >
+                              قبول ✔️
+                            </button>
+                            <button 
+                              className="assign-btn-gold" 
+                              style={{ padding: '3px 8px', fontSize: '11px', background: '#c0392b', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                              onClick={() => {
+                                if (socket && user?.username) {
+                                  socket.emit('reject_friend_request', { currentUser: user.username, targetUser: senderName });
+                                  alert(`❌ تم رفض طلب الصداقة وسحبه بنجاح.`);
+                                  window.location.reload();
+                                }
+                              }}
+                            >
+                              رفض ❌
+                            </button>
                           </div>
                         </div>
                       ))}
+                      {(!myIncomingRequests || myIncomingRequests.length === 0) && (
+                        <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '11px', padding: '10px 0' }}>صندوق الطلبات الواردة فارغ حالياً...</p>
+                      )}
                     </div>
                   </div>
 
-                </div> /* 🧱 [تم القفل الصحيح] إغلاق الـ friends-split-layout الشامل لكافة الأعمدة */
+                </div> {/* 🧱 [تم القفل الصحيح النهائي] إغلاق الـ friends-split-layout الشامل لكافة الأعمدة الثلاثة معاً بصفاء تامي */}
               )}
 
               {activeTab === 'market' && (
