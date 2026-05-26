@@ -249,7 +249,16 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                           {/* 👑 [تم التعديل والربط الشرعي] استدعاء handleToggleFriend لتشغيل الحركة والاستجابة الفورية */}
                           <button 
                             className="gold-btn-small" 
-                            onClick={() => handleToggleFriend(u.username)}
+                            /* ✅ التعديل الهندسي القاطع والجاهز للتشغيل فوراً دون الحاجة لدوال علوية: */
+                            onClick={() => {
+                              if (socket && user?.username) {
+                                 // ضخ إشارة التحديث لـ MongoDB Atlas فوراً
+                                socket.emit('toggle_friend', { currentUser: user.username, targetUser: u.username });
+                                alert(`👥 تم إرسال طلب الصداقة للمعلن ${u.username} بنجاح!`);
+                                // إنعاش الكاش اختصاراً ليختفي كارت الشخص فوراً أمام عينك
+                                window.location.reload(); 
+                              }
+                            }}
                           >
                             إضافة صديق +
                           </button>
