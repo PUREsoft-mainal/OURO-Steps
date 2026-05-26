@@ -5,6 +5,7 @@ import '../App.css'; // استدعاء ملف التنسيق الشامل ليع
 const UploadSidebar = ({ files, serverUrl, onUpload, user }) => { 
   const [caption, setCaption] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [storyFile, setStoryFile] = useState(null); // 👑 المتغير المخصص لحقن الصورة فيزيائياً بالذاكرة
   const [isTextStatus, setIsTextStatus] = useState(false); // تحديد نوع الحالة (نصية أم وسائط)
   const [textBg, setTextBg] = useState("#1a1a1a"); // اللون الافتراضي للحالة النصية
   const [selectedFileName, setSelectedFileName] = useState(""); // 👑 لتخزين اسم الملف المختار وعرضه للمستخدم
@@ -15,8 +16,10 @@ const UploadSidebar = ({ files, serverUrl, onUpload, user }) => {
   // 👑 دالة ذكية لمراقبة وتأمين التقاط الملف المختار من جهاز المستخدم وعرض اسمه
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedFileName(e.target.files[0].name); // التقاط اسم الملف ليعرف المستخدم أنه تمت إضافة الصورة
+      setStoryFile(e.target.files[0]); // 👑 حقن الملف الفيزيائي بالكامل لمنع الـ 404
+      setSelectedFileName(e.target.files[0].name); 
     } else {
+      setStoryFile(null);
       setSelectedFileName("");
     }
   };
@@ -35,14 +38,15 @@ const UploadSidebar = ({ files, serverUrl, onUpload, user }) => {
       formData.append('isTextOnly', 'true');
       formData.append('textBg', textBg); // إرسال لون النيون الذهبي المختار من المصفوفة
     } else {
-      const fileInput = document.getElementById('storyFileInput'); // توحيد معرف حقل الإدخال
-      if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-        return alert("⚠️ الرجاء اختيار ملف (صورة/فيديو) أولاً أو التبديل لحالة نصية!");
+      // 👑 التأكد من وجود الملف الفيزيائي المخزن بالذاكرة قبل الإرسال
+      if (!storyFile) {
+        return alert("⚠️ الرجاء اختيار ملف (صورة/فيديو/صوت) أولاً من مربع الاستقبال!");
       }
-      formData.append('storyFile', fileInput.files[0]); // حشر الملف الصافي لملتر
+      formData.append('storyFile', storyFile); // 👑 ضخ الملف الفيزيائي الصافي مباشرة لملتر السحابي بنجاح
       formData.append('isTextOnly', 'false');
       formData.append('textBg', '#1a1a1a');
     }
+
 
     try {
       setUploading(true);
@@ -51,16 +55,20 @@ const UploadSidebar = ({ files, serverUrl, onUpload, user }) => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      if (res.data.success) {
-        alert("👑 🎉 تم إيداع ونشر حالتك الملكية بنجاح في خزائن السحاب لـ 24 ساعة!");
-        setCaption(""); // تصفير الصندوق الذكي
-        const fileInput = document.getElementById('storyFileInput');
-        if (fileInput) fileInput.value = "";// تصفير حقل اختيار الملفات
-        // تمرير البيانات للمكون الأب لإنعاش الشاشة لحظياً
-        if (onUpload && res.data.file) {
-          onUpload(res.data.file);
-        }   
-      }
+    if (res.data.success) {
+            alert("👑 🎉 تم إيداع ونشر حالتك الملكية بنجاح في خزائن السحاب لـ 24 ساعة!");
+            setCaption(""); // تصفير الصندوق الذكي
+            setStoryFile(null); // 👑 [تمت الإضافة بنجاح] تصفير الملف فيزيائياً من الذاكرة فور اكتمال الرفع
+        
+            const fileInput = document.getElementById('sideUpFiles'); // مطابقة الـ ID مع المربع المطور بالأسفل
+            if (fileInput) fileInput.value = ""; // تصفير حقل اختيار الملفات
+        
+            // تمرير البيانات للمكون الأب لإنعاش الشاشة لحظياً
+            if (onUpload && res.data.file) {
+              onUpload(res.data.file);
+            }   
+          }
+
       setUploading(false);
     } catch (err) {
       console.error("خطأ أثناء النشر السحابي للحالة المحدثة:", err);
