@@ -46,20 +46,8 @@ function App() {
   const [showPrayerModal, setShowPrayerModal] = useState(false); // حالة فتح وإغلاق نافذة الصلاة
 
 
-  // 👑 المنظومة المركزية الشاملة والموحدة لإدارة أحداث السوكت وجلب البيانات (مطهّرة تماماً ومحمية من التكرار والكراش)
+  // 👑 1. المنظومة المركزية الشاملة والموحدة لإدارة أحداث السوكت (مخصصة ومطهرة للبث الحي والرسائل فقط دون تداخل)
   useEffect(() => {
-    const fetchInitialFiles = async () => {
-      if (!isLogged) return;
-      try {
-        const res = await axios.get(`${API_BASE}/api/stories`); 
-        setFiles(res.data || []);
-      } catch (err) {
-        console.warn("⚠️ تنبيه لوجستي: مسار الستوريات فارغ حالياً بالسيرفر السحابي، جاري المتابعة الآمنة.");
-        setFiles([]);
-      }
-    };
-    fetchInitialFiles();
-
     if (socket) {
       // 🔊 1. مستمع استقبال وحفظ رسائل المجموعات اللحظي المصفى من الكائنات التالفة
       socket.on('group_message', (data) => {
@@ -170,7 +158,47 @@ function App() {
         socket.off('error_msg');
       }
     };
-  }, [isLogged, currentGroup.id]); // 🧱 جدار حماية هندسي: قفل واحد موحد وصافي بالملي للمنظومة بالكامل
+  }, [isLogged, currentGroup.id]); // 🧱 نهاية كتلة السوكت المخصصة والمعزولة بنجاح
+
+  // 👑 2. [منظومة اقتراحك العبقري] مراقبة وجلب دوري مستقل لشريط الإعلانات كل 15 دقيقة لمنع الاختفاء الصامت كلياً
+  useEffect(() => {
+    const fetchLiveAdsFromServer = async () => {
+      if (!isLogged) return;
+      try {
+        const res = await axios.get(`${API_BASE}/api/ads`);
+        if (res.data) {
+          setAds(res.data);
+        }
+      } catch (err) {
+        console.log("تنبيه سحابي: جاري محاولة تحديث ومزامنة الأشرطة الإعلانية دورياً...");
+      }
+    };
+
+    // الاستدعاء الفوري الأول بمجرد عبور بوابة الدخول لضمان رسم الكروت بلا تأخير
+    fetchLiveAdsFromServer();
+
+    // ⏳ جدولة الفحص الذكي: مراجعة قاعدة البيانات بانتظام كل 15 دقيقة لإثبات المتوفر وعزل الممسوح
+    const adsInterval = setInterval(() => {
+      fetchLiveAdsFromServer();
+    }, 15 * 60 * 1000); // 15 دقيقة بالملي ثانية بدقة فلكية
+
+    return () => clearInterval(adsInterval);
+  }, [isLogged]);
+
+  // 👑 3. دالة مستقلة ومعزولة كلياً لجلب الستوريات (القصص) لعدم تداخل خطأ الـ 404 مع الأشرطة أو السوكت
+  useEffect(() => {
+    const fetchGlobalStories = async () => {
+      if (!isLogged) return;
+      try {
+        const res = await axios.get(`${API_BASE}/api/stories`);
+        if (res.data) setFiles(res.data);
+      } catch (err) {
+        setFiles([]); // حماية الواجهة بمصفوفة صافية تمنع الشاشة السوداء
+      }
+    };
+    fetchGlobalStories();
+  }, [isLogged]);
+ // 🧱 جدار حماية هندسي: قفل واحد موحد وصافي بالملي للمنظومة بالكامل
 
 
   const handleAction = (e) => {
