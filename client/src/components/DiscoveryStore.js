@@ -305,7 +305,8 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                       ))}
                     </div>
                   </div>
-                </div>
+
+                </div> /* 🧱 [تم القفل الصحيح] إغلاق الـ friends-split-layout الشامل لكافة الأعمدة */
               )}
 
               {activeTab === 'market' && (
