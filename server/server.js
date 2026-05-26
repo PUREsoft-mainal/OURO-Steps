@@ -209,7 +209,6 @@ initJsonFile(CHAT_FILE);
 initJsonFile(ADS_FILE);
 initJsonFile(MARKET_FILE);
 initJsonFile(GROUPS_LIST_FILE, [{ id: 'public', name: 'المجموعة العامة', creator: 'System', mod1: '', mod2: '' }]);
-initJsonFile(STORIES_FILE);
 initJsonFile(FLASH_DB_FILE);
 
 // دوال مساعدة للقراءة والكتابة من نظام الملفات المحلي
