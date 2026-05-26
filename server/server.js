@@ -434,26 +434,51 @@ io.on('connection', (socket) => {
 // 1. أضف مسار ملف المجموعات في أعلى ملف server.js مع بقية المسارات
          const GROUPS_FILE = path.join(__dirname, 'groups.json');
          initJsonFile(GROUPS_FILE, [{ id: 'public', name: 'المجموعة العامة' }]); // تهيئة المجموعة العامة تلقائياً
-    // دالة تسجيل الدخول المحلية النقية
-    socket.on('join', (data) => {
-        console.log(`📡 استلم السيرفر المحلي طلب دخول للمستخدم: ${data.username}`);
-        let users = readJson(USERS_FILE);
-        let user = users.find(u => u.username === data.username && u.password === data.password);
 
-        // إنشاء حساب الأدمن تلقائياً داخل ملف users.json لو لم يكن موجوداً
-        if (!user && data.username === 'Admin_Mostafa' && data.password === '123') {
-            user = { id: 'admin', username: 'Admin_Mostafa', password: '123', role: 'Admin', friends: [] };
-            users.push(user);
-            writeJson(USERS_FILE, users);
-        }
+  // 🔑 [تم التطهير السحابي الشامل] حدث تسجيل الدخول والمزامنة الحية الأزلية من MongoDB Atlas
+    socket.on('join', async (data) => {
+        try {
+            if (!data || !data.username) return socket.emit('error_msg', 'البيانات المرسلة غير مكتملة');
 
-        if (user) {
-            socket.user = user;
-            const ads = readJson(ADS_FILE);
-            const chatHistory = readJson(CHAT_FILE).slice(-50);
-            socket.emit('init_data', { ads, chatHistory, user, stats: { totalUsers: users.length, activeUsers } });
-        } else {
-            socket.emit('error_msg', 'خطأ في اسم المستخدم أو كلمة المرور!');
+            // 👑 تأمين وزرع حساب الأدمن الملكي الاستثنائي تلقائياً في السحاب بقفل المونجو للأبد
+            if (data.username === 'Admin_Mostafa' && data.password === '123') {
+                let adminCheck = await UserModel.findOne({ username: 'Admin_Mostafa' });
+                if (!adminCheck) {
+                    adminCheck = new UserModel({
+                        username: 'Admin_Mostafa',
+                        password: '123',
+                        role: 'Admin',
+                        avatar: ''
+                    });
+                    await adminCheck.save();
+                    console.log("👑 تم زرع وتثبيت حساب الأدمن العام بالـ Cloud بنجاح ساحق!");
+                }
+            }
+
+            // البحث والمطابقة الصارمة للحساب من قاعدة البيانات السحابية الحية
+            let user = await UserModel.findOne({ username: data.username, password: data.password });
+
+            if (user) {
+                socket.user = user;
+                
+                // 👑 [مفتاح الحل الأزلي] جلب كافة الإعلانات المرفوعة المخزنة بالأطلس دون قيود موقوتة لمنع الاختفاء
+                const ads = await AdModel.find({}); 
+                
+                // جلب آخر 50 رسالة تاريخية من السحاب لتغذية الشات فوراً
+                const messages = await GroupMessageModel.find({ roomId: 'public' }).sort({ _id: 1 }).limit(50);
+                const chatHistory = messages;
+
+                const localGroups = [{ id: 'public', name: 'المجموعة العامة', creator: 'System' }];
+                const total = await UserModel.countDocuments();
+                
+                // ضخ حزمة الأصول السحابية المكتملة للواجهة لتفتح المنصة بلمح البصر وبثبات أزلي
+                socket.emit('init_data', { ads, chatHistory, user, groups: localGroups, stats: { totalUsers: total, activeUsers } });
+            } else {
+                socket.emit('error_msg', 'خطأ في اسم المستخدم أو كلمة المرور!');
+            }
+        } catch (err) {
+            console.error("خطأ تسجيل الدخول السحابي الفوري:", err);
+            socket.emit('error_msg', 'فشل الاتصال بقاعدة البيانات السحابية الحية');
         }
     });
 
@@ -608,10 +633,10 @@ app.post('/api/upload-ad', upload.single('adImage'), async (req, res) => {
         });
         await newAd.save(); // تم الحفظ بأمان مطلق في خزائن الـ Cloud الخارجي للأبد
         
-        // جلب الإعلانات النشطة وغير منتهية الصلاحية فقط وبثها لحظياً لجميع المشتركين
-        const allAds = await AdModel.find({ expiryDate: { $gt: Date.now() } });
+        // 👑 [تصحيح الحسم الأزلي] جلب كافة الإعلانات المرفوعة المخزنة دون قيد أو شرط موقوت لبثها لحظياً فور الرفع
+        const allAds = await AdModel.find({}); 
         io.emit('update_ads', allAds);
-        
+      
         res.json({ success: true, ad: newAd });
     } catch (err) {
         console.error("خطأ أثناء رفع الإعلان الموقوت السحابي:", err);
