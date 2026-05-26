@@ -3,44 +3,57 @@ import axios from 'axios';
 import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
 const UploadSidebar = ({ files, serverUrl, user }) => {
+  const [caption, setCaption] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [statusText, setStatusText] = useState(""); // نص الحالة أو تعليق الوسائط
   const [isTextStatus, setIsTextStatus] = useState(false); // تحديد نوع الحالة (نصية أم وسائط)
   const [selectedBg, setSelectedBg] = useState("#8a6f27"); // اللون الافتراضي للحالات النصية
-
-  // خيارات خلفيات النيون الفاخرة للستوري النصي
+  const [textBg, setTextBg] = useState("#1a1a1a"); // اللون الافتراضي للحالة النصية
+  
+  // 👑 خيارات خلفيات النيون الفاخرة للستوري النصي المعتمدة بملفك
   const bgOptions = ["#8a6f27", "#1c1c1c", "#4a154b", "#0b3c5d", "#328cc1", "#d9534f", "#27ae60"];
 
-  // دالة النشر المطورة (تتعامل مع الوسائط المرفقة بتعليق أو الحالة النصية النقية الملونة)
+  // دالة النشر المطورة والمحمية من الكراش والتوجيه المكسور
   const handlePublishStatus = async (e) => {
     e.preventDefault();
+    if (!user?.username) return alert("❌ يجب تسجيل الدخول أولاً بحسابك الملكي");
+    
     const formData = new FormData();
-    formData.append('user', user?.username || 'مستخدم مجهول');
-    formData.append('caption', statusText);
+    formData.append('username', user.username);
+    formData.append('caption', caption.trim()); // استخدام متغير النص المعتمد بالـ textarea
 
     if (isTextStatus) {
-      if (!statusText.trim()) return alert("⚠️ الرجاء كتابة نص أولاً لنشره كحالة نصية!");
+      if (!caption.trim()) return alert("⚠️ الرجاء كتابة نص أولاً لنشره كحالة نصية!");
       formData.append('isTextOnly', 'true');
-      formData.append('textBg', selectedBg);
+      formData.append('textBg', textBg); // إرسال لون النيون الذهبي المختار من المصفوفة
     } else {
-      const fileInput = document.getElementById('sideUpFiles');
-      if (!fileInput || !fileInput.files[0]) return alert("⚠️ الرجاء اختيار ملف (صورة/فيديو/صوت) أولاً أو التبديل لحالة نصية!");
-      formData.append('file', fileInput.files[0]);
+      const fileInput = document.getElementById('storyFileInput'); // توحيد معرف حقل الإدخال
+      if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+        return alert("⚠️ الرجاء اختيار ملف (صورة/فيديو) أولاً أو التبديل لحالة نصية!");
+      }
+      formData.append('storyFile', fileInput.files[0]); // حشر الملف الصافي لملتر
       formData.append('isTextOnly', 'false');
+      formData.append('textBg', '#1a1a1a');
     }
 
     try {
-      const res = await axios.post(`${serverUrl}/api/upload`, formData, {
+      setUploading(true);
+      // 👑 [تصحيح التوجيه السحابي الأزلي] الإرسال للمسار الشرعي المرتبط بـ MongoDB Atlas لحظر الـ 404
+      const res = await axios.post(`${serverUrl}/api/upload-story`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+
       if (res.data.success) {
-        alert("✅ تم نشر حالتك الملكية بنجاح ولمدة يومين!");
-        setStatusText("");
-        const fileInput = document.getElementById('sideUpFiles');
+        alert("👑 🎉 تم إيداع ونشر حالتك الملكية بنجاح في خزائن السحاب لـ 24 ساعة!");
+        setCaption(""); // تصفير الصندوق الذكي
+        const fileInput = document.getElementById('storyFileInput');
         if (fileInput) fileInput.value = ""; // تصفير حقل اختيار الملفات
       }
+      setUploading(false);
     } catch (err) {
-      console.error("خطأ أثناء النشر المحلي للحالة:", err);
-      alert("❌ فشل النشر، تأكد من اتصال السيرفر.");
+      console.error("خطأ أثناء النشر السحابي للحالة المحدثة:", err);
+      alert("❌ فشل النشر، تحقق من اتصال السيرفر السحابي وقاعدة البيانات.");
+      setUploading(false);
     }
   };
 
