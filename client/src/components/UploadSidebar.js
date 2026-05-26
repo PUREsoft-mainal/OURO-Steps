@@ -3,12 +3,10 @@ import axios from 'axios';
 import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
 const UploadSidebar = ({ files, serverUrl, onUpload, user }) => { 
-  const [statusText, setStatusText] = useState(""); // صندوق الكتابة الذكي والتعليقات
   const [caption, setCaption] = useState("");
   const [uploading, setUploading] = useState(false);
   const [isTextStatus, setIsTextStatus] = useState(false); // تحديد نوع الحالة (نصية أم وسائط)
   const [textBg, setTextBg] = useState("#1a1a1a"); // اللون الافتراضي للحالة النصية
-  const [selectedBg, setSelectedBg] = useState("#8a6f27"); // لون خلفية النيون النصي النشط
   const [selectedFileName, setSelectedFileName] = useState(""); // 👑 لتخزين اسم الملف المختار وعرضه للمستخدم
   
   // 👑 خيارات خلفيات النيون الفاخرة للستوري النصي المعتمدة بملفك
