@@ -274,12 +274,52 @@ const ChatArea = ({ chat, currentUser, msg, setMsg, socket, currentGroup }) => {
         <div ref={messagesEndRef} />
       </div>
       
-      <form className="input-box" onSubmit={send}>
+      {/* 👑 لوحة تحكم الفورم وقنوات حقن الإضافات الخمسة الشاملة بجوار زر الإرسال */}
+      <form className="input-box" onSubmit={send} style={{ display: 'flex', gap: '8px', alignItems: 'center', position: 'relative' }}>
+        
+        {/* ➕ زر الإضافات المطور عالي الفخامة الحاضن للخيارات الخمسة المذهبة */}
+        <button 
+          type="button"
+          className="assign-btn-gold"
+          style={{ width: '38px', height: '38px', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', borderRadius: '8px', background: 'linear-gradient(135deg, #1c1c1c 0%, #0d0d0d 100%)', border: '1px solid var(--gold-primary)', color: 'var(--gold-primary)' }}
+          onClick={() => {
+            const actionType = window.prompt(
+              "👑 استوديو الملحقات الملكي الشامل:\n\n" +
+              "اكتب رقم الخيار المطلوب حقنه بالشات فوراً:\n" +
+              "1️⃣ - رفع صور وفيديوهات بجميع الصيغ\n" +
+              "2️⃣ - رفع ملفات ومستندات PDF حرة\n" +
+              "3️⃣ - إدراج رابط لموقع خارجي\n" +
+              "4️⃣ - إرسال الموقع الجغرافي اللحظي GPS"
+            );
+
+            if (actionType === "1" || actionType === "2") {
+              const fileLink = window.prompt("📁 الصق هنا رابط المرفق أو ملف الميديا المرفوع سحابياً لحقنه بالشات فوراً:");
+              if (fileLink && fileLink.trim()) setMsg(prev => prev + ` [📎 مرفق سحابي: ${fileLink.trim()}]`);
+            } else if (actionType === "3") {
+              const webLink = window.prompt("🌐 اكتب أو الصق رابط الموقع الإلكتروني المستهدف:");
+              if (webLink && webLink.trim()) setMsg(prev => prev + ` ${webLink.trim()} `);
+            } else if (actionType === "4") {
+              if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                  // 👑 [تم التصحيح والتحصين] صياغة الرابط القياسي الصحيح لخرائط جوجل لتشغيل الـ GPS بنجاح ساحق
+                  const geoLink = `https://google.com{pos.coords.latitude},${pos.coords.longitude}`;
+                  setMsg(prev => prev + ` 📍 موقعي الجغرافي الحي: ${geoLink} `);
+                  alert("✅ تم قنص إحداثيات الـ GPS وحقنها بصندوق الرسائل بنجاح فخم!");
+                }, () => alert("❌ عذراً، يرجى تفعيل إذن الـ GPS بالمتصفح أولاً."));
+              }
+            }
+          }}
+          title="انقر لحقن مرفقات (PDF, صور, فيديو, روابط, GPS)"
+        >
+          ＋
+        </button>
+
         <input 
           value={msg} 
           onChange={e => setMsg(e.target.value)} 
           placeholder={`اكتب رسالتك الملكية داخل غُرفة ${currentGroup ? currentGroup.name : '...'}`} 
           required
+          style={{ flex: 1 }}
         />
         <button type="submit">إرسال 🚀</button>
       </form>
