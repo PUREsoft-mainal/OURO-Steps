@@ -23,33 +23,7 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
 
   const pChatEndRef = useRef(null);
 
-  useEffect(() => {
-  // 👑 [تعديل الحسم] دالة ذكية لإرسال طلب الصداقة وتطهير شاشة الاستكشاف لحظياً فور النقر
-    const handleToggleFriend = (targetUsername) => {
-      if (!user?.username || !socket) return;
- 
-      // 1️⃣ إرسال النبضة الفورية لـ MongoDB Atlas لحفظ الصداقة أزلياً
-      socket.emit('toggle_friend', { 
-        currentUser: user.username, 
-        targetUser: targetUsername 
-      });
-
-      // 2️⃣ إخفاء المستخدم فوراً من الشاشة المحلية أمامك لتأكيد نجاح العملية بصرياً
-      alert(`👥 تم إرسال طلب الصداقة وتثبيت هويّة المعلن ${targetUsername} سحابياً!`);
-    
-      // إنعاش الكاش وعمل تصفية فورية للقائمة (سيختفي كارت الشخص المنقور فوراً)
-      if (typeof setAllUsers === 'function') {
-        setAllUsers(prev => prev.map(u => {
-          if (u.username === user.username) {
-            const currentFriends = u.friends || [];
-            return { ...u, friends: [...currentFriends, targetUsername] };
-          }
-          return u;
-        }));
-      }
-    };
-
-    
+  useEffect(() => { 
     const fetchData = async () => {
       try {
         setLoading(true);
