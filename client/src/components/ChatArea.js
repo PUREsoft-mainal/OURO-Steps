@@ -281,7 +281,7 @@ const ChatArea = ({ chat, currentUser, msg, setMsg, socket, currentGroup }) => {
         <button 
           type="button"
           className="assign-btn-gold"
-          style={{ width: '15px', height: '15px', fontSize: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', borderRadius: '8px', background: 'linear-gradient(135deg, #1c1c1c 0%, #0d0d0d 100%)', border: '1px solid var(--gold-primary)', color: 'var(--gold-primary)' }}
+          style={{ width: '15px', height: '10px', fontSize: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', borderRadius: '8px', background: 'linear-gradient(135deg, #1c1c1c 0%, #0d0d0d 100%)', border: '1px solid var(--gold-primary)', color: 'var(--gold-primary)' }}
           onClick={() => {
             const actionType = window.prompt(
               "👑 استوديو الملحقات الملكي الشامل:\n\n" +
