@@ -6,7 +6,6 @@ const UploadSidebar = ({ files, serverUrl, onUpload, user }) => {
   const [caption, setCaption] = useState("");
   const [uploading, setUploading] = useState(false);
   const [isTextStatus, setIsTextStatus] = useState(false); // تحديد نوع الحالة (نصية أم وسائط)
-  const [selectedBg, setSelectedBg] = useState("#8a6f27"); // اللون الافتراضي للحالات النصية
   const [textBg, setTextBg] = useState("#1a1a1a"); // اللون الافتراضي للحالة النصية
   
   // 👑 خيارات خلفيات النيون الفاخرة للستوري النصي المعتمدة بملفك
