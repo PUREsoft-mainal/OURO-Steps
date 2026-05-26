@@ -16,7 +16,7 @@ const ActionBar = ({ setShowDiscovery, setDiscoveryTab, setShowPrayerModal }) =>
         className="action-bar-btn gold-glow-btn" 
         onClick={() => { setDiscoveryTab('friends'); setShowDiscovery(true); }} // 🔥 [تعديل الحسم] فتح الاستكشاف فورا 
       >
-        🔍 إضافة أصدقاء
+        🔍 البحث عن صديق
       </button>
       
       <button 
