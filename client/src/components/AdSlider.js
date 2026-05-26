@@ -36,8 +36,8 @@ const AdSlider = ({ ads, user }) => { // 👑 استقبال جلسة الـ use
     }
   };
 
-  // 👑 تصفية حصرية للشريط العلوي فقط (الذي يحمل كلاس top أو المرفوع قديماً تلقائياً)
-  const topAds = (ads || []).filter(ad => !ad.location || ad.location === 'top');
+  // ✅ [تعديل الحسم] تصفية شاملة ومأمنة تجعل الإعلانات تظهر لجميع الزوار والمستخدمين دون تضارب
+  const topAds = (ads || []).filter(ad => !ad.location || ad.location === 'top' || ad.location === '');
 
   return (
     <div className="ads-slider-wrapper">
