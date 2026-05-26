@@ -12,8 +12,7 @@ const LoginBox = ({ isSignUp, setIsSignUp, user, setUser, password, setPassword,
 
   return (
     <div className="login-box-wrapper">
-<img src="/assets/logo.png" className="main-logo" alt="OURO" style={{ width: '320px', height: 'auto' }} />
-
+<img src="https://hf.space" className="main-logo" alt="OURO" style={{ width: '320px', height: 'auto', display: 'block', margin: '0 auto 20px' }} />
       <h2 className="login-title">{isSignUp ? "إنشاء حساب ملكي جديد" : "دخول المنصة المحلية"}</h2>
       
       <form onSubmit={onFormSubmit}>
