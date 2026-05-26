@@ -593,7 +593,7 @@ io.on('connection', (socket) => {
 });
 
 // مسارات الـ API المحلية لخدمة المتجر والملفات والسوق وسجلات الشات المستقلة
-app.get('/api/users', (req, res) => res.json(readJson(USERS_FILE)));
+app.get('/api/users', async (req, res) => { try { const allUsers = await UserModel.find({}, { password: 0 }).sort({ username: 1 }); res.json(allUsers); } catch (err) { res.json([]); } });
 app.get('/api/market', (req, res) => res.json(readJson(MARKET_FILE)));
 
 // ==========================================================================
