@@ -3,14 +3,26 @@ import axios from 'axios';
 import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
 const UploadSidebar = ({ files, serverUrl, onUpload, user }) => { 
+  const [statusText, setStatusText] = useState(""); // صندوق الكتابة الذكي والتعليقات
   const [caption, setCaption] = useState("");
   const [uploading, setUploading] = useState(false);
   const [isTextStatus, setIsTextStatus] = useState(false); // تحديد نوع الحالة (نصية أم وسائط)
   const [textBg, setTextBg] = useState("#1a1a1a"); // اللون الافتراضي للحالة النصية
+  const [selectedBg, setSelectedBg] = useState("#8a6f27"); // لون خلفية النيون النصي النشط
+  const [selectedFileName, setSelectedFileName] = useState(""); // 👑 لتخزين اسم الملف المختار وعرضه للمستخدم
   
   // 👑 خيارات خلفيات النيون الفاخرة للستوري النصي المعتمدة بملفك
   const bgOptions = ["#8a6f27", "#1c1c1c", "#4a154b", "#0b3c5d", "#328cc1", "#d9534f", "#27ae60"];
 
+  // 👑 دالة ذكية لمراقبة وتأمين التقاط الملف المختار من جهاز المستخدم وعرض اسمه
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFileName(e.target.files[0].name); // التقاط اسم الملف ليعرف المستخدم أنه تمت إضافة الصورة
+    } else {
+      setSelectedFileName("");
+    }
+  };
+  
   // دالة النشر المطورة والمحمية من الكراش والتوجيه المكسور
   const handlePublishStatus = async (e) => {
     e.preventDefault();
@@ -73,11 +85,11 @@ const UploadSidebar = ({ files, serverUrl, onUpload, user }) => {
           <button type="button" className={`cs-btn ${isTextStatus ? 'active' : ''}`} style={{ flex: 1, fontSize:'11px', padding:'6px', borderRadius:'6px' }} onClick={() => setIsTextStatus(true)}>✍️ حالة نصية</button>
         </div>
 
-        {/* 👑 صندوق الكتابة الذكي والتعليقات المشترك المصفى والمحمّي من الكراش السحابي */}
+        {/* صندوق الكتابة الذكي والتعليقات المشترك */}
         <textarea 
           className="story-caption-textarea" 
-          value={caption}
-          onChange={(e) => setCaption(e.target.value)}
+          value={statusText}
+          onChange={(e) => setStatusText(e.target.value)}
           placeholder={isTextStatus ? "اكتب حالتك النصية الملكية هنا..." : "أضف تعليقاً ووصفاً يظهر أسفل القصة..."}
           style={{ width: '100%', minHeight: '60px', background: '#0a0a0a', border: '1px solid var(--border-glass)', borderRadius: '8px', color: '#fff', padding: '10px', fontSize: '13px', outline: 'none', resize: 'none', fontFamily: 'inherit' }}
           required={isTextStatus}
@@ -85,11 +97,29 @@ const UploadSidebar = ({ files, serverUrl, onUpload, user }) => {
 
         {/* عرض عناصر الاختيار التفاعلية بناءً على التبويب النشط */}
         {!isTextStatus ? (
-          <div>
-            <input type="file" id="sideUpFiles" accept="image/*,video/*,audio/*" style={{ display: 'none' }} />
-            <button className="upload-trigger" type="button" style={{ width: '100%', padding: '8px', fontSize:'12px' }} onClick={() => document.getElementById('sideUpFiles').click()}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {/* 👑 [إضافة مأمنة] حقن مستمع الالتقاط الفوري للملف وتخزين اسمه بالـ state الشغالة دون مساس بالبقية */}
+            <input 
+              type="file" 
+              id="sideUpFiles" 
+              accept="image/*,video/*,audio/*" 
+              style={{ display: 'none' }} 
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  setSelectedFileName(e.target.files[0].name);
+                }
+              }}
+            />
+            <button className="upload-trigger" type="button" style={{ width: '100%', padding: '8px', fontSize:'12px', cursor: 'pointer' }} onClick={() => document.getElementById('sideUpFiles').click()}>
               📁 اختر الملف من جهازك (صورة/فيديو/صوت)
             </button>
+            
+            {/* 👑 [إضافة مأمنة] حاوية إلكترونية مصغرة تلمح للمستخدم باسم الصورة أو الصوت الجاهز للإيداع السحابي */}
+            {selectedFileName && (
+              <small style={{ color: 'var(--gold-primary)', fontSize: '11px', textAlign: 'center', wordBreak: 'break-all', direction: 'ltr', marginTop: '2px', display: 'block', fontWeight: 'bold' }}>
+                📎 جاهز للرفع: {selectedFileName}
+              </small>
+            )}
           </div>
         ) : (
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center', overflowX: 'auto', padding: '4px 0' }}>
@@ -97,8 +127,8 @@ const UploadSidebar = ({ files, serverUrl, onUpload, user }) => {
             {bgOptions.map(bg => (
               <div 
                 key={bg} 
-                onClick={() => setTextBg(bg)}
-                style={{ width: '20px', height: '20px', borderRadius: '50%', background: bg, cursor: 'pointer', border: textBg === bg ? '2px solid #fff' : '1px solid #000', flexShrink: 0, transition: '0.2s' }}
+                onClick={() => setSelectedBg(bg)}
+                style={{ width: '20px', height: '20px', borderRadius: '50%', background: bg, cursor: 'pointer', border: selectedBg === bg ? '2px solid #fff' : '1px solid #000', flexShrink: 0, transition: '0.2s' }}
               />
             ))}
           </div>
@@ -184,3 +214,4 @@ const UploadSidebar = ({ files, serverUrl, onUpload, user }) => {
 };
 
 export default UploadSidebar;
+
