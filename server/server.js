@@ -258,7 +258,8 @@ const GroupSchema = new mongoose.Schema({
     name: { type: String, required: true },
     creator: { type: String, required: true },
     mod1: { type: String, default: '' },
-    mod2: { type: String, default: '' }
+    mod2: { type: String, default: '' },
+    allowedUsers: { type: [String], default: [] } // 🔒 [إضافة مأمنة] مصفوفة حفظ أسماء المصرح لهم بالدخول
 });
 const GroupModel = mongoose.model('Group', GroupSchema);
 
@@ -292,7 +293,8 @@ io.on('connection', (socket) => {
                 name: data.name.trim(),
                 creator: socket.user.username,
                 mod1: '',
-                mod2: ''
+                mod2: '',
+                allowedUsers: [socket.user.username, 'Admin_Mostafa'] // 👑 إدراج المنشئ والأدمن تلقائياً في بوابة المصرح لهم
             });
             await newGroup.save(); // حُفظت للأبد في MongoDB Atlas ولا تتأثر بالتحديثات
             
@@ -303,7 +305,21 @@ io.on('connection', (socket) => {
     // 2️⃣ مستمع الانضمام للغرفة وجلب تاريخ الرسائل المأمن من الكراش من Cloud
     socket.on('join_group_room', async (data) => {
         try {
-            if (!data.roomId) return;
+            if (!data.roomId || !socket.user) return; // تأمين قراءة جلسة المستخدم
+            
+            // 🔒 [جدار الحماية المضاف] العثور على الغرفة الحالية لفرز قائمة المصرح لهم بالدخول
+            const group = await GroupModel.findOne({ id: data.roomId });
+            if (group) {
+                // التحقق الأمني: إذا لم تكن المجموعة العامة، والمستخدم ليس الأدمن، وليس منشئ المجموعة، وليس مدرجاً فيallowedUsers، يُحظر فوراً!
+                if (data.roomId !== 'public' && 
+                    socket.user.username !== 'Admin_Mostafa' && 
+                    socket.user.username !== group.creator && 
+                    (!group.allowedUsers || !group.allowedUsers.includes(socket.user.username))) {
+                    
+                    return socket.emit('error_msg', '🛑 عذراً، هذه الغرفة مغلقة! يتوجب عليك طلب إذن من منشئ الغرفة أو الأدمن لمنحك هويّة الدخول.');
+                }
+            }
+
             socket.join(data.roomId);
             
             // جلب رسائل الغرفة المحددة من السحاب مرتبة تصاعدياً لتوليد السجل التاريخي
@@ -318,11 +334,28 @@ io.on('connection', (socket) => {
                 avatar: m.avatar,
                 time: m.time,
                 text: typeof m.text === 'object' && m.text !== null ? (m.text.text || JSON.stringify(m.text)) : m.text
-            }));
+              }));
 
             // إرسال تاريخ الدردشة للشخص الذي دخل الغرفة بالثانية وبأمان كامل
             socket.emit('group_chat_history', { roomId: data.roomId, history: sanitizedHistory });
         } catch (err) { console.error("خطأ جلب سجل الغرفة من السحاب:", err); }
+    });
+
+    // 👑 [مستمع إضافي جديد مكمل للزراعة بالأسفل فوراً] لمنح ميزة بث إضافة الأصدقاء سحابياً بـ MongoDB Atlas
+    socket.on('add_user_to_group', async (data) => {
+        try {
+            const { roomId, targetUser } = data;
+            if (!roomId || !targetUser) return;
+            
+            const group = await GroupModel.findOne({ id: roomId });
+            if (!group) return;
+
+            group.allowedUsers = group.allowedUsers || [];
+            if (!group.allowedUsers.includes(targetUser)) {
+                group.allowedUsers.push(targetUser);
+                await group.save(); // تخزين مشفر ودائم بالأطلس
+            }
+        } catch (err) { console.error("خطأ إضافة عضو للمجموعات المغلقة:", err); }
     });
 
     // 3️⃣ مستمع استقبال وحفظ الرسائل الجديدة بـ MongoDB Atlas وبثها لحظياً للمجموعة
