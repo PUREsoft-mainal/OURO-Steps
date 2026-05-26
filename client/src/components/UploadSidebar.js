@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
-const UploadSidebar = ({ files, serverUrl, user }) => {
+const UploadSidebar = ({ files, serverUrl, onUpload, user }) => { 
   const [caption, setCaption] = useState("");
   const [uploading, setUploading] = useState(false);
   const [statusText, setStatusText] = useState(""); // نص الحالة أو تعليق الوسائط
