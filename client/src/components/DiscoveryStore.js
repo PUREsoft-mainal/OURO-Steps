@@ -244,9 +244,15 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                     <h4 className="column-title">🔍 استكشاف وإضافة أصدقاء الجدد</h4>
                     <div className="users-scroll">
                       {usersToDiscover.map(u => (
-                        <div key={u.id} className="mini-user-card">
+                        <div key={u.id || u._id || u.username} className="mini-user-card">
                           <span>👤 {u.username}</span>
-                          <button className="gold-btn-small" onClick={() => socket.emit('toggle_friend', { currentUser: user?.username, targetUser: u.username })}>إضافة صديق +</button>
+                          {/* 👑 [تم التعديل والربط الشرعي] استدعاء handleToggleFriend لتشغيل الحركة والاستجابة الفورية */}
+                          <button 
+                            className="gold-btn-small" 
+                            onClick={() => handleToggleFriend(u.username)}
+                          >
+                            إضافة صديق +
+                          </button>
                         </div>
                       ))}
                     </div>
