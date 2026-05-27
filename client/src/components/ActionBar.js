@@ -19,9 +19,15 @@ const ActionBar = ({ setShowDiscovery, setDiscoveryTab, setShowPrayerModal }) =>
         🔍 البحث عن صديق
       </button>
       
+      {/* 🤝 زر الأصدقاء المطور لتوجيه واستدعاء ملف الأصدقاء الحصري تلقائياً */}
       <button 
         className="action-bar-btn gold-glow-btn" 
-        onClick={() => { setDiscoveryTab('friends'); setShowDiscovery(true); }} // 🔥 [تعديل الحسم] جلب قائمة الأصدقاء فورا
+        onClick={() => {
+          if (typeof setShowDiscovery === 'function' && typeof setDiscoveryTab === 'function') {
+            setDiscoveryTab('friends'); // تحويل التبويب لملف الأصدقاء
+            setShowDiscovery(true);    // إطلاق واستدعاء الصندوق العائم على الشاشة فوراً
+          }
+        }}
       >
         🤝 الأصدقاء
       </button>
