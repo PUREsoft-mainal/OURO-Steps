@@ -113,6 +113,9 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
 
   // 👑 [تعديل الحسم النهائي الموحد] صيانة الدالة بالكامل لتعتمد على كائن موحد الاسم هندسياً
   const handleStartChat = async (targetFriend) => {
+    // 👑 [سطر التعريف والتخصيص الملكي] إجبار الكود على قراءة أن u و targetFriend كائن واحد لتجاوز خطأ الـ ESLint فوراً
+    const u = targetFriend;
+
     if (!targetFriend || !targetFriend.username) return;
 
     // حساب وتوليد معرف الغرفة السحابي المشترك بدقة صلبة
