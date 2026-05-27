@@ -23,7 +23,7 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
 
   const pChatEndRef = useRef(null);
 
-  useEffect(() => { 
+    useEffect(() => { 
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -100,39 +100,30 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
     pChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [privateChatHistory]);
 
-/* ✅ [الحل الجذري] صب المعرفات تحت هوية الحرف u الموحد لمنع كراش الـ no-undef للأبد: */
+    // 👑 [الحل الهندسي القاطع والجذري للأزمة] التعريف الآمن لإسكات فاحص الـ ESLint وتمرير البناء فوراً
+  const handleStartChat = async (incomingUser) => {
+    if (!incomingUser || !incomingUser.username) return;
+
+    // 🔒 قراءة هويات المتغيرات مباشرة من الكائن الممرر لمنع تعارض النطاق الصامت (no-undef)
+    const u = incomingUser;
+
+    // حساب وتوليد معرف الغرفة السحابي المشترك بدقة صلبة عبر المعرف الموحد
     const roomId = [user?.username, u.username].sort().join('_ch_');
     setChatRoomId(roomId);
     setChatParticipants([user?.username, u.username]);
-    setActiveChat(u);
-  
+
     // تعيين منشئ الغرفة الافتراضي لإتاحة صلاحيات الطرد والإضافة
     setCurrentChatMeta({ creator: user?.username, mod1: '', mod2: '' });
-
     socket.emit('join_private_room', { roomId });
 
-// 👑 [الحل الهندسي القاطع والجذري للأزمة] التعريف الآمن لإسكات فاحص الـ ESLint وتمرير البناء فوراً
-const handleStartChat = async (incomingUser) => {
-  if (!incomingUser || !incomingUser.username) return;
-
-  // 🔒 قراءة هويات المتغيرات مباشرة من الكائن الممرر لمنع تعارض النطاق الصامت (no-undef)
-  const u = incomingUser;
-  const targetFriend = incomingUser;
-
-  // حساب وتوليد معرف الغرفة السحابي المشترك بدقة صلبة عبر المعرف الموحد
-  const roomId = [user?.username, incomingUser.username].sort().join('_ch_');
-  setChatRoomId(roomId);
-  setChatParticipants([user?.username, incomingUser.username]);
-
-  try {
-    const res = await axios.get(`${API_BASE}/api/private-chat-history/${roomId}`);
-    setPrivateChatHistory(res.data || []);
-    setActiveChat(incomingUser); // تفعيل وفتح الشات الخاص العائم بالواجهة فوراً عبر المسمى المعرف يقيناً
-  } catch (err) {
-    console.error("خطأ في جلب سجل المحادثة المحلي من السحاب:", err);
-  }
-};
-
+    try {
+      const res = await axios.get(`${API_BASE}/api/private-chat-history/${roomId}`);
+      setPrivateChatHistory(res.data || []);
+      setActiveChat(u); // تفعيل وفتح الشات الخاص العائم بالواجهة فوراً عبر المسمى المعرف يقيناً
+    } catch (err) {
+      console.error("خطأ في جلب سجل المحادثة المحلي من السحاب:", err);
+    }
+  };
 
   // دالة إرسال الرسالة الخاصة وبثها عبر السوكيت
   const sendPrivateMsg = (e) => {
@@ -190,7 +181,7 @@ const handleStartChat = async (incomingUser) => {
 
   // دالة حذف منشور السلعة نهائياً عبر زر (×)
   const handleDeletePost = async (postId) => {
-    if (!window.confirm("⚠️ هل أنت متأكد من حذف هذا منشور البضاعة وصوره نهائياً من السوق؟")) return;
+    if (!window.confirm("⚠️ هل أنت متأكد من حذف هذا منشور البضاعة وصوره نهائياً من السوق?")) return;
     try {
       await axios.delete(`${API_BASE}/api/market/delete/${postId}`, { 
         data: { username: user?.username } 
@@ -214,7 +205,7 @@ const handleStartChat = async (incomingUser) => {
     user.username === currentChatMeta.mod2
   );
 
-  return (
+    return (
     <div className="discovery-overlay" onClick={onClose}>
       <div className="discovery-window gold-border" onClick={e => e.stopPropagation()}>
         
@@ -235,10 +226,8 @@ const handleStartChat = async (incomingUser) => {
                       {usersToDiscover.map(u => (
                         <div key={u.id || u._id || u.username} className="mini-user-card">
                           <span>👤 {u.username}</span>
-                          {/* 👑 [تم التعديل والربط الشرعي] استدعاء handleToggleFriend لتشغيل الحركة والاستجابة الفورية */}
                           <button 
                             className="gold-btn-small" 
-                            /* ✅ التعديل الهندسي الشرعي لإرسال طلب صداقة معلق ينتظر موافقة الطرف الآخر: */
                             onClick={() => {
                               if (socket && user?.username) {
                                 socket.emit('send_friend_request', { currentUser: user.username, targetUser: u.username });
@@ -253,17 +242,16 @@ const handleStartChat = async (incomingUser) => {
                       ))}
                     </div>
                   </div>
-                                       {/* 👑 [موضع الحقن والزراعة المأمن] جدار استقبال ومعالجة طلبات الصداقة الواردة المطور بأزرار القبول والرفض */}
+
+                  {/* 📩 👑 جدار استقبال ومعالجة طلبات الصداقة الواردة المطور بعد المزامنة والتنظيف والتأمين */}
                   <div className="requests-column" style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.1)' }}>
                     <h4 className="column-title" style={{ color: 'var(--gold-primary)', fontSize: '13px', marginBottom: '12px' }}>📩 طلبات الصداقة الواردة المعلقة</h4>
-                    <div className="users-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {/* تدوير مصفوفة الطلبات الواردة التي قمنا بفرزها بالأعلى */}
+                    <div className="users-scroll">
                       {(myIncomingRequests || []).map(senderName => (
-                        <div key={senderName} className="mini-user-card" style={{ display: 'flex', alignItems: 'center', justifyRules: 'space-between', padding: '8px', background: 'rgba(0,0,0,0.5)', borderRadius: '6px', border: '1px solid var(--border-glass)' }}>
+                        <div key={senderName} className="mini-user-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', background: 'rgba(0,0,0,0.5)', borderRadius: '6px', border: '1px solid var(--border-glass)' }}>
                           <span style={{ color: '#fff', fontSize: '12px' }}>👤 {senderName}</span>
                           
                           <div style={{ display: 'flex', gap: '5px' }}>
-                            {/* ✔️ زر القبول المذهب الفاخر لدمج هويات الأصدقاء تبادلياً بسجل MongoDB Atlas */}
                             <button 
                               className="assign-btn-gold" 
                               style={{ padding: '3px 8px', fontSize: '11px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
@@ -278,7 +266,6 @@ const handleStartChat = async (incomingUser) => {
                               قبول ✔️
                             </button>
 
-                            {/* ❌ زر الرفض القاني لسحب وتطهير طلبات العضو المعلق من قاعدة البيانات */}
                             <button 
                               className="assign-btn-gold" 
                               style={{ padding: '3px 8px', fontSize: '11px', background: '#c0392b', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
@@ -295,65 +282,14 @@ const handleStartChat = async (incomingUser) => {
                           </div>
                         </div>
                       ))}
-                      {/* لو قائمة الطلبات الواردة المعلقة صفر يطبع تنبيه الاستقرار التالي */}
                       {myIncomingRequests.length === 0 && (
                         <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '11px', padding: '10px 0' }}>صندوق الطلبات الواردة فارغ حالياً...</p>
                       )}
                     </div>
                   </div>
 
-                </div> /* 🧱 إغلاق الـ friends-split-layout الأساسي العازل للكتل بملفك */
+                </div>
               )}
-
-              {/* 🟢 تم فتح الشرط والحاوية الشاملة لتتطابق مع الإغلاق في الأسفل */}
-                <div className="friends-split-layout">
-
-                  {/* 📩 👑 [موضع الحقن والزراعة المأمن] جدار معالجة طلبات الصداقة الواردة المعلقة بأزرار القبول والرفض النيون */}
-                  <div className="requests-column" style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.1)' }}>
-                    <h4 className="column-title" style={{ color: 'var(--gold-primary)', fontSize: '13px', marginBottom: '12px' }}>📩 طلبات الصداقة الواردة المعلقة</h4>
-                    <div className="users-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {(myIncomingRequests || []).map(senderName => (
-                        <div key={senderName} className="mini-user-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', background: 'rgba(0,0,0,0.5)', borderRadius: '6px', border: '1px solid var(--border-glass)' }}>
-                          <span style={{ color: '#fff', fontSize: '12px' }}>👤 {senderName}</span>
-                          <div style={{ display: 'flex', gap: '5px' }}>
-                            <button 
-                              className="assign-btn-gold" 
-                              style={{ padding: '3px 8px', fontSize: '11px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-                              onClick={() => {
-                                if (socket && user?.username) {
-                                  socket.emit('accept_friend_request', { currentUser: user.username, targetUser: senderName });
-                                  alert(`✔️ تم قبول طلب الصداقة من العضو ${senderName} بنجاح!`);
-                                  window.location.reload();
-                                }
-                              }}
-                            >
-                            قبول ✔️
-                            </button>
-                            <button 
-                              className="assign-btn-gold" 
-                              style={{ padding: '3px 8px', fontSize: '11px', background: '#c0392b', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-                              onClick={() => {
-                                if (socket && user?.username) {
-                                  socket.emit('reject_friend_request', { currentUser: user.username, targetUser: senderName });
-                                  alert(`❌ تم رفض طلب الصداقة وسحبه بنجاح.`);
-                                  window.location.reload();
-                                }
-                              }}
-                            >
-                              رفض ❌
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                      {(!myIncomingRequests || myIncomingRequests.length === 0) && (
-                        <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '11px', padding: '10px 0' }}>صندوق الطلبات الواردة فارغ حالياً...</p>
-                      )}
-                    </div>
-                  </div>
-
-                </div> 
-              )}
-
               {activeTab === 'market' && (
                 <div className="market-section-layout">
                   <form className="market-upload-form gold-border" onSubmit={handleMarketUpload}>
@@ -501,4 +437,3 @@ const handleStartChat = async (incomingUser) => {
 };
 
 export default DiscoveryStore;
-
