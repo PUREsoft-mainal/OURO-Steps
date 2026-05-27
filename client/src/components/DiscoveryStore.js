@@ -111,8 +111,8 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
 
     socket.emit('join_private_room', { roomId });
 
-  const handleStartChat = async (u) => {
-    try {
+const handleStartChat = async (targetFriend) => { // 👑 تم توحيد المسمى ليتطابق مع السطور 104 و106 و107 لإنهاء كراش الـ no-undef
+  try {
       const res = await axios.get(`${API_BASE}/api/private-chat-history/${roomId}`);
       setPrivateChatHistory(res.data || []);
     } catch (err) {
