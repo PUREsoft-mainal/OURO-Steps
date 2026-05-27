@@ -291,6 +291,9 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                 </div> /* 🧱 إغلاق الـ friends-split-layout الأساسي العازل للكتل بملفك */
               )}
 
+              {/* 🟢 تم فتح الشرط والحاوية الشاملة لتتطابق مع الإغلاق في الأسفل */}
+              {showRequests && (
+                <div className="friends-split-layout">
 
                   {/* 📩 👑 [موضع الحقن والزراعة المأمن] جدار معالجة طلبات الصداقة الواردة المعلقة بأزرار القبول والرفض النيون */}
                   <div className="requests-column" style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.1)' }}>
@@ -311,7 +314,7 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                                 }
                               }}
                             >
-                              قبول ✔️
+                            قبول ✔️
                             </button>
                             <button 
                               className="assign-btn-gold" 
@@ -335,7 +338,7 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                     </div>
                   </div>
 
-                </div> {/* 🧱 [تم القفل الصحيح النهائي] إغلاق الـ friends-split-layout الشامل لكافة الأعمدة الثلاثة معاً بصفاء تامي */}
+                </div> /* 🧱 [تم القفل الصحيح النهائي] إغلاق الـ friends-split-layout الشامل لكافة الأعمدة الثلاثة معاً بصفاء تامي */
               )}
 
               {activeTab === 'market' && (
