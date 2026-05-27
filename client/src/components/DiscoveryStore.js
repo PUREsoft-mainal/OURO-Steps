@@ -111,6 +111,7 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
 
     socket.emit('join_private_room', { roomId });
 
+  const handleStartChat = async (u) => {
     try {
       const res = await axios.get(`${API_BASE}/api/private-chat-history/${roomId}`);
       setPrivateChatHistory(res.data || []);
