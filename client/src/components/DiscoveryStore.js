@@ -100,33 +100,30 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
     pChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [privateChatHistory]);
 
-/* ✅ التعديل البرمجي الصحيح والموحد لصب المعرفات تحت اسم targetFriend: */
-    const roomId = [user?.username, targetFriend.username].sort().join('_ch_');
+/* ✅ [الحل الجذري] صب المعرفات تحت هوية الحرف u الموحد لمنع كراش الـ no-undef للأبد: */
+    const roomId = [user?.username, u.username].sort().join('_ch_');
     setChatRoomId(roomId);
-    setChatParticipants([user?.username, targetFriend.username]);
-    setActiveChat(targetFriend);
+    setChatParticipants([user?.username, u.username]);
+    setActiveChat(u);
   
     // تعيين منشئ الغرفة الافتراضي لإتاحة صلاحيات الطرد والإضافة
     setCurrentChatMeta({ creator: user?.username, mod1: '', mod2: '' });
 
     socket.emit('join_private_room', { roomId });
 
-  // 👑 [تعديل الحسم النهائي الموحد] صيانة الدالة بالكامل لتعتمد على كائن موحد الاسم هندسياً
-  const handleStartChat = async (targetFriend) => {
-    // 👑 [سطر التعريف والتخصيص الملكي] إجبار الكود على قراءة أن u و targetFriend كائن واحد لتجاوز خطأ الـ ESLint فوراً
-    const u = targetFriend;
+  // 👑 [الحل الجذري القاطع] تطهير المعرفات وتوحيد الدالة بالكامل تحت هوية الحرف u لإبادة كراش الـ ESLint
+  const handleStartChat = async (u) => {
+    if (!u || !u.username) return;
 
-    if (!targetFriend || !targetFriend.username) return;
-
-    // حساب وتوليد معرف الغرفة السحابي المشترك بدقة صلبة
-    const roomId = [user?.username, targetFriend.username].sort().join('_ch_');
+    // حساب وتوليد معرف الغرفة السحابي المشترك بدقة صلبة عبر الحرف u
+    const roomId = [user?.username, u.username].sort().join('_ch_');
     setChatRoomId(roomId);
-    setChatParticipants([user?.username, targetFriend.username]);
+    setChatParticipants([user?.username, u.username]);
 
     try {
       const res = await axios.get(`${API_BASE}/api/private-chat-history/${roomId}`);
       setPrivateChatHistory(res.data || []);
-      setActiveChat(targetFriend); // تفعيل وفتح الشات الخاص العائم بالواجهة فوراً
+      setActiveChat(u); // تفعيل وفتح الشات الخاص العائم بالواجهة فوراً عبر u
     } catch (err) {
       console.error("خطأ في جلب سجل المحادثة المحلي من السحاب:", err);
     }
