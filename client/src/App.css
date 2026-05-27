@@ -2028,3 +2028,20 @@ body, html {
   100% { transform: translateX(-30%); }
 }
 
+/* 👑 [تنسيق ملكي] صب وتهيئة شريط التمرير المذهب المخصص لأسواق ومنصات OURO */
+.scrollbar-gold::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-gold::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+.scrollbar-gold::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--gold-primary, #d4af37) 0%, #8a6f27 100%);
+  border-radius: 4px;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+}
+.scrollbar-gold::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-primary, #d4af37);
+}
