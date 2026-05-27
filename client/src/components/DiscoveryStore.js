@@ -220,7 +220,18 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                               onClick={() => {
                                 if (socket && user?.username) {
                                   socket.emit('send_friend_request', { currentUser: user.username, targetUser: u.username });
-                                  window.location.reload(); 
+                                  alert(`📩 تم إرسال طلب صداقة ملكي للمعلن ${u.username} بنجاح، بانتظار اعتماده وقبوله!`);
+                                        
+                                  // 👑 [بديل الحسم الصامت] إخفاء كارت المستخدم فوراً من الشاشة دون عمل ريفريش وطرد
+                                  if (typeof setAllUsers === 'function') {
+                                    setAllUsers(prev => prev.map(usr => {
+                                      if (usr.username === user.username) {
+                                        const currentRequests = usr.friendRequests || [];
+                                        return { ...usr, friendRequests: [...currentRequests, u.username] };
+                                      }
+                                      return usr;
+                                    }));
+                                  }
                                 }
                               }}
                             >
