@@ -292,7 +292,6 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
               )}
 
               {/* 🟢 تم فتح الشرط والحاوية الشاملة لتتطابق مع الإغلاق في الأسفل */}
-              {showRequests && (
                 <div className="friends-split-layout">
 
                   {/* 📩 👑 [موضع الحقن والزراعة المأمن] جدار معالجة طلبات الصداقة الواردة المعلقة بأزرار القبول والرفض النيون */}
