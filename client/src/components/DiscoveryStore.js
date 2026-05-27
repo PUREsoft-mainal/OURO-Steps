@@ -111,14 +111,22 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
 
     socket.emit('join_private_room', { roomId });
 
-const handleStartChat = async (targetFriend) => { // 👑 تم توحيد المسمى ليتطابق مع السطور 104 و106 و107 لإنهاء كراش الـ no-undef
+// ✅ [تم الحسم والتأمين الشامل] صياغة الدالة بالهيكل القياسي المكتمل لحرق أخطاء الـ no-undef
+const handleStartChat = async (targetFriend) => {
+  if (!targetFriend || !targetFriend.username) return;
+  
+  // 👑 حساب وحقن معرّف الغرفة الخاص المشترك بينك وبين الصديق سحابياً
+  const roomId = [user?.username, targetFriend.username].sort().join('_');
+  
   try {
-      const res = await axios.get(`${API_BASE}/api/private-chat-history/${roomId}`);
-      setPrivateChatHistory(res.data || []);
-    } catch (err) {
-      console.error("خطأ في جلب سجل المحادثة المحلي:", err);
-    }
-  };
+    const res = await axios.get(`${API_BASE}/api/private-chat-history/${roomId}`);
+    setPrivateChatHistory(res.data || []);
+    setActiveChat(targetFriend); // تفعيل فتح الشات العائم للصديق فوراً
+  } catch (err) {
+    console.error("خطأ في جلب سجل المحادثة الملكي:", err);
+  }
+};
+
 
   // دالة إرسال الرسالة الخاصة وبثها عبر السوكيت
   const sendPrivateMsg = (e) => {
