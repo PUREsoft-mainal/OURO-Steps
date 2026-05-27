@@ -220,7 +220,6 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                               onClick={() => {
                                 if (socket && user?.username) {
                                   socket.emit('send_friend_request', { currentUser: user.username, targetUser: u.username });
-                                  alert(`📩 تم إرسال طلب صداقة ملكي للمعلن ${u.username} بنجاح، بانتظار اعتماده وقبوله!`);
                                   window.location.reload(); 
                                 }
                               }}
