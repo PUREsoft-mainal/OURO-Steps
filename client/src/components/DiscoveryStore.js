@@ -111,21 +111,23 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
 
     socket.emit('join_private_room', { roomId });
 
-// ✅ [تم الحسم والتأمين الشامل] صياغة الدالة بالهيكل القياسي المكتمل لحرق أخطاء الـ no-undef
-const handleStartChat = async (u) => { // 👑 تم توحيد المسمى برأس الدالة ليتطابق مع السطور 104 و106 و107
-  if (!targetFriend || !targetFriend.username) return; 
-  // 👑 حساب وحقن معرّف الغرفة الخاص المشترك بينك وبين الصديق سحابياً
-  const roomId = [user?.username, targetFriend.username].sort().join('_');
-  
-  try {
-    const res = await axios.get(`${API_BASE}/api/private-chat-history/${roomId}`);
-    setPrivateChatHistory(res.data || []);
-    setActiveChat(targetFriend); // تفعيل فتح الشات العائم للصديق فوراً
-  } catch (err) {
-    console.error("خطأ في جلب سجل المحادثة الملكي:", err);
-  }
-};
+  // 👑 [تعديل الحسم النهائي الموحد] صيانة الدالة بالكامل لتعتمد على كائن موحد الاسم هندسياً
+  const handleStartChat = async (targetFriend) => {
+    if (!targetFriend || !targetFriend.username) return;
 
+    // حساب وتوليد معرف الغرفة السحابي المشترك بدقة صلبة
+    const roomId = [user?.username, targetFriend.username].sort().join('_ch_');
+    setChatRoomId(roomId);
+    setChatParticipants([user?.username, targetFriend.username]);
+
+    try {
+      const res = await axios.get(`${API_BASE}/api/private-chat-history/${roomId}`);
+      setPrivateChatHistory(res.data || []);
+      setActiveChat(targetFriend); // تفعيل وفتح الشات الخاص العائم بالواجهة فوراً
+    } catch (err) {
+      console.error("خطأ في جلب سجل المحادثة المحلي من السحاب:", err);
+    }
+  };
 
   // دالة إرسال الرسالة الخاصة وبثها عبر السوكيت
   const sendPrivateMsg = (e) => {
