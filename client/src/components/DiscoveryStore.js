@@ -294,8 +294,7 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
               )}
 
               {activeTab === 'market' && (
-                <div className="market-section-layout">
-                  <form className="market-upload-form gold-border" onSubmit={handleMarketUpload}>
+                <div className="market-section-layout scrollbar-gold" style={{ maxHeight: '75vh', overflowY: 'auto', paddingRight: '5px' }}>                  <form className="market-upload-form gold-border" onSubmit={handleMarketUpload}>
                     <h4>📣 عرض بضاعة جديدة (حتى 10 صور للمنتج)</h4>
                     <textarea 
                       placeholder="اكتب وصف البضاعة بالتفصيل للمشترين..." 
