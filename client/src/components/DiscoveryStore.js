@@ -275,12 +275,28 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                               onClick={() => {
                                 if (socket && user?.username) {
                                   socket.emit('reject_friend_request', { currentUser: user.username, targetUser: senderName });
-                                  alert(`❌ تم رفض طلب الصداقة وسحبه بنجاح وتطهير الذاكرة.`);
-                                  window.location.reload();
+                                  alert(`✔️ 🎉 مبروك! تم قبول طلب الصداقة ودمج العضو ${senderName} في قائمة أصدقائك بنجاح!`);
+      
+                                  // 2️⃣ [التحديث الصامت المحصن] إخفاء طلب الصداقة فوراً من القائمة المحلية وتحديث الذاكرة دون ريفريش وطرد
+                                  if (typeof setAllUsers === 'function') {
+                                    setAllUsers(prev => prev.map(usr => {
+                                      if (usr.username === user.username) {
+                                        // سحب العضو المقبول من مصفوفة الطلبات الواردة وحقنه بمصفوفة الأصدقاء تلقائياً
+                                        const currentRequests = usr.friendRequests || [];
+                                        const currentFriends = usr.friends || [];
+                                        return { 
+                                          ...usr, 
+                                          friendRequests: currentRequests.filter(name => name !== senderName),
+                                          friends: [...currentFriends, senderName]
+                                        };
+                                      }
+                                      return usr;
+                                    }));
+                                  } 
                                 }
                               }}
                             >
-                              رفض ❌
+                              قبول ✔️
                             </button>
                           </div>
                         </div>
