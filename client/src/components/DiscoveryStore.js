@@ -100,12 +100,12 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
     pChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [privateChatHistory]);
 
-  // دالة بدء المراسلة وإنشاء المعرف الفريد للمحادثة الخاصة
-    const roomId = [user?.username, targetFriend.username].sort().join('_ch_');
+/* ✅ التعديل البرمجي الصحيح والمأمن لإنهاء كراش الـ no-undef كلياً: */
+    const roomId = [user?.username, u.username].sort().join('_ch_');
     setChatRoomId(roomId);
-    setChatParticipants([user?.username, targetFriend.username]);
-    setActiveChat(targetFriend);
-    
+    setChatParticipants([user?.username, u.username]);
+    setActiveChat(u);
+  
     // تعيين منشئ الغرفة الافتراضي لإتاحة صلاحيات الطرد والإضافة
     setCurrentChatMeta({ creator: user?.username, mod1: '', mod2: '' });
 
