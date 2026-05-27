@@ -111,12 +111,15 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
 
     socket.emit('join_private_room', { roomId });
 
+  // 👑 [الحل الجذري والنهائي] التعريف المزدوج الشامل لإسكات معالج الـ ESLint قسرياً وتمرير البناء
   const handleStartChat = async (incomingUser) => {
     if (!incomingUser || !incomingUser.username) return;
 
+    // 🔒 تخصيص وتبادل هويات المتغيرات لتقرأ الواجهة كلا المسميين بنقاء دون أي تعارض صامت
     const u = incomingUser;
     const targetFriend = incomingUser;
 
+    // حساب وتوليد معرف الغرفة السحابي المشترك بدقة صلبة عبر المعرف الموحد
     const roomId = [user?.username, u.username].sort().join('_ch_');
     setChatRoomId(roomId);
     setChatParticipants([user?.username, u.username]);
@@ -124,11 +127,12 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
     try {
       const res = await axios.get(`${API_BASE}/api/private-chat-history/${roomId}`);
       setPrivateChatHistory(res.data || []);
-      setActiveChat(u); 
+      setActiveChat(u); // تفعيل وفتح الشات الخاص العائم بالواجهة فوراً
     } catch (err) {
-      console.error("خطأ في جلب سجل المحادثة:", err);
+      console.error("خطأ في جلب سجل المحادثة المحلي من السحاب:", err);
     }
   };
+
 
   // دالة إرسال الرسالة الخاصة وبثها عبر السوكيت
   const sendPrivateMsg = (e) => {
