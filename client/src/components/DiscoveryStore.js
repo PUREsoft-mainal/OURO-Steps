@@ -22,8 +22,7 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
   const [currentChatMeta, setCurrentChatMeta] = useState({ creator: '', mod1: '', mod2: '' });
 
   const pChatEndRef = useRef(null);
-
-    useEffect(() => { 
+  useEffect(() => { 
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -99,33 +98,28 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
   useEffect(() => {
     pChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [privateChatHistory]);
-
-    // 👑 [الحل الهندسي القاطع والجذري للأزمة] التعريف الآمن لإسكات فاحص الـ ESLint وتمرير البناء فوراً
+  
+  // 👑 الحل الجذري لتفعيل المحادثة وإسكات فاحص الـ ESLint
   const handleStartChat = async (incomingUser) => {
     if (!incomingUser || !incomingUser.username) return;
 
-    // 🔒 قراءة هويات المتغيرات مباشرة من الكائن الممرر لمنع تعارض النطاق الصامت (no-undef)
     const u = incomingUser;
-
-    // حساب وتوليد معرف الغرفة السحابي المشترك بدقة صلبة عبر المعرف الموحد
     const roomId = [user?.username, u.username].sort().join('_ch_');
     setChatRoomId(roomId);
     setChatParticipants([user?.username, u.username]);
 
-    // تعيين منشئ الغرفة الافتراضي لإتاحة صلاحيات الطرد والإضافة
     setCurrentChatMeta({ creator: user?.username, mod1: '', mod2: '' });
     socket.emit('join_private_room', { roomId });
 
     try {
       const res = await axios.get(`${API_BASE}/api/private-chat-history/${roomId}`);
       setPrivateChatHistory(res.data || []);
-      setActiveChat(u); // تفعيل وفتح الشات الخاص العائم بالواجهة فوراً عبر المسمى المعرف يقيناً
+      setActiveChat(u); 
     } catch (err) {
       console.error("خطأ في جلب سجل المحادثة المحلي من السحاب:", err);
     }
   };
 
-  // دالة إرسال الرسالة الخاصة وبثها عبر السوكيت
   const sendPrivateMsg = (e) => {
     e.preventDefault();
     if (!privateMsg.trim() || !chatRoomId) return;
@@ -141,18 +135,15 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
     setPrivateMsg("");
   };
 
-  // دالة إضافة صديق للمحادثة عبر زر (+) في رأس الشات العائم
   const handleAddFriendToChat = (friendName) => {
     socket.emit('add_user_to_chat', { roomId: chatRoomId, newUser: friendName });
     setShowAddList(false);
   };
 
-  // دالة طرد مستخدم من المحادثة عبر زر (×) بجانب اسمه
   const handleKickUser = (participantName) => {
     socket.emit('kick_user_from_chat', { roomId: chatRoomId, kickedUser: participantName });
   };
 
-  // دالة النشر المطور للسلع في السوق الملكي (تصل حتى 10 صور وتدمج الوصف والسعر)
   const handleMarketUpload = async (e) => {
     e.preventDefault();
     if (!newPost.files || newPost.files.length === 0) return alert("⚠️ الرجاء اختيار صور البضاعة أولاً!");
@@ -179,9 +170,8 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
     }
   };
 
-  // دالة حذف منشور السلعة نهائياً عبر زر (×)
   const handleDeletePost = async (postId) => {
-    if (!window.confirm("⚠️ هل أنت متأكد من حذف هذا منشور البضاعة وصوره نهائياً من السوق?")) return;
+    if (!window.confirm("⚠️ هل أنت متأكد من حذف هذا منشور البضاعة وصوره نهائياً من السوق؟")) return;
     try {
       await axios.delete(`${API_BASE}/api/market/delete/${postId}`, { 
         data: { username: user?.username } 
@@ -189,14 +179,12 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
     } catch (err) { alert("❌ فشل الحذف، غير مصرح لك."); }
   };
 
-  // تصفية قوائم الأصدقاء والاستكشاف
   const currentUserData = allUsers.find(u => u.username === user?.username);
   const myFriendsList = currentUserData?.friends || [];
-  const myIncomingRequests = currentUserData?.friendRequests || []; // 📩 مصفوفة استقبال الطلبات الواردة الحية
+  const myIncomingRequests = currentUserData?.friendRequests || []; 
   const usersToDiscover = allUsers.filter(u => u.username !== user?.username && !myFriendsList.includes(u.username));
   const myFriends = allUsers.filter(u => u.username !== user?.username && myFriendsList.includes(u.username));
 
-  // جدار حماية الصلاحيات للمحادثة الجماعية العائمة
   const isAuthorizedToManage = user && (
     user.username === 'Admin_Mostafa' || 
     user.role === 'Admin' || 
@@ -224,29 +212,34 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                     <h4 className="column-title">🔍 استكشاف وإضافة أصدقاء الجدد</h4>
                     <div className="users-scroll">
                       {usersToDiscover.map(u => (
-                        <div key={u.id || u._id || u.username} className="mini-user-card">
+                        <div key={u.id || u._id || u.username} className="mini-user-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span>👤 {u.username}</span>
-                          <button 
-                            className="gold-btn-small" 
-                            onClick={() => {
-                              if (socket && user?.username) {
-                                socket.emit('send_friend_request', { currentUser: user.username, targetUser: u.username });
-                                alert(`📩 تم إرسال طلب صداقة ملكي للمعلن ${u.username} بنجاح، بانتظار اعتماده وقبوله!`);
-                                window.location.reload(); 
-                              }
-                            }}
-                          >
-                            إضافة صديق +
-                          </button>
+                          <div style={{ display: 'flex', gap: '5px' }}>
+                            <button 
+                              className="gold-btn-small" 
+                              onClick={() => {
+                                if (socket && user?.username) {
+                                  socket.emit('send_friend_request', { currentUser: user.username, targetUser: u.username });
+                                  alert(`📩 تم إرسال طلب صداقة ملكي للمعلن ${u.username} بنجاح، بانتظار اعتماده وقبوله!`);
+                                  window.location.reload(); 
+                                }
+                              }}
+                            >
+                              إضافة +
+                            </button>
+                            {/* 💬 تم ربط الدالة هنا لتعمل الواجهة بذكاء ويسكت فاحص الـ ESLint للأبد */}
+                            <button className="gold-btn-small" style={{ background: '#2980b9' }} onClick={() => handleStartChat(u)}>
+                              محادثة 💬
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* 📩 👑 جدار استقبال ومعالجة طلبات الصداقة الواردة المطور بعد المزامنة والتنظيف والتأمين */}
                   <div className="requests-column" style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.1)' }}>
                     <h4 className="column-title" style={{ color: 'var(--gold-primary)', fontSize: '13px', marginBottom: '12px' }}>📩 طلبات الصداقة الواردة المعلقة</h4>
-                    <div className="users-scroll">
+                    <div className="users-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {(myIncomingRequests || []).map(senderName => (
                         <div key={senderName} className="mini-user-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', background: 'rgba(0,0,0,0.5)', borderRadius: '6px', border: '1px solid var(--border-glass)' }}>
                           <span style={{ color: '#fff', fontSize: '12px' }}>👤 {senderName}</span>
@@ -287,9 +280,9 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                       )}
                     </div>
                   </div>
-
                 </div>
               )}
+
               {activeTab === 'market' && (
                 <div className="market-section-layout">
                   <form className="market-upload-form gold-border" onSubmit={handleMarketUpload}>
@@ -364,7 +357,6 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
         </div>
       </div>
 
-      {/* 🆕 شاشة الفيس بوك العائمة المذهبة المكتملة بالأزرار التفاعلية (+ / ×) */}
       {activeChat && (
         <div className="private-chat-floating gold-border" onClick={e => e.stopPropagation()}>
           <div className="p-chat-header">
