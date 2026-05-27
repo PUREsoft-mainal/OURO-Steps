@@ -100,11 +100,11 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
     pChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [privateChatHistory]);
 
-/* ✅ التعديل البرمجي الصحيح والمأمن لإنهاء كراش الـ no-undef كلياً: */
-    const roomId = [user?.username, u.username].sort().join('_ch_');
+/* ✅ التعديل البرمجي الصحيح والموحد لصب المعرفات تحت اسم targetFriend: */
+    const roomId = [user?.username, targetFriend.username].sort().join('_ch_');
     setChatRoomId(roomId);
-    setChatParticipants([user?.username, u.username]);
-    setActiveChat(u);
+    setChatParticipants([user?.username, targetFriend.username]);
+    setActiveChat(targetFriend);
   
     // تعيين منشئ الغرفة الافتراضي لإتاحة صلاحيات الطرد والإضافة
     setCurrentChatMeta({ creator: user?.username, mod1: '', mod2: '' });
