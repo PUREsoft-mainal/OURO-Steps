@@ -111,12 +111,12 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
 
     socket.emit('join_private_room', { roomId });
 
-  // 👑 [الحل الجذري القاطع] تطهير المعرفات وتوحيد الدالة بالكامل تحت هوية الحرف u لإبادة كراش الـ ESLint
-  const handleStartChat = async (u) => {
-    const targetFriend = u; 
-    if (!u || !u.username) return;
+  const handleStartChat = async (incomingUser) => {
+    if (!incomingUser || !incomingUser.username) return;
 
-    // حساب وتوليد معرف الغرفة السحابي المشترك بدقة صلبة عبر الحرف u
+    const u = incomingUser;
+    const targetFriend = incomingUser;
+
     const roomId = [user?.username, u.username].sort().join('_ch_');
     setChatRoomId(roomId);
     setChatParticipants([user?.username, u.username]);
@@ -124,9 +124,9 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
     try {
       const res = await axios.get(`${API_BASE}/api/private-chat-history/${roomId}`);
       setPrivateChatHistory(res.data || []);
-      setActiveChat(u); // تفعيل وفتح الشات الخاص العائم بالواجهة فوراً عبر u
+      setActiveChat(u); 
     } catch (err) {
-      console.error("خطأ في جلب سجل المحادثة المحلي من السحاب:", err);
+      console.error("خطأ في جلب سجل المحادثة:", err);
     }
   };
 
