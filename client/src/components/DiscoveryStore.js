@@ -113,6 +113,7 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
 
   // 👑 [الحل الجذري القاطع] تطهير المعرفات وتوحيد الدالة بالكامل تحت هوية الحرف u لإبادة كراش الـ ESLint
   const handleStartChat = async (u) => {
+    const targetFriend = u; 
     if (!u || !u.username) return;
 
     // حساب وتوليد معرف الغرفة السحابي المشترك بدقة صلبة عبر الحرف u
