@@ -112,9 +112,8 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
     socket.emit('join_private_room', { roomId });
 
 // ✅ [تم الحسم والتأمين الشامل] صياغة الدالة بالهيكل القياسي المكتمل لحرق أخطاء الـ no-undef
-const handleStartChat = async (targetFriend) => {
-  if (!targetFriend || !targetFriend.username) return;
-  
+const handleStartChat = async (u) => { // 👑 تم توحيد المسمى برأس الدالة ليتطابق مع السطور 104 و106 و107
+  if (!targetFriend || !targetFriend.username) return; 
   // 👑 حساب وحقن معرّف الغرفة الخاص المشترك بينك وبين الصديق سحابياً
   const roomId = [user?.username, targetFriend.username].sort().join('_');
   
