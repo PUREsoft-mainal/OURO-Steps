@@ -101,7 +101,6 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
   }, [privateChatHistory]);
 
   // دالة بدء المراسلة وإنشاء المعرف الفريد للمحادثة الخاصة
-  const handleStartChat = async (targetFriend) => {
     const roomId = [user?.username, targetFriend.username].sort().join('_ch_');
     setChatRoomId(roomId);
     setChatParticipants([user?.username, targetFriend.username]);
