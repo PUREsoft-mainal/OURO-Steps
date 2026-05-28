@@ -217,7 +217,6 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose, allUsers,
                     <div className="users-scroll">
                       {myFriends.map(u => (
                         <div key={u.id || u._id || u.username} className="mini-user-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          {/* 👑 [تعديل اللون الملكي النحاسي الوهّاج] لمنع اللون الأسود القديم كلياً */}
                           <span style={{ color: '#e5c158', fontWeight: 'bold', textShadow: '0 0 6px rgba(229,193,88,0.2)' }}>👤 {u.username}</span>
                           <div style={{ display: 'flex', gap: '5px' }}>
                             <button className="gold-btn-small" style={{ background: '#2980b9' }} onClick={() => handleStartChat(u)}>
@@ -232,15 +231,16 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose, allUsers,
                     </div>
                   </div>
 
-                  {/* 📩 عمود استقبال طلبات الصداقة الواردة المعلقة */}
+                  {/* 📩 عمود استقبال طلبات الصداقة الواردة المعلقة المطور بالدمج التبادلي الفوري */}
                   <div className="requests-column" style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.1)' }}>
                     <h4 className="column-title" style={{ color: 'var(--gold-primary)', fontSize: '13px', marginBottom: '12px' }}>📩 طلبات الصداقة الواردة المعلقة</h4>
                     <div className="users-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {(myIncomingRequests || []).map(senderName => (
                         <div key={senderName} className="mini-user-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', background: 'rgba(0,0,0,0.5)', borderRadius: '6px', border: '1px solid var(--border-glass)' }}>
-                          {/* 👑 [تعديل اللون الملكي الذهبي اللامع] لمنع اللون الأسود القديم كلياً */}
                           <span style={{ color: 'var(--gold-primary)', fontWeight: 'bold', fontSize: '13px', textShadow: '0 0 6px rgba(212,175,55,0.2)' }}>👤 {senderName}</span>                          
+                          
                           <div style={{ display: 'flex', gap: '5px' }}>
+                            {/* ✔️ زر القبول الذكي: دمج تبادلي فوري لكلا الحسابين معاً في نفس اللحظة بالواجهة */}
                             <button 
                               className="assign-btn-gold" 
                               style={{ padding: '3px 8px', fontSize: '11px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
@@ -248,13 +248,37 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose, allUsers,
                                 if (socket && user?.username) {
                                   socket.emit('accept_friend_request', { currentUser: user.username, targetUser: senderName });
                                   alert(`✔️ 🎉 مبروك! تم قبول الطلب ودمج العضو ${senderName} في قائمة أصدقائك بنجاح!`);
+                                  
+                                  if (typeof setAllUsers === 'function') {
+                                    setAllUsers(prev => prev.map(usr => {
+                                      // أ) تحديث حسابك (المستقبل): مسح الطلب وضخ اسم الصديق
+                                      if (usr.username === user.username) {
+                                        const currentRequests = usr.friendRequests || [];
+                                        const currentFriends = usr.friends || [];
+                                        return { 
+                                          ...usr, 
+                                          friendRequests: currentRequests.filter(name => name !== senderName),
+                                          friends: currentFriends.includes(senderName) ? currentFriends : [...currentFriends, senderName]
+                                        };
+                                      }
+                                      // ب) تحديث حساب الطرف الآخر (المرسل): ضخ اسمك في قائمة أصدقائه فوراً بلحظتها
+                                      if (usr.username === senderName) {
+                                        const targetFriends = usr.friends || [];
+                                        return {
+                                          ...usr,
+                                          friends: targetFriends.includes(user.username) ? targetFriends : [...targetFriends, user.username]
+                                        };
+                                      }
+                                      return usr;
+                                    }));
+                                  }
                                 }
                               }}
                             >
                               قبول ✔️
                             </button>
 
-                            {/* ❌ [تم التصحيح والتحصين] زر الرفض القاني الفعال بالإنعاش الصامت بدلاً من تكرار زر القبول القديم المكسور */}
+                            {/* ❌ زر الرفض القاني المحصن والفعال بالإنعاش الصامت كلياً من السحاب */}
                             <button 
                               className="assign-btn-gold" 
                               style={{ padding: '3px 8px', fontSize: '11px', background: '#c0392b', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
