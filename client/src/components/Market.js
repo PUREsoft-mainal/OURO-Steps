@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import '../App.css';
 
 // 📸 كبسولة الـ Slider التفاعلية لتقليب وعرض صور البضاعة المتعددة بنقاء 100%
 const ProductImageSlider = ({ images, apiBase }) => {
