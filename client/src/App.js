@@ -12,6 +12,7 @@ import DiscoveryStore from './components/DiscoveryStore';
 import VirtualFlash from './components/VirtualFlash';
 import PrayerWidget from './components/PrayerWidget'; 
 import AdSliderBottom from './components/AdSliderBottom';
+import Market from './components/Market'; // استدعاء ملف السوق المستقل الجديد
 import './App.css';
 
 // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
