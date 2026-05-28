@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const OuroWalletModal = ({ user, API_BASE, onClose }) => {
+const OuroWalletModal = ({ user, API_BASE, onClose, ouroBalance, setOuroBalance }) => { // 👑 تم استقبال صلاحية شحن السقف بنجاح 100%
   const [walletData, setWalletData] = useState({ ouroBalance: 0, publicAddress: "غير متصل", ethBalance: 0 });
   const [metaMaskAddress, setMetaMaskAddress] = useState("");
   const [loading, setLoading] = useState(true);
