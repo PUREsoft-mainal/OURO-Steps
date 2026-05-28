@@ -11,6 +11,7 @@ import ChatArea from './components/ChatArea';
 import VirtualFlash from './components/VirtualFlash';
 import PrayerWidget from './components/PrayerWidget'; 
 import AdSliderBottom from './components/AdSliderBottom';
+import DiscoveryStore from './components/DiscoveryStore';
 import Market from './components/Market'; // استدعاء ملف السوق المستقل الجديد
 import './App.css';
 
