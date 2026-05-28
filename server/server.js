@@ -37,6 +37,24 @@ const MarketSchema = new mongoose.Schema({
 // تثبيت الموديل باسم MarketModel ليتطابق مع دوال الرفع والحذف التي صببناها سابقاً
 const MarketModel = mongoose.model('Market', MarketSchema);
 
+// 🔑 [صياغة قفل بوابات المطورين] هيكل حفظ وإصدار مفاتيح الـ API سحابياً بـ MongoDB Atlas للأبد
+const DeveloperKeySchema = new mongoose.Schema({
+    id: { type: String, required: true, unique: true },
+    username: { type: String, required: true }, // صاحب المفتاح
+    keyLabel: { type: String, required: true }, // وصف المفتاح (مثال: تطبيق الموبايل)
+    apiKey: { type: String, required: true, unique: true }, // المفتاح السري المشفر
+    scopes: {
+        all_features: { type: Boolean, default: false }, // مزايا المنصة كلياً
+        prayer_times: { type: Boolean, default: false }, // مواقيت الصلاة
+        virtual_flash: { type: Boolean, default: false }, // الفلاشة
+        market: { type: Boolean, default: false },        // المتجر
+        ads: { type: Boolean, default: false }            // الإعلانات
+    },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const DeveloperKeyModel = mongoose.model('DeveloperKey', DeveloperKeySchema);
+
 // 👑 معيار حفظ الأصول الإدارية لمواقيت الصلاة بـ MongoDB Atlas
 const PrayerAssetSchema = new mongoose.Schema({
     id: { type: String, default: 'config' },
@@ -1106,6 +1124,58 @@ setInterval(() => {
 
 // مسار API مخصص لتغذية واجهة المستخدم بالمواقيت المحلية فور فتح الصفحة
 app.get('/api/prayer-times', (req, res) => res.json(getPrayerTimesLocal()));
+
+// ==========================================================================
+// 🔑 دالة توليد مفاتيح عشوائية فريدة ومأمنة سيبرانياً لمنصات المطورين لـ OURO Steps
+// ==========================================================================
+const generateSecureApiKey = () => {
+    const crypto = require('crypto');
+    return 'ouro_live_' + crypto.randomBytes(24).toString('hex');
+};
+
+// 1️⃣ [مسار توليد المفتاح] استخراج وحفظ مفتاح الـ API ومطابقة الخصائص المحددة فالسحاب
+app.post('/api/developer/generate-key', async (req, res) => {
+    try {
+        const { username, keyLabel, scopes } = req.body;
+        if (!username || !keyLabel) return res.status(400).json({ success: false, message: "البيانات ناقصة" });
+
+        const newKeyData = new DeveloperKeyModel({
+            id: 'key_' + Date.now().toString(),
+            username: username,
+            keyLabel: keyLabel,
+            apiKey: generateSecureApiKey(), // توليد مفتاح مشفر معقم
+            scopes: scopes
+        });
+
+        await newKeyData.save(); // الحفظ النهائي المستمر داخل MongoDB Atlas
+        res.json({ success: true, newKey: newKeyData });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 2️⃣ [مسار جلب المفاتيح] قراءة وعرض المفاتيح المستخرجة للحساب المفتوح حالياً من السحاب
+app.post('/api/developer/keys-list', async (req, res) => {
+    try {
+        const { username } = req.body;
+        const keys = await DeveloperKeyModel.find({ username }).sort({ createdAt: -1 });
+        res.json({ success: true, keys });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 3️⃣ [مسار إبادة وحذف المفتاح] تدمير المفتاح سحابياً وقطع الاتصال عن تطبيقات الموبايل فوراً
+app.post('/api/developer/delete-key', async (req, res) => {
+    try {
+        const { username, keyId } = req.body;
+        await DeveloperKeyModel.deleteOne({ id: keyId, username: username });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 
 
 server.listen(PORT, "0.0.0.0", () => { 
