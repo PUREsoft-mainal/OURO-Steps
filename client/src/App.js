@@ -285,7 +285,8 @@ function App() {
         <ActionBar 
           setShowDiscovery={setShowDiscovery} 
           setDiscoveryTab={setDiscoveryTab} 
-          setShowPrayerModal={setShowPrayerModal} // 👑 تمرير دالة فتح نافذة مواقيت الصلاة لشريط الأزرار
+          setShowPrayerModal={setShowPrayerModal}
+          setShowMarket={setShowMarket} // 👈 حقن دالة استدعاء السوق هنا
         />
 
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
