@@ -49,9 +49,38 @@ function App() {
   // 👑 [تمت الزراعة والتحصين] متغيرات الـ State المخصصة لتغذية وبناء معرض بضائع السوق السحابية
   const [marketPosts, setMarketPosts] = useState([]);
   const [newPost, setNewPost] = useState({ description: "", price: "", files: null });
-  // دالات التشغيل الحركية التابعة لها (امتداد المعمارية المصانة بملفك)
-  const handleMarketUpload = (e) => { e.preventDefault(); alert("📣 جاري معالجة ورفع سلعتك سحابياً..."); };
   const handleDeletePost = (id) => { alert("🗑️ جاري حذف وإلغاء المنشور..."); };
+  // 👑 [داخل جسد دالة App] صياغة دالة الرفع السحابية الحركية بدلاً من السطر 53 الجامد
+  const handleMarketUpload = async (e) => {
+    e.preventDefault();
+    if (!newPost || !newPost.description.trim() || !newPost.price.trim() || !newPost.files) {
+      return alert("⚠️ الرجاء كتابة وصف البضاعة وتحديد السعر واختيار الصور أولاً!");
+    }
+
+    const formData = new FormData();
+    formData.append('uploader', user?.username || 'GUEST');
+    formData.append('description', newPost.description);
+    formData.append('price', newPost.price);
+    
+    // تدوير وحشر كافة الصور بداخل المصفوفة المتجهة لمولتر السيرفر
+    for (let i = 0; i < newPost.files.length; i++) {
+      formData.append('marketImages', newPost.files[i]);
+    }
+
+    try {
+      const res = await axios.post(`${API_BASE}/api/upload-market`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      if (res.data.success) {
+        setNewPost({ description: "", price: "", files: null });
+        alert("🎉 تم نشر وتثبيت بضاعتك الملكية في معرض السوق السحابي بنجاح باهر!");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("❌ عذراً، فشل الاتصال بالسيرفر السحابي أثناء معالجة السلعة.");
+    }
+  };
 
   // 👑 [تحديث حاسم للأسطر 56-67] المزامنة الحية الصافية واستقبال قنوات بث المتجر لحظياً في السحاب
   useEffect(() => {
