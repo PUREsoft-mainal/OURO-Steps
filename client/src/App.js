@@ -406,6 +406,7 @@ return (
               return currentUserData && currentUserData.friendRequests ? currentUserData.friendRequests.length : 0;
             })()
           }
+          setShowApiKeyModal={setShowApiKeyModal} // 👈 قُم بحقن هذا السطر هنا لتتصل التروس ببعضها
         />
 
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
