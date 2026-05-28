@@ -67,7 +67,7 @@ const Market = ({ user, marketPosts, handleMarketUpload, handleDeletePost, setNe
               <div className="file-input-wrapper-gold">
                 <input 
                   type="file" 
-                  multiple 
+                  multiple={true} // 👑 [تم الحسم الحركي] تفعيل اختيار حتى 10 صور معاً بنجاح 
                   accept="image/*" 
                   onChange={e => setNewPost({...newPost, files: e.target.files})} 
                   required 
