@@ -2,8 +2,7 @@ import React from 'react';
 import '../App.css';
 
 // 👑 استقبال معطيات الدوال وتوجيه النقرات الفاخرة لـ OURO Steps
-const ActionBar = ({ setShowDiscovery, setDiscoveryTab, setShowPrayerModal, setShowMarket }) => {  
-  
+const ActionBar = ({ setShowDiscovery, setDiscoveryTab, setShowPrayerModal, setShowMarket, friendRequestsCount }) => {    
   // 👑 [تم التفعيل والتوظيف الحركي] دالة ذكية معقمة لتفتيت التنبيهات وإطلاق النوافذ الموجهة فوراً
   const handleButtonClick = (tabName) => {
     if (typeof setDiscoveryTab === 'function' && typeof setShowDiscovery === 'function') {
@@ -23,13 +22,21 @@ const ActionBar = ({ setShowDiscovery, setDiscoveryTab, setShowPrayerModal, setS
         🔍 البحث عن صديق
       </button>
       
-      {/* 🤝 زر الأصدقاء المطور لتوجيه واستدعاء ملف الأصدقاء والطلبات المعزولة */}
-      <button 
-        className="action-bar-btn gold-glow-btn" 
-        onClick={() => handleButtonClick('my_friends_list')} // 👑 [تم الحسم] توجيه النقر للتبويب المحدث المأمن
-      >
-        🤝 الأصدقاء
-      </button>
+      {/* 👑 [إضافة التطوير الرقمي] حشر طبقة الدائرة النيونية اللامعة حول زر الأصدقاء الحركي دون مساس بجيناته */}
+      <div className="badge-container" style={{ position: 'relative', display: 'inline-block' }}>
+        {/* 🤝 زر الأصدقاء المطور لتوجيه واستدعاء ملف الأصدقاء والطلبات المعزولة */}
+        <button 
+          className="action-bar-btn gold-glow-btn" 
+          onClick={() => handleButtonClick('my_friends_list')} // 👑 [تم الحسم] توجيه النقر للتبويب المحدث المأمن
+        >
+          🤝 الأصدقاء
+        </button>
+        
+        {/* 🔴 تنبثق الدائرة الحمراء النيونية النابضة بالحياة تلقائياً إذا كان هناك طلبات واردة معلقة أكبر من صفر */}
+        {friendRequestsCount > 0 && (
+          <span className="notification-badge-neon">{friendRequestsCount}</span>
+        )}
+      </div>
 
       {/* 🕋 زرع منظومة مواقيت الصلاة والأذان المنبثقة الفاخرة متمركزة في قلب شريط الأزرار */}
       <button 
@@ -59,3 +66,4 @@ const ActionBar = ({ setShowDiscovery, setDiscoveryTab, setShowPrayerModal, setS
 };
 
 export default ActionBar;
+
