@@ -268,7 +268,7 @@ function App() {
     );
   }
 
-  return (
+return (
     <div className="app-container" style={{ backgroundImage: "url('/assets/background.png')", backgroundSize: 'cover' }}>
       <div className="app-overlay">
         
@@ -292,7 +292,7 @@ function App() {
           setShowDiscovery={setShowDiscovery} 
           setDiscoveryTab={setDiscoveryTab} 
           setShowPrayerModal={setShowPrayerModal}
-          setShowMarket={setShowMarket} // 👈 حقن دالة استدعاء السوق هنا
+          setShowMarket={setShowMarket} 
         />
 
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
@@ -339,7 +339,7 @@ function App() {
           />
         )}
 
-        /* ✅ [تعديل الحسم الحركي] تمرير دالة الإغلاق المباشرة والمعزولة تماماً لمنع التعليق: */
+        {/* 👑 [تم التطهير كلياً] حذف السطر النصي المكشوف وتأمين تشغيل المتجر المستقل دون طرد أو تعليق */}
         {showMarket && (
           <Market 
             user={user}
@@ -395,7 +395,7 @@ function App() {
       </div> {/* إغلاق app-overlay */}
     </div> // إغلاق app-container
   );
-}
+};
 
 export default App;
 
