@@ -162,7 +162,7 @@ function App() {
         socket.off('friend_updated');
       }
     };
-  }, [isLogged, setAllUsers, setLoading]); // 👑 تم عزل كائن السوكت لتخطي فحص ال-exhaustive-deps بنجاح فلكي 100%
+  }, [isLogged, setAllUsers, setLoading]);
   
   // 👑 1. المنظومة المركزية الشاملة والموحدة لإدارة أحداث السوكت (مخصصة ومطهرة للبث الحي والرسائل فقط دون تداخل)
   useEffect(() => {
