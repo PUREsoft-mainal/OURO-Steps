@@ -566,7 +566,7 @@ io.on('connection', (socket) => {
 
             // جلب الحسابات المحدثة بالكامل وبثها لإعادة رسم القوائم الحية فوراً بالمتصفحات
             const updatedUsers = await UserModel.find({}, { password: 0 }).sort({ username: 1 });
-            io.emit('update_users_catalogue', updatedUsers);
+            io.emit('friend_updated', { usersList: updatedUsers }); // 👑 ضخ البيانات للمصفوفة النشطة مباشرة 
         } catch (err) { console.error(err); }
     });
 
@@ -580,7 +580,7 @@ io.on('connection', (socket) => {
             await UserModel.updateOne({ username: currentUser }, { $pull: { friendRequests: targetUser } });
 
             const updatedUsers = await UserModel.find({}, { password: 0 }).sort({ username: 1 });
-            io.emit('update_users_catalogue', updatedUsers);
+            io.emit('friend_updated', { usersList: updatedUsers }); // 👑 ضخ البيانات للمصفوفة النشطة مباشرة 
         } catch (err) { console.error(err); }
     });
 
