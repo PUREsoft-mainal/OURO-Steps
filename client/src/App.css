@@ -2077,3 +2077,19 @@ body, html {
   0% { transform: scale(1); box-shadow: 0 0 5px #ff3333; }
   100% { transform: scale(1.15); box-shadow: 0 0 12px #ff3333; }
 }
+
+/* 👑 [تنسيق نيون ملكي] صب الألوان الذهبية والنحاسية لأسماء المستخدمين والأصدقاء */
+.mini-user-card span {
+  color: var(--gold-primary, #d4af37) !important; /* تحويل قسري للون الذهبي الملكي */
+  font-weight: 700 !important;
+  text-shadow: 0 0 6px rgba(212, 175, 55, 0.3); /* توهج نحاسي خفيف خلف الاسم */
+}
+
+/* في حال استخدام فئات مخصصة لأسماء الأعضاء داخل عمود الاستكشاف والطلبات */
+.fb-uploader-name, .column-title {
+  color: #e5c158 !important; /* درجة ذهبية لامعة عيار 24 */
+}
+
+.dropdown-user-item {
+  color: #b38f4d !important; /* درجة نحاسية فاخرة ومعتقة */
+}
