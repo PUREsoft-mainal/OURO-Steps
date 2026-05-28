@@ -121,7 +121,6 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose, allUsers,
     !mySentRequests.includes(usr.username)
   );
 
-    // 🤝 مصفوفة الأصدقاء الحاليين المأمنة من الفقد البصري
   const myFriends = (allUsers || []).filter(usr => 
     usr.username !== user?.username && 
     myFriendsList.includes(usr.username)
