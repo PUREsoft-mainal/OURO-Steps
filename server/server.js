@@ -131,7 +131,6 @@ const CONVERSATIONS_DIR = path.join(__dirname, 'conversations'); // مجلد م�
 const USERS_FILE = path.join(__dirname, 'users.json');
 const CHAT_FILE = path.join(__dirname, 'chat.json');
 const ADS_FILE = path.join(__dirname, 'ads.json');
-const MARKET_FILE = path.join(__dirname, 'market.json');
 const GROUPS_LIST_FILE = path.join(__dirname, 'groups.json');
 // ==========================================================================
 // 🕋 [تمت الزراعة والتطهير] المخطط الهيكلي والمسارات السحابية للقصص بـ MongoDB Atlas
@@ -214,7 +213,6 @@ if (!fs.existsSync(FLASH_DRIVE_DIR)) fs.mkdirSync(FLASH_DRIVE_DIR, { recursive: 
 initJsonFile(USERS_FILE);
 initJsonFile(CHAT_FILE);
 initJsonFile(ADS_FILE);
-initJsonFile(MARKET_FILE);
 initJsonFile(GROUPS_LIST_FILE, [{ id: 'public', name: 'المجموعة العامة', creator: 'System', mod1: '', mod2: '' }]);
 initJsonFile(FLASH_DB_FILE);
 
