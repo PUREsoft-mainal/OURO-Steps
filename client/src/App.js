@@ -45,6 +45,7 @@ function App() {
   const [currentGroup, setCurrentGroup] = useState({ id: 'public', name: 'المجموعة العامة' });
   const [groups, setGroups] = useState([{ id: 'public', name: 'المجموعة العامة' }]);
   const [showPrayerModal, setShowPrayerModal] = useState(false); // حالة فتح وإغلاق نافذة الصلاة
+  const [showMarket, setShowMarket] = useState(false); // كبسولة عرض وإغلاق نافذة السوق
 
 
   // 👑 1. المنظومة المركزية الشاملة والموحدة لإدارة أحداث السوكت (مخصصة ومطهرة للبث الحي والرسائل فقط دون تداخل)
