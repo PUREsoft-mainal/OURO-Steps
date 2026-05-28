@@ -1,13 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
-const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
+const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose, allUsers, setAllUsers, loading }) => {
   const [activeTab, setActiveTab] = useState(defaultTab || 'friends'); 
-  const [allUsers, setAllUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  // خيارات النشر للبضاعة الجديدة داخل السوق
-  const [newPost, setNewPost] = useState({ description: '', price: '', files: null });
 
   // حالات المراسلة الخاصة المتقدمة الفورية (Facebook Style)
   const [activeChat, setActiveChat] = useState(null); 
@@ -22,9 +17,13 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
 
   const pChatEndRef = useRef(null);
 
+  // 👑 [تم التصحيح والتحصين] إرجاع ترويسة ال-useEffect المفقودة التي كانت تسبب ال-Syntax Error
+  useEffect(() => {
+    if (!socket) return;
+
     // مستمع تحديثات الأصدقاء في ملفات الـ JSON المحلية
     socket.on('friend_updated', (data) => {
-        setAllUsers(data.usersList || []);
+        if (typeof setAllUsers === 'function') setAllUsers(data.usersList || []);
     });
 
     // الاستماع اللحظي الفوري للرسائل الخاصة بداخل الغرفة المفتوحة
@@ -58,13 +57,13 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
       socket.off('user_added_to_chat');
       socket.off('user_kicked_from_chat');
     };
-  }, [API_BASE, socket, user?.username, chatRoomId]);
+  }, [API_BASE, socket, user?.username, chatRoomId, setAllUsers]);
 
   useEffect(() => {
     pChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [privateChatHistory]);
   
-  // 👑 الحل الجذري لتفعيل المحادثة وإسكات فاحص الـ ESLint
+  // 👑 الحل الجذري لتفعيل المحادثة واستخدام الحرف u الموحد لإسكات فاحص الـ ESLint
   const handleStartChat = async (incomingUser) => {
     if (!incomingUser || !incomingUser.username) return;
 
@@ -85,7 +84,7 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
     }
   };
 
-  const sendPrivateMsg = (e) => {
+    const sendPrivateMsg = (e) => {
     e.preventDefault();
     if (!privateMsg.trim() || !chatRoomId) return;
 
@@ -109,11 +108,12 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
     socket.emit('kick_user_from_chat', { roomId: chatRoomId, kickedUser: participantName });
   };
 
-  const currentUserData = allUsers.find(u => u.username === user?.username);
+  const currentUserData = (allUsers || []).find(usr => usr.username === user?.username);
   const myFriendsList = currentUserData?.friends || [];
   const myIncomingRequests = currentUserData?.friendRequests || []; 
-  const usersToDiscover = allUsers.filter(u => u.username !== user?.username && !myFriendsList.includes(u.username));
-  const myFriends = allUsers.filter(u => u.username !== user?.username && myFriendsList.includes(u.username));
+  
+  // تصفية الاستكشاف: عزل الأصدقاء وأصحاب الطلبات المعلقة لمنع العشوائية الرقمية
+  const usersToDiscover = (allUsers || []).filter(usr => usr.username !== user?.username && !myFriendsList.includes(usr.username) && !myIncomingRequests.includes(usr.username));
 
   const isAuthorizedToManage = user && (
     user.username === 'Admin_Mostafa' || 
@@ -123,7 +123,7 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
     user.username === currentChatMeta.mod2
   );
 
-    return (
+  return (
     <div className="discovery-overlay" onClick={onClose}>
       <div className="discovery-window gold-border" onClick={e => e.stopPropagation()}>
         
@@ -151,7 +151,7 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                                   socket.emit('send_friend_request', { currentUser: user.username, targetUser: u.username });
                                   alert(`📩 تم إرسال طلب صداقة ملكي للمعلن ${u.username} بنجاح، بانتظار اعتماده وقبوله!`);
                                         
-                                  // 👑 [بديل الحسم الصامت] إخفاء كارت المستخدم فوراً من الشاشة دون عمل ريفريش وطرد
+                                  // 👑 [بديل الحسم الصامت المأمن] إخفاء كارت المستخدم فوراً دون ريفريش وطرد
                                   if (typeof setAllUsers === 'function') {
                                     setAllUsers(prev => prev.map(usr => {
                                       if (usr.username === user.username) {
@@ -166,7 +166,6 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                             >
                               إضافة +
                             </button>
-                            {/* 💬 تم ربط الدالة هنا لتعمل الواجهة بذكاء ويسكت فاحص الـ ESLint للأبد */}
                             <button className="gold-btn-small" style={{ background: '#2980b9' }} onClick={() => handleStartChat(u)}>
                               محادثة 💬
                             </button>
@@ -176,6 +175,7 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                     </div>
                   </div>
 
+                  {/* 📩 جدار استقبال ومعالجة طلبات الصداقة الواردة المطور بالإنعاش الصامت وتأمين زري القبول والرفض */}
                   <div className="requests-column" style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.1)' }}>
                     <h4 className="column-title" style={{ color: 'var(--gold-primary)', fontSize: '13px', marginBottom: '12px' }}>📩 طلبات الصداقة الواردة المعلقة</h4>
                     <div className="users-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -184,33 +184,18 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                           <span style={{ color: '#fff', fontSize: '12px' }}>👤 {senderName}</span>
                           
                           <div style={{ display: 'flex', gap: '5px' }}>
+                            {/* ✔️ زر القبول المطور والمأمن من الريفريش والطرد كلياً */}
                             <button 
                               className="assign-btn-gold" 
                               style={{ padding: '3px 8px', fontSize: '11px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
                               onClick={() => {
                                 if (socket && user?.username) {
                                   socket.emit('accept_friend_request', { currentUser: user.username, targetUser: senderName });
-                                  alert(`✔️ 🎉 مبروك! تم قبول الطلب ودمج العضو ${senderName} في قائمة أصدقائك بنجاح ملكي!`);
-                                  window.location.reload();
-                                }
-                              }}
-                            >
-                              قبول ✔️
-                            </button>
-
-                            <button 
-                              className="assign-btn-gold" 
-                              style={{ padding: '3px 8px', fontSize: '11px', background: '#c0392b', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-                              onClick={() => {
-                                if (socket && user?.username) {
-                                  socket.emit('reject_friend_request', { currentUser: user.username, targetUser: senderName });
-                                  alert(`✔️ 🎉 مبروك! تم قبول طلب الصداقة ودمج العضو ${senderName} في قائمة أصدقائك بنجاح!`);
-      
-                                  // 2️⃣ [التحديث الصامت المحصن] إخفاء طلب الصداقة فوراً من القائمة المحلية وتحديث الذاكرة دون ريفريش وطرد
+                                  alert(`✔️ 🎉 مبروك! تم قبول الطلب ودمج العضو ${senderName} في قائمة أصدقائك بنجاح!`);
+                                  
                                   if (typeof setAllUsers === 'function') {
                                     setAllUsers(prev => prev.map(usr => {
                                       if (usr.username === user.username) {
-                                        // سحب العضو المقبول من مصفوفة الطلبات الواردة وحقنه بمصفوفة الأصدقاء تلقائياً
                                         const currentRequests = usr.friendRequests || [];
                                         const currentFriends = usr.friends || [];
                                         return { 
@@ -221,11 +206,38 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                                       }
                                       return usr;
                                     }));
-                                  } 
+                                  }
                                 }
                               }}
                             >
                               قبول ✔️
+                            </button>
+
+                            {/* ❌ [تم التصحيح والتحصين] زر الرفض القاني الفعال بالإنعاش الصامت بدلاً من تكرار زر القبول القديم المكسور */}
+                            <button 
+                              className="assign-btn-gold" 
+                              style={{ padding: '3px 8px', fontSize: '11px', background: '#c0392b', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                              onClick={() => {
+                                if (socket && user?.username) {
+                                  socket.emit('reject_friend_request', { currentUser: user.username, targetUser: senderName });
+                                  alert(`❌ تم رفض طلب الصداقة وسحبه بنجاح وتطهير الذاكرة السحابية.`);
+      
+                                  if (typeof setAllUsers === 'function') {
+                                    setAllUsers(prev => prev.map(usr => {
+                                      if (usr.username === user.username) {
+                                        const currentRequests = usr.friendRequests || [];
+                                        return { 
+                                          ...usr, 
+                                          friendRequests: currentRequests.filter(name => name !== senderName)
+                                        };
+                                      }
+                                      return usr;
+                                    }));
+                                  } 
+                                }
+                              }}
+                            >
+                              رفض ❌
                             </button>
                           </div>
                         </div>
@@ -238,7 +250,7 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                 </div>
               )}
 
-
+      {/* 💬 شاشة الفيس بوك العائمة المذهبة المكتملة بالأزرار التفاعلية لحسابات الشات الخاص */}
       {activeChat && (
         <div className="private-chat-floating gold-border" onClick={e => e.stopPropagation()}>
           <div className="p-chat-header">
@@ -257,12 +269,12 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
             {showAddList && (
               <div className="add-friends-dropdown scrollbar-gold">
                 <h5>إضافة صديق للشات الحالي:</h5>
-                {myFriends.filter(f => !chatParticipants.includes(f.username)).map(f => (
-                  <div key={f.id} className="dropdown-user-item" onClick={() => handleAddFriendToChat(f.username)}>
+                {(allUsers || []).filter(f => myFriendsList.includes(f.username) && !chatParticipants.includes(f.username)).map(f => (
+                  <div key={f.id || f._id || f.username} className="dropdown-user-item" onClick={() => handleAddFriendToChat(f.username)}>
                     ➕ {f.username}
                   </div>
                 ))}
-                {myFriends.filter(f => !chatParticipants.includes(f.username)).length === 0 && (
+                {(allUsers || []).filter(f => myFriendsList.includes(f.username) && !chatParticipants.includes(f.username)).length === 0 && (
                   <p className="no-friends-to-add">كل الأصدقاء مضافون حالياً.</p>
                 )}
               </div>
@@ -306,6 +318,10 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
           </form>
         </div>
       )}
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
