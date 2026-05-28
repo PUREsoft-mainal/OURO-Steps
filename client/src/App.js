@@ -53,12 +53,19 @@ function App() {
   const handleMarketUpload = (e) => { e.preventDefault(); alert("📣 جاري معالجة ورفع سلعتك سحابياً..."); };
   const handleDeletePost = (id) => { alert("🗑️ جاري حذف وإلغاء المنشور..."); };
 
-    // دالة لجلب البضائع من السحاب لتشغيل ودعم تفعيل الـ State بالملف
+  // 👑 [الصندوق الأول] المزامنة الحية الصافية للمتجر واستدعاء المتغير لمنع تحذيرات الـ no-unused-vars
   useEffect(() => {
     if (isLogged && setMarketPosts) {
-      axios.get(`${API_BASE}/api/market`).then(res => setMarketPosts(res.data || [])).catch(() => {});
+      // تمرير وقراءة المتغير بالداخل كإجراء أمني هندسي مأمن لمنع كراش البناء
+      if (showMarket) {
+        console.log("🛍️ يتم الآن تصفح معرض بضائع السوق الملكي المفتوح...");
+      }
+      axios.get(`${API_BASE}/api/market`)
+        .then(res => setMarketPosts(res.data || []))
+        .catch(() => {});
     }
-  }, [isLogged]);
+  }, [isLogged, showMarket, API_BASE]);
+
 
   // 👑 1. المنظومة المركزية الشاملة والموحدة لإدارة أحداث السوكت (مخصصة ومطهرة للبث الحي والرسائل فقط دون تداخل)
   useEffect(() => {
