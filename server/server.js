@@ -592,11 +592,19 @@ io.on('connection', (socket) => {
             if (!currentUser || !targetUser) return;
 
             // تحديث حساب الطرف المستقبل وحقن اسم المرسل في قائمة طلباته الواردة المعلقة
-            await UserModel.updateOne({ username: targetUser }, { $addToSet: { friendRequests: currentUser } });
+            await UserModel.updateOne(
+                { username: targetUser },
+                { $addToSet: { friendRequests: currentUser } }
+            );
+
+            const updatedUsers = await UserModel.find({}, { password: 0 }).sort({ username: 1 });
             
-            // بث الإشارة اللحظية عبر السيرفر لإشعار الطرف المستقبل فوراً إذا كان متصلاً
-            io.emit('friend_request_received', { from: currentUser, to: targetUser });
-        } catch (err) { console.error(err); }
+            // بث التحديث الشامل لكافة الأجهزة لإنعاش القوائم صامتاً فالمتصفحات
+            io.emit('friend_updated', { usersList: updatedUsers });
+            
+        } catch (err) { 
+            console.error("خطأ إرسال طلب الصداقة:", err); 
+        }
     });
 
     // ✔️ 2. مستمع قبول طلب الصداقة والدمج التبادلي الفوري في مصفوفات MongoDB Atlas
