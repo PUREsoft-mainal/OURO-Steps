@@ -42,9 +42,13 @@ const ActionBar = ({ setShowDiscovery, setDiscoveryTab, setShowPrayerModal }) =>
       
       <button 
         className="action-bar-btn gold-glow-btn" 
-        onClick={() => handleButtonClick('market')}
+        onClick={() => {
+          if (typeof setShowMarket === 'function') {
+            setShowMarket(true); // إطلاق واستدعاء الصندوق العائم للمتجر على الشاشة فوراً
+          }
+        }}
       >
-        🛍️ السوق الملكي
+        🛍️ المتجر الملكي
       </button>
     </div>
   );
