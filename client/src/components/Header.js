@@ -3,7 +3,8 @@ import axios from 'axios';
 import StatsBar from './StatsBar';
 import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
-const Header = ({ activeUsers, totalUsers, user }) => {
+// 👑 [تعديل الترويسة] استقبال المعطى renderCoinBadge ديناميكياً من الأب لعرض مربع العملة وزر الـ (+)
+const Header = ({ activeUsers, totalUsers, user, renderCoinBadge }) => {
   const [showCS, setShowCS] = useState(false);
   
   // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
@@ -40,7 +41,7 @@ const Header = ({ activeUsers, totalUsers, user }) => {
   return (
     <header className="ouro-header">
 
-      {/* جهة اليمين: الإحصائيات + خدمة العملاء فقط */}
+      {/* جهة اليمين: الإحصائيات + خدمة العملاء فقط دون أي تعديل أو مساس */}
       <div className="header-right">
         <StatsBar activeCount={activeUsers} totalCount={totalUsers} />
         
@@ -60,8 +61,16 @@ const Header = ({ activeUsers, totalUsers, user }) => {
         </div>
       </div>
 
-      {/* 👑 جهة اليسار المطور: عرض الصورة الشخصية المتوهجة بالنيون + اسم المستخدم + زر الخروج */}
+      {/* 👑 جهة اليسار المطور: حقن وصيانة مربع العملات وزر الـ (+) بجوار الهوية الشخصية ونظام الأفاتار */}
       <div className="user-profile-section">
+        
+        {/* 🪙 [شريان الضخ السحابي الحاسم] ظهور مربع العملات وزر الـ (+) الملتزم بالأبعاد الفزيائية الدقيقة هنا فوراً */}
+        {renderCoinBadge && (
+          <div className="header-coin-badge-zone" style={{ display: 'flex', alignItems: 'center' }}>
+            {renderCoinBadge}
+          </div>
+        )}
+
         <div className="avatar-picker-wrapper" title="اضغط هنا لتغيير صورتك الشخصية الملكية">
           {/* حقل رفع ملفات مخفي يتم تفعيله بالنقر على الصورة */}
           <input 
