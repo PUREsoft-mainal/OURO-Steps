@@ -23,6 +23,20 @@ app.use(cors({
     methods: ["GET", "POST", "DELETE"]
 }));
 
+// 👑 [صياغة قفل الأمان السحابي الثابت] بناء وهيكلة جدول السوق بـ MongoDB Atlas للأبد
+const MarketSchema = new mongoose.Schema({
+    id: { type: String, required: true, unique: true },
+    uploader: { type: String, required: true },
+    description: { type: String, default: '' },
+    price: { type: String, default: 'غير محدد' },
+    images: { type: [String], default: [] },
+    time: { type: String, required: true },
+    expiryDate: { type: Number, required: true }
+});
+
+// تثبيت الموديل باسم MarketModel ليتطابق مع دوال الرفع والحذف التي صببناها سابقاً
+const MarketModel = mongoose.model('Market', MarketSchema);
+
 // 👑 معيار حفظ الأصول الإدارية لمواقيت الصلاة بـ MongoDB Atlas
 const PrayerAssetSchema = new mongoose.Schema({
     id: { type: String, default: 'config' },
