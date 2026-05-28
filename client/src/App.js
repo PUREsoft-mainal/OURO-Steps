@@ -398,7 +398,12 @@ return (
           setDiscoveryTab={setDiscoveryTab} 
           setShowPrayerModal={setShowPrayerModal}
           setShowMarket={setShowMarket} 
-          friendRequestsCount={myIncomingRequests ? myIncomingRequests.length : 0} // 👈 حقن عداد الإشعارات هنا
+          friendRequestsCount={
+            (() => {
+              const currentUserData = (allUsers || []).find(usr => usr.username === user?.username);
+              return currentUserData && currentUserData.friendRequests ? currentUserData.friendRequests.length : 0;
+            })()
+          }
         />
 
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
