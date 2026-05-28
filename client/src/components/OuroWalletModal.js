@@ -54,6 +54,34 @@ const OuroWalletModal = ({ user, API_BASE, onClose }) => {
     }
   };
 
+    // 👑 [حالة التحويل التبادلي الحركي] حقول معالجة إرسال العملات لصديق على المنصة
+  const [transferData, setTransferData] = useState({ receiver: "", amount: "" });
+
+  const handleTransferOuro = async (e) => {
+    e.preventDefault();
+    const amt = parseFloat(transferData.amount);
+    if (!transferData.receiver.trim() || isNaN(amt) || amt <= 0) return alert("⚠️ الرجاء كتابة اسم المستخدم وتحديد كمية صالحة للتحويل!");
+
+    try {
+      const res = await axios.post(`${API_BASE}/api/wallet/transfer`, {
+        sender: user?.username,
+        receiver: transferData.receiver.trim(),
+        amount: amt
+      });
+
+      if (res.data.success) {
+        setTransferData({ receiver: "", amount: "" });
+        // تحديث الرصيد الحالي فالسقف واللوحة صامتاً
+        if (typeof setOuroBalance === 'function') setOuroBalance(res.data.newSenderBalance);
+        setWalletData(prev => ({ ...prev, ouroBalance: res.data.newSenderBalance }));
+        
+        alert(`💸 تم تحويل العملات بنجاح للمستخدم ${transferData.receiver}!\n\n💰 القيمة المرسلة: ${amt} OURO\n⚖️ ضريبة التحويل (7%): ${(amt * 0.07).toFixed(2)} OURO (ذهبت لخزينة الأدمن الملكية)`);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "❌ فشل إتمام التحويل، تأكد من امتلاكك رصيد كافٍ.");
+    }
+  };
+
   // 📜 3️⃣ [صلاحية الأدمن الملكية] دالة زرع وإضافة عقد ذكي (Smart Contract) جديد للمنصة
   const handleAddContract = async (e) => {
     e.preventDefault();
@@ -114,6 +142,32 @@ const OuroWalletModal = ({ user, API_BASE, onClose }) => {
             <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>🔗 العنوان العام المعتمد للاستقبال الخارجي:</span>
             <code style={{ display: 'block', color: '#27ae60', fontSize: '11px', wordBreak: 'break-all', marginTop: '5px', userSelect: 'all' }}>{walletData.publicAddress}</code>
           </div>
+
+         /* 💡 قُم بحشر هذا الـ JSX للفورم التفاعلي بالأسفل مباشرة داخل الـ return فوق قائمة العقود الذكية ليرسمه المتصفح فخماً: */
+         <form className="market-upload-form gold-border" onSubmit={handleTransferOuro} style={{ background: 'rgba(0,0,0,0.4)', padding: '15px', borderRadius: '8px', marginBottom: '25px', border: '1px solid rgba(212,175,55,0.1)' }}>
+           <h4 style={{ color: 'var(--gold-primary)', margin: '0 0 12px 0' }}>💸 تحويل عملات OURO Coin الفورية لأي محفظة على المنصة</h4>
+           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+             <input 
+               type="text" 
+               placeholder="👤 اكتب اسم المستخدم المستلم بدقة..." 
+               value={transferData.receiver} 
+               onChange={e => setTransferData({ ...transferData, receiver: e.target.value })} 
+               required 
+               style={{ flex: 1, padding: '8px', background: '#000', color: '#fff', border: '1px solid var(--border-glass)', borderRadius: '4px' }}
+             />
+             <input 
+               type="number" 
+               step="any"
+               placeholder="💰 كمية العملات المراد إرسالها..." 
+               value={transferData.amount} 
+               onChange={e => setTransferData({ ...transferData, amount: e.target.value })} 
+               required 
+               style={{ width: '180px', padding: '8px', background: '#000', color: '#fff', border: '1px solid var(--border-glass)', borderRadius: '4px' }}
+             />
+             <button type="submit" className="gold-btn-small" style={{ background: 'var(--gold-primary)', color: '#000', border: 'none', padding: '8px 15px', fontWeight: 'bold' }}>إرسال فوري ⚡</button>
+             </div>
+             <small style={{ color: 'var(--text-muted)', fontSize: '10px', display: 'block', marginTop: '6px' }}>⚙️ تنبيه سيبراني: يتم تطبيق ضريبة تحويل انكماشية ثابتة بقيمة 7% تُستقطع تلقائياً وتُضخ في محفظة الأدمن الملكية Mostafa لتأمين الشبكة [▲].</small>
+           </form>
 
           {/* 📜 [قسم الأدمن الملكي] لإضافة وعقد ذكي جديد للشبكة السحابية */}
           {isAdmin && (
