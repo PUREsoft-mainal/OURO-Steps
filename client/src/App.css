@@ -2045,3 +2045,35 @@ body, html {
 .scrollbar-gold::-webkit-scrollbar-thumb:hover {
   background: var(--gold-primary, #d4af37);
 }
+
+/* 👑 [تنسيق ملكي] دائرة الإشعارات الرقمية النيونية لشريط أزرار OURO */
+.badge-container {
+  position: relative;
+  display: inline-block;
+}
+
+.notification-badge-neon {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: linear-gradient(135deg, #ff3333 0%, #c0392b 100%);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: bold;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  box-shadow: 0 0 8px #ff3333, inset 0 0 4px rgba(255, 255, 255, 0.6);
+  border: 1px solid #ffffff;
+  animation: pulseNeon 1.5s infinite alternate;
+  z-index: 15;
+}
+
+@keyframes pulseNeon {
+  0% { transform: scale(1); box-shadow: 0 0 5px #ff3333; }
+  100% { transform: scale(1.15); box-shadow: 0 0 12px #ff3333; }
+}
