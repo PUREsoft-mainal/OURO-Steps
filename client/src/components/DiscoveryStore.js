@@ -173,11 +173,9 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose, allUsers,
                               className="gold-btn-small" 
                               onClick={() => {
                                 if (socket && user?.username) {
-                                  // إرسال النبضة السحابية الحقيقية بنقاء دون ارتداد
                                   socket.emit('send_friend_request', { currentUser: user.username, targetUser: u.username });
                                   alert(`📩 تم إرسال طلب صداقة ملكي للمعلن ${u.username} بنجاح، بانتظار اعتماده وقبوله!`);
-                                        
-                                  // الإنعاش الصامت الفوري لإخفاء كارت المستخدم من شاشتك فوراً
+          
                                   if (typeof setAllUsers === 'function') {
                                     setAllUsers(prev => prev.map(usr => {
                                       if (usr.username === user.username) {
