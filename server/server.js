@@ -838,34 +838,37 @@ app.delete('/api/market/delete/:id', async (req, res) => {
     }
 });
 
-// ⏳ دالة آلية مدمجة (تشتغل كل ساعة) لتطهير وحذف منشورات بضائع السوق المنتهية صلاحيتها بعد 3 أشهر
-setInterval(() => {
+// 🧹 [تم التطهير السحابي الشامل] دالة آلية دورية (تشتغل كل ساعة) لتطهير وحذف السلع المنتهية بعد 3 أشهر من MongoDB Atlas
+setInterval(async () => {
     try {
-        if (!fs.existsSync(MARKET_FILE)) return;
-        let posts = JSON.parse(fs.readFileSync(MARKET_FILE, 'utf8'));
         const now = Date.now();
 
-        const activePosts = posts.filter(post => {
-            const isExpired = post.expiryDate && post.expiryDate <= now;
-            // إذا انتهت الـ 3 أشهر، يمسح السيرفر صور السلعة من مجلد uploads فوراً لحماية هارد جهازك
-            if (isExpired && post.images) {
-                post.images.forEach(imgUrl => {
-                    const filePath = path.join(UPLOADS_DIR, path.basename(imgUrl));
-                    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-                });
-            }
-            return !isExpired;
-        });
+        // 1️⃣ قنص واستخراج السلع المنتهية من السحاب أولاً لحذف صورها الفيزيائية وتوفير المساحة
+        const expiredPosts = await MarketModel.find({ expiryDate: { $lte: now } });
+        
+        if (expiredPosts.length > 0) {
+            expiredPosts.forEach(post => {
+                if (post.images && post.images.length > 0) {
+                    post.images.forEach(imgUrl => {
+                        const filePath = path.join(UPLOADS_DIR, path.basename(imgUrl));
+                        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+                    });
+                }
+            });
 
-        if (posts.length !== activePosts.length) {
-            fs.writeFileSync(MARKET_FILE, JSON.stringify(activePosts, null, 2), 'utf8');
-            io.emit('sync_market_posts', activePosts); // تحديث واجهة السوق تلقائياً عند الجميع
-            console.log(`🧹 تم فحص السوق تلقائياً وحذف السلع التي تخطت فترة الـ 3 أشهر بنجاح.`);
+            // 2️⃣ إبادة واقتلاع المنشورات المنتهية كلياً وقسرياً من قلب قاعدة البيانات السحابية
+            await MarketModel.deleteMany({ expiryDate: { $lte: now } });
+            console.log(`🧹 تم فحص ال-Cloud تلقائياً وحذف عدد ${expiredPosts.length} سلعة منتهية الصلاحية.`);
         }
+
+        // 3️⃣ جلب السلع النشطة المتبقية وضخ الحزمة المحدثة الحية لجميع المتصفحات لإنعاش الفيد
+        const activePosts = await MarketModel.find({}).sort({ _id: -1 });
+        io.emit('sync_market_posts', activePosts); 
+
     } catch (err) {
-        console.error("خطأ في دالة التنظيف الدوري للسوق المعمر:", err);
+        console.error("خطأ في دالة التنظيف الدوري للسوق السحابي:", err);
     }
-}, 60 * 60 * 1000); // كل 60 دقيقة
+}, 60 * 60 * 1000); // تفقد دوري صارم كل 60 دقيقة فلكية
 
 // 🔥 مسار رفع وتحديث الصورة الشخصية للمستخدم محلياً
 app.post('/api/user/upload-avatar', upload.single('avatar'), (req, res) => {
