@@ -398,6 +398,7 @@ return (
           setDiscoveryTab={setDiscoveryTab} 
           setShowPrayerModal={setShowPrayerModal}
           setShowMarket={setShowMarket} 
+          friendRequestsCount={myIncomingRequests ? myIncomingRequests.length : 0} // 👈 حقن عداد الإشعارات هنا
         />
 
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
