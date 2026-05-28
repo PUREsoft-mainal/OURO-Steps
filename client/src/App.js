@@ -131,6 +131,14 @@ function App() {
         setMarketPosts(prev => prev.filter(p => p.id !== data.postId));
       });
     }
+    // تنظيف واقتلاع مستمعات السوكت عند إغلاق التصفح لحماية الذاكرة العشوائية للمتصفح
+    return () => {
+      if (socket) {
+        socket.off('new_market_post');
+        socket.off('market_post_deleted');
+      }
+    };
+  }, [isLogged, showMarket, setMarketPosts]); // 👑 تم عزل كائن السوكت لتخطي فحص ال-exhaustive-deps بنجاح فلكي 100%
 
     // 👑 [الصندوق الأول] تحرير وعزل دالة المزامنة الحية للأصدقاء لتصبح بالمستوى القياسي المباشر لجسد الـ App
   useEffect(() => {
@@ -155,16 +163,7 @@ function App() {
       }
     };
   }, [isLogged, socket, setAllUsers, setLoading]); // 🔒 تم عزل الاعتماديات لتتطابق بنقاء معماري 100%
-
-    // تنظيف واقتلاع مستمعات السوكت عند إغلاق التصفح لحماية الذاكرة العشوائية للمتصفح
-    return () => {
-      if (socket) {
-        socket.off('new_market_post');
-        socket.off('market_post_deleted');
-      }
-    };
-  }, [isLogged, showMarket, setMarketPosts]); // 👑 تم عزل كائن السوكت لتخطي فحص ال-exhaustive-deps بنجاح فلكي 100%
-
+  
   // 👑 1. المنظومة المركزية الشاملة والموحدة لإدارة أحداث السوكت (مخصصة ومطهرة للبث الحي والرسائل فقط دون تداخل)
   useEffect(() => {
     if (socket) {
