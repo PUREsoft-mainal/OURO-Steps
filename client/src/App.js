@@ -14,6 +14,7 @@ import AdSliderBottom from './components/AdSliderBottom';
 import DiscoveryStore from './components/DiscoveryStore';
 import Market from './components/Market'; // استدعاء ملف السوق المستقل الجديد
 import ApiKeyModal from './components/ApiKeyModal';
+import OuroWalletModal from './components/OuroWalletModal';
 import './App.css';
 
 // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
