@@ -423,13 +423,7 @@ return (
           <div className="welcome-msg">مرحباً بكم فى عالمكم الجديد</div>
           <img src="/assets/logo.png" className="mini-logo" alt="logo" />
         </div>
-        
-        {/* 2. الفراغ الملكي الفاصل المستقل لعرض جملة الترحيب واللوجو حرّاً */}
-        <div className="header-center">
-          <div className="welcome-msg">مرحباً بكم فى عالمكم الجديد</div>
-          <img src="/assets/logo.png" className="mini-logo" alt="logo" />
-        </div>
-        
+          
         {/* 3. شريط الإعلانات التفاعلي المربوط بمسافات الـ CSS (العلوى الحصري) */}
         <div className="ads-section-wrapper">
           {/* 👑 تمرير الـ user ليفهم المكون أنك الأدمن فيظهر لك زر الحذف في الأعلى */}
