@@ -95,7 +95,6 @@ function App() {
       if (res.data.success) {
         setNewPost({ description: "", price: "", files: null });
         alert("🎉 تم نشر وتثبيت بضاعتك الملكية في معرض السوق السحابي بنجاح باهر!");
-        window.location.reload();
       }
     } catch (err) {
       console.error(err);
