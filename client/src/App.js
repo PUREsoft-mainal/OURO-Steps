@@ -81,10 +81,11 @@ function App() {
     formData.append('description', newPost.description);
     formData.append('price', newPost.price);
     
-    // تدوير وحشر كافة الصور بداخل المصفوفة المتجهة لمولتر السيرفر
-    for (let i = 0; i < newPost.files.length; i++) {
-      formData.append('marketImages', newPost.files[i]);
-    }
+    if (newPost.files) {
+      for (let i = 0; i < newPost.files.length; i++) {
+        formData.append('marketImages', newPost.files[i]);
+      }
+    }  
 
     try {
       const res = await axios.post(`${API_BASE}/api/upload-market`, formData, {
@@ -94,6 +95,7 @@ function App() {
       if (res.data.success) {
         setNewPost({ description: "", price: "", files: null });
         alert("🎉 تم نشر وتثبيت بضاعتك الملكية في معرض السوق السحابي بنجاح باهر!");
+        window.location.reload();
       }
     } catch (err) {
       console.error(err);
