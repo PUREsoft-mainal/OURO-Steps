@@ -132,20 +132,18 @@ function App() {
       });
     }
 
-      // 👑 [الصندوق الثاني] دالة فتح مسارات السوكت لشحن وقراءة الأصدقاء من الـ MongoDB Atlas
+  // 👑 [الصندوق الأول] تحرير وعزل دالة المزامنة الحية للأصدقاء لتصبح بالمستوى القياسي المباشر لجسد الـ App
   useEffect(() => {
     if (isLogged && socket) {
-      setLoading(true);
-
-      // 1. استقبال مصفوفة الحسابات الكلية فور إقلاع ودخول المنصة الملكية
+      // 1️⃣ مستمع شحن المنصة: استقبال ومزامنة الحسابات الكلية فور إقلاع ودخول المنصة الملكية
       socket.on('init_users_data', (usersList) => {
-        setAllUsers(usersList || []);
-        setLoading(false);
+        if (typeof setAllUsers === 'function') setAllUsers(usersList || []);
+        if (typeof setLoading === 'function') setLoading(false);
       });
 
-      // 2. المزامنة اللحظية الفورية وإعادة فرز القوائم عند قبول أو رفض أو إرسال أي طلب
+      // 2️⃣ المزامنة اللحظية الفورية: إعادة فرز القوائم سحابياً عند قبول أو رفض أو إرسال أي طلب
       socket.on('friend_updated', (data) => {
-        setAllUsers(data.usersList || []);
+        if (typeof setAllUsers === 'function') setAllUsers(data.usersList || []);
       });
     }
 
@@ -155,7 +153,7 @@ function App() {
         socket.off('friend_updated');
       }
     };
-  }, [isLogged, socket]);
+  }, [isLogged, socket, setAllUsers, setLoading]); // 🔒 تم عزل الاعتماديات لتتطابق بنقاء معماري 100%
 
     // تنظيف واقتلاع مستمعات السوكت عند إغلاق التصفح لحماية الذاكرة العشوائية للمتصفح
     return () => {
