@@ -67,9 +67,14 @@ const Market = ({ user, marketPosts, handleMarketUpload, handleDeletePost, setNe
               <div className="file-input-wrapper-gold">
                 <input 
                   type="file" 
-                  multiple={true} // 👑 [تم الحسم الحركي] تفعيل اختيار حتى 10 صور معاً بنجاح 
+                  multiple={true} // 🔒 تفعيل التظليل المتعدد لجميع أنظمة التشغيل والموبايل
                   accept="image/*" 
-                  onChange={e => setNewPost({...newPost, files: e.target.files})} 
+                  name="marketImages" // مطابقة اسم الحقل مع مولتر السيرفر لصب الحزم بنقاء
+                  onChange={e => {
+                    // تحويل قائمة الملفات الملتقطة فوراً إلى مصفوفة صلبة ومستقرة لمنع الفقد الرقمي
+                    const selectedFiles = Array.from(e.target.files || []);
+                    setNewPost({ ...newPost, files: selectedFiles });
+                  }} 
                   required 
                 />
               </div>
