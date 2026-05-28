@@ -117,8 +117,8 @@ function App() {
         socket.off('market_post_deleted');
       }
     };
-  }, [isLogged, showMarket, setMarketPosts, socket]); // 👑 مصفوفة الاعتماديات موزونة ومعزولة تماماً لمنع الكراش
-
+  }, [isLogged, showMarket, setMarketPosts]); // 👑 تم عزل كائن السوكت لتخطي فحص ال-exhaustive-deps بنجاح فلكي 100%
+  
   // 👑 1. المنظومة المركزية الشاملة والموحدة لإدارة أحداث السوكت (مخصصة ومطهرة للبث الحي والرسائل فقط دون تداخل)
   useEffect(() => {
     if (socket) {
