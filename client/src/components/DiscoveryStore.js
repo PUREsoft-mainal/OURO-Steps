@@ -143,9 +143,15 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose, allUsers,
     <div className="discovery-overlay" onClick={onClose}>
       <div className="discovery-window gold-border" onClick={e => e.stopPropagation()}>
         
-        <div className="discovery-tabs">
-          <button className={activeTab === 'friends' ? 'active' : ''} onClick={() => setActiveTab('friends')}>👥 إدارة الأصدقاء</button>
-          <button className="close-discovery" onClick={onClose}>❌ إغلاق</button>
+/* ✅ [تعديل الحسم والتوجيه الصحيح] قُم باستبدالها وصياغتها هكذا بالملي لفتح المسارات: */
+        <div className="discovery-tabs" style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+          {/* زر البحث يفتح مصفوفة الاستكشاف الموجهة لقيمة friends */}
+          <button className={activeTab === 'friends' ? 'active' : ''} onClick={() => setActiveTab('friends')}>🔍 استكشاف الأعضاء</button>
+          
+          {/* زر الأصدقاء يفتح عمود الأصدقاء والطلبات المعزولة الموجهة لقيمة my_friends_list */}
+          <button className={activeTab === 'my_friends_list' ? 'active' : ''} onClick={() => setActiveTab('my_friends_list')}>🤝 طلباتي وأصدقائي</button>
+          
+          <button className="close-discovery" onClick={onClose} style={{ marginRight: 'auto' }}>❌ إغلاق</button>
         </div>
 
         <div className="discovery-body scrollbar-gold">
