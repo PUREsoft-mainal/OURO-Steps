@@ -516,9 +516,11 @@ io.on('connection', (socket) => {
 
                 const localGroups = [{ id: 'public', name: 'المجموعة العامة', creator: 'System' }];
                 const total = await UserModel.countDocuments();
+                const usersList = await UserModel.find({}, { password: 0 }).sort({ username: 1 }); // 👑 جلب جميع الحسابات سحابياً بنقاء أمني كامل
+
                 
                 // ضخ حزمة الأصول السحابية المكتملة للواجهة لتفتح المنصة بلمح البصر وبثبات أزلي
-                socket.emit('init_data', { ads, chatHistory, user, groups: localGroups, stats: { totalUsers: total, activeUsers } });
+                socket.emit('init_data', { ads, chatHistory, user, groups: localGroups, usersList, stats: { totalUsers: total, activeUsers } }); // 👑 حقن ومزامنة ال-usersList بنجاح فلكي
             } else {
                 socket.emit('error_msg', 'خطأ في اسم المستخدم أو كلمة المرور!');
             }
