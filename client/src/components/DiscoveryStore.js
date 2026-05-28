@@ -111,10 +111,22 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose, allUsers,
   const currentUserData = (allUsers || []).find(usr => usr.username === user?.username);
   const myFriendsList = currentUserData?.friends || [];
   const myIncomingRequests = currentUserData?.friendRequests || []; 
+  const mySentRequests = currentUserData?.sentRequests || []; // تأمين إضافي للطلبات المرسلة
   
-  // تصفية الاستكشاف: عزل الأصدقاء وأصحاب الطلبات المعلقة لمنع العشوائية الرقمية
-  const usersToDiscover = (allUsers || []).filter(usr => usr.username !== user?.username && !myFriendsList.includes(usr.username) && !myIncomingRequests.includes(usr.username));
+  // 🔍 تصفية الاستكشاف المحدثة والمأمنة من الكراش الصامت 100%
+  const usersToDiscover = (allUsers || []).filter(usr => 
+    usr.username !== user?.username && 
+    !myFriendsList.includes(usr.username) && 
+    !myIncomingRequests.includes(usr.username) &&
+    !mySentRequests.includes(usr.username)
+  );
 
+    // 🤝 مصفوفة الأصدقاء الحاليين المأمنة من الفقد البصري
+  const myFriends = (allUsers || []).filter(usr => 
+    usr.username !== user?.username && 
+    myFriendsList.includes(usr.username)
+  );
+  
   const isAuthorizedToManage = user && (
     user.username === 'Admin_Mostafa' || 
     user.role === 'Admin' || 
