@@ -58,7 +58,7 @@ function App() {
     if (isLogged && setMarketPosts) {
       axios.get(`${API_BASE}/api/market`).then(res => setMarketPosts(res.data || [])).catch(() => {});
     }
-  }, [isLogged, API_BASE]);
+  }, [isLogged]);
 
   // 👑 1. المنظومة المركزية الشاملة والموحدة لإدارة أحداث السوكت (مخصصة ومطهرة للبث الحي والرسائل فقط دون تداخل)
   useEffect(() => {
