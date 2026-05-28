@@ -352,9 +352,9 @@ function App() {
             onClose={(e) => {
               if (e) {
                 e.preventDefault();
-                e.stopPropagation(); // 🔒 منع تداخل النقرات السحابية كلياً
+                e.stopPropagation(); 
               }
-              setShowMarket(false); // 👑 اختفاء النافذة فوراً والعودة بصفاء للشاشة الرئيسية
+              setShowMarket(false); 
             }}
           />
         )}
