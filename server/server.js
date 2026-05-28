@@ -762,9 +762,11 @@ setInterval(() => {
     }
 }, 60 * 60 * 1000); // 60 دقيقة
 
-
 // تعديل مسار رفع بضائع السوق الملكي ليتلقى حتى 10 صور ويحسب مدة الـ 3 أشهر
-app.post('/api/upload-market', upload.array('marketImages', 10), (req, res) => {
+// ==========================================================================
+// 🛍️ 1. [مسار الرفع السحابي الحاسم] استقبال وحفظ بضائع السوق في MongoDB Atlas للأبد
+// ==========================================================================
+app.post('/api/upload-market', upload.array('marketImages', 10), async (req, res) => {
     try {
         const userUploader = req.body.username || req.body.uploader;
         if (!userUploader) return res.status(400).json({ success: false, message: "بيانات المستخدم مفقودة" });
@@ -772,47 +774,49 @@ app.post('/api/upload-market', upload.array('marketImages', 10), (req, res) => {
         const files = req.files || [];
         const imagesPaths = files.map(f => `/uploads/${f.filename}`);
 
-        // حساب تاريخ انتهاء المنشور تلقائياً بعد 3 أشهر (90 يوم بالضبط) قسرياً
         const threeMonthsInMs = 90 * 24 * 60 * 60 * 1000;
         const expiryTimestamp = Date.now() + threeMonthsInMs;
 
-        const posts = readJson(MARKET_FILE);
-        const newPost = {
+        // 👑 صب حزمة البيانات ككائن سحابي نقي ومطهر تماماً من ملفات الـ JSON القديمة
+        const newPost = new MarketModel({
             id: 'post_' + Date.now().toString(),
-            uploader: userUploader, // 👑 [تم الحسم الجذري] ربط الحقل بالمتغير الشامل الموحد لمنع الاختفاء 
+            uploader: userUploader,
             description: req.body.description || '',
             price: req.body.price || 'غير محدد',
             images: imagesPaths,
             time: new Date().toLocaleDateString('ar-EG') + ' ' + new Date().toLocaleTimeString('ar-EG'),
-            expiryDate: expiryTimestamp // ختم وقت انتهاء الصلاحية بعد 3 أشهر
-        };
+            expiryDate: expiryTimestamp 
+        });
 
-        posts.unshift(newPost); // وضع المنشور الأحدث بالأعلى كالفيس بوك
-        writeJson(MARKET_FILE, posts);
+        await newPost.save(); // تم الحفظ بأمان هندسي مطلق في خزائن الـ Cloud الخارجي للأبد
 
-        // بث المنشور الجديد لحظياً لجميع المشاهدين المتصلين بالسوق
+        // جلب المعروضات سحابياً بالكامل وضخها لحظياً لجميع المشاهدين المتصلين
+        const allPosts = await MarketModel.find({}).sort({ _id: -1 });
         io.emit('new_market_post', newPost);
+        
         res.json({ success: true, post: newPost });
     } catch (err) {
-        console.error("خطأ أثناء النشر في السوق الملكي:", err);
+        console.error("خطأ أثناء النشر في السوق الملكي السحابي:", err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// مسار حذف منشور السلعة نهائياً من قبل المعلن أو الأدمن (×)
-app.delete('/api/market/delete/:id', (req, res) => {
+// ==========================================================================
+// 🗑️ 2. [مسار الحذف السحابي المأمن] إبادة منشور السلعة من قلب MongoDB Atlas
+// ==========================================================================
+app.delete('/api/market/delete/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const username = req.body.username || req.body.uploader; // 👑 توحيد هوية طالب الحذف سيبرانياً        let posts = readJson(MARKET_FILE);
-        const targetPost = posts.find(p => p.id === id);
+        const username = req.body.username || req.body.uploader;
 
-        if (!targetPost) return res.status(404).json({ success: false, message: "المنشور غير موجود" });
+        // قراءة ومطابقة السلعة المستهدفة مباشرة من السحاب
+        const targetPost = await MarketModel.findOne({ id: id });
+        if (!targetPost) return res.status(404).json({ success: false, message: "المنشور غير موجود سحابياً" });
 
-        // التحقق الأمني من الصلاحية: (المعلن نفسه أو الأدمن العام)
         const isAuthorized = username === targetPost.uploader || username === 'Admin_Mostafa';
 
         if (isAuthorized) {
-            // حذف الصور الفيزيائية للمنشور من الهارد لتوفير المساحة قبل مسح السجل
+            // حذف الملفات الفيزيائية من سيرفر الرفع لعدم ملء المساحة
             if (targetPost.images && targetPost.images.length > 0) {
                 targetPost.images.forEach(imgUrl => {
                     const filename = path.basename(imgUrl);
@@ -821,13 +825,13 @@ app.delete('/api/market/delete/:id', (req, res) => {
                 });
             }
 
-            posts = posts.filter(p => p.id !== id);
-            writeJson(MARKET_FILE, posts);
+            // اقتلاع وحذف الكارت نهائياً ومطلقاً من المونجو أطلس
+            await MarketModel.deleteOne({ id: id });
 
             io.emit('market_post_deleted', { postId: id });
             res.json({ success: true });
         } else {
-            res.status(403).json({ success: false, message: "غير مصرح لك بالحذف" });
+            res.status(403).json({ success: false, message: "غير مصرح لك بالحذف سيبرانياً" });
         }
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
