@@ -278,6 +278,17 @@ function App() {
 
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
         <div className="main-content">
+
+          <Market 
+            user={user}
+            marketPosts={marketPosts}
+            handleMarketUpload={handleMarketUpload}
+            handleDeletePost={handleDeletePost}
+            setNewPost={setNewPost}
+            newPost={newPost}
+            apiBase={API_BASE}
+            onClose={() => setShowMarket(false)}
+          />
           
           {/* الجانب الأيمن: المجموعات وأدوات الأدمن وتمرير السوكيت الفعال */}
           <GroupsSidebar 
