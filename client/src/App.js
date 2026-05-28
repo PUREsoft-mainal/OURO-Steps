@@ -64,8 +64,7 @@ function App() {
         .then(res => setMarketPosts(res.data || []))
         .catch(() => {});
     }
-  }, [isLogged, showMarket, API_BASE]);
-
+  }, [isLogged, showMarket]); // 👑 تم عزل الثابت الخارجي لتخطي فحص ال-exhaustive-deps بنجاح فلكي 100%
 
   // 👑 1. المنظومة المركزية الشاملة والموحدة لإدارة أحداث السوكت (مخصصة ومطهرة للبث الحي والرسائل فقط دون تداخل)
   useEffect(() => {
