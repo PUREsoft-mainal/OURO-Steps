@@ -4,7 +4,6 @@ import axios from 'axios';
 const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
   const [activeTab, setActiveTab] = useState(defaultTab || 'friends'); 
   const [allUsers, setAllUsers] = useState([]);
-  const [marketPosts, setMarketPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // خيارات النشر للبضاعة الجديدة داخل السوق
@@ -22,41 +21,10 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
   const [currentChatMeta, setCurrentChatMeta] = useState({ creator: '', mod1: '', mod2: '' });
 
   const pChatEndRef = useRef(null);
-  useEffect(() => { 
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const usersRes = await axios.get(`${API_BASE}/api/users`);
-        setAllUsers(usersRes.data || []);
-
-        const marketRes = await axios.get(`${API_BASE}/api/market`); 
-        setMarketPosts(marketRes.data || []);
-        setLoading(false);
-      } catch (err) {
-        console.error("خطأ في مزامنة بيانات المتجر الملكي:", err);
-        setLoading(false);
-      }
-    };
-    fetchData();
 
     // مستمع تحديثات الأصدقاء في ملفات الـ JSON المحلية
     socket.on('friend_updated', (data) => {
         setAllUsers(data.usersList || []);
-    });
-
-    // مستمع بث سلعة جديدة بالسوق لحظياً
-    socket.on('new_market_post', (post) => {
-        setMarketPosts(prev => [post, ...prev]);
-    });
-
-    // مستمع الحذف اللحظي لسلعة معينة عبر التاجر أو الأدمن (×)
-    socket.on('market_post_deleted', (data) => {
-        setMarketPosts(prev => prev.filter(p => p.id !== data.postId));
-    });
-
-    // مستمع المزامنة الدورية لحذف السلع تلقائياً بعد مرور 3 أشهر
-    socket.on('sync_market_posts', (posts) => {
-        setMarketPosts(posts);
     });
 
     // الاستماع اللحظي الفوري للرسائل الخاصة بداخل الغرفة المفتوحة
@@ -86,9 +54,6 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
 
     return () => {
       socket.off('friend_updated');
-      socket.off('new_market_post');
-      socket.off('market_post_deleted');
-      socket.off('sync_market_posts');
       socket.off('new_private_message');
       socket.off('user_added_to_chat');
       socket.off('user_kicked_from_chat');
@@ -144,41 +109,6 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
     socket.emit('kick_user_from_chat', { roomId: chatRoomId, kickedUser: participantName });
   };
 
-  const handleMarketUpload = async (e) => {
-    e.preventDefault();
-    if (!newPost.files || newPost.files.length === 0) return alert("⚠️ الرجاء اختيار صور البضاعة أولاً!");
-    if (newPost.files.length > 10) return alert("⚠️ الحد الأقصى المسموح به هو 10 صور فقط للسلعة الواحدة!");
-
-    const formData = new FormData();
-    Array.from(newPost.files).forEach(file => formData.append('marketImages', file));
-    formData.append('description', newPost.description);
-    formData.append('price', newPost.price);
-    formData.append('username', user?.username || 'تاجر ملكي');
-
-    try {
-      const res = await axios.post(`${API_BASE}/api/market/upload`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      if (res.data.success) {
-        alert("✅ تم نشر سلعتك بنجاح في المعرض الشامل ولمدة 3 أشهر!");
-        setNewPost({ description: '', price: '', files: null });
-        e.target.reset();
-      }
-    } catch (err) { 
-        console.error(err);
-        alert("❌ فشل نشر السلعة، تحقق من اتصال السيرفر."); 
-    }
-  };
-
-  const handleDeletePost = async (postId) => {
-    if (!window.confirm("⚠️ هل أنت متأكد من حذف هذا منشور البضاعة وصوره نهائياً من السوق؟")) return;
-    try {
-      await axios.delete(`${API_BASE}/api/market/delete/${postId}`, { 
-        data: { username: user?.username } 
-      });
-    } catch (err) { alert("❌ فشل الحذف، غير مصرح لك."); }
-  };
-
   const currentUserData = allUsers.find(u => u.username === user?.username);
   const myFriendsList = currentUserData?.friends || [];
   const myIncomingRequests = currentUserData?.friendRequests || []; 
@@ -199,7 +129,6 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
         
         <div className="discovery-tabs">
           <button className={activeTab === 'friends' ? 'active' : ''} onClick={() => setActiveTab('friends')}>👥 إدارة الأصدقاء</button>
-          <button className={activeTab === 'market' ? 'active' : ''} onClick={() => setActiveTab('market')}>🛍️ السوق الملكي الفاخر</button>
           <button className="close-discovery" onClick={onClose}>❌ إغلاق</button>
         </div>
 
@@ -309,78 +238,6 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose }) => {
                 </div>
               )}
 
-              {activeTab === 'market' && (
-                <div className="market-section-layout scrollbar-gold" style={{ maxHeight: '75vh', overflowY: 'auto', paddingRight: '5px' }}>                  <form className="market-upload-form gold-border" onSubmit={handleMarketUpload}>
-                    <h4>📣 عرض بضاعة جديدة (حتى 10 صور للمنتج)</h4>
-                    <textarea 
-                      placeholder="اكتب وصف البضاعة بالتفصيل للمشترين..." 
-                      onChange={e => setNewPost({...newPost, description: e.target.value})} 
-                      required 
-                    />
-                    <input 
-                      type="text" placeholder="💰 حدد السعر المطلوب لبيعها (مثال: 500 جنيه)..." 
-                      onChange={e => setNewPost({...newPost, price: e.target.value})} 
-                      required 
-                    />
-                    <div className="file-input-wrapper-gold">
-                      <input 
-                        type="file" multiple accept="image/*" 
-                        onChange={e => setNewPost({...newPost, files: e.target.files})} 
-                        required 
-                      />
-                    </div>
-                    <button type="submit" className="gold-btn" style={{ width: '100%', marginTop: '10px' }}>نشر في معرض السوق المفتوح</button>
-                  </form>
-
-                  <div className="market-facebook-feed">
-                    {marketPosts.map(post => {
-                      const canDelete = user && (post.uploader === user.username || user.username === 'Admin_Mostafa');
-                      return (
-                        <div key={post.id} className="facebook-post-card gold-border">
-                          <div className="fb-post-header">
-                            <div className="fb-uploader-meta">
-                              <span className="fb-uploader-avatar">👑</span>
-                              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <span className="fb-uploader-name">{post.uploader}</span>
-                                <small className="fb-post-time">تم النشر: {post.time}</small>
-                              </div>
-                            </div>
-                            {canDelete && (
-                              <button className="fb-delete-btn" onClick={() => handleDeletePost(post.id)} title="حذف السلعة وإلغاء المنشور نهائياً">
-                                ×
-                              </button>
-                            )}
-                          </div>
-
-                          <div className="fb-post-body">
-                            <p className="fb-product-desc">{post.description}</p>
-                            <div className="fb-price-badge">
-                              <span>السعر المطلوب للبيع:</span> <strong>{post.price}</strong>
-                            </div>
-                          </div>
-
-                          <div className={`fb-images-grid grid-count-${Math.min(post.images?.length || 1, 4)}`}>
-                            {post.images?.map((img, idx) => (
-                              <div key={idx} className="fb-img-wrapper" onClick={() => window.open(`${API_BASE}${img}`, '_blank')}>
-                                <img src={`${API_BASE}${img}`} alt="product-view" className="fb-product-img" />
-                              </div>
-                            ))}
-                          </div>
-
-                          <div className="fb-post-footer">
-                            <span className="warranty-tag">🛡️ فحص آمن - متبقي على الصلاحية حتى 3 أشهر تلقائياً</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    {marketPosts.length === 0 && <p className="empty-text-gold">معرض البضائع شاغر حالياً... كن أول من يعرض سلعته الملكية!</p>}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
 
       {activeChat && (
         <div className="private-chat-floating gold-border" onClick={e => e.stopPropagation()}>
