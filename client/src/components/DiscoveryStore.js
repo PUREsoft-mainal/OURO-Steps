@@ -151,22 +151,27 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose, allUsers,
         <div className="discovery-body scrollbar-gold">
           {loading && (!allUsers || allUsers.length === 0) ? <p className="gold-text">جاري التحميل والمزامنة الحية البصريّة...</p> : (
             <>
+              {/* ========================================================================== */}
+              {/* 🔍 اللوحة الأولى: تظهر حصرياً عند اختيار تبويب البحث والاستكشاف للأعضاء الجدد */}
+              {/* ========================================================================== */}
               {activeTab === 'friends' && (
                 <div className="friends-split-layout">
-                  <div className="discover-column">
+                  <div className="discover-column" style={{ width: '100%', flex: '1' }}>
                     <h4 className="column-title">🔍 استكشاف وإضافة أصدقاء الجدد</h4>
                     <div className="users-scroll">
-                        { (usersToDiscover && usersToDiscover.length > 0 ? usersToDiscover : (allUsers || []).filter(usr => usr.username !== user?.username)).map(u => (                        <div key={u.id || u._id || u.username} className="mini-user-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      {usersToDiscover.map(u => (
+                        <div key={u.id || u._id || u.username} className="mini-user-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span>👤 {u.username}</span>
                           <div style={{ display: 'flex', gap: '5px' }}>
                             <button 
                               className="gold-btn-small" 
                               onClick={() => {
                                 if (socket && user?.username) {
+                                  // إرسال النبضة السحابية الحقيقية بنقاء دون ارتداد
                                   socket.emit('send_friend_request', { currentUser: user.username, targetUser: u.username });
                                   alert(`📩 تم إرسال طلب صداقة ملكي للمعلن ${u.username} بنجاح، بانتظار اعتماده وقبوله!`);
                                         
-                                  // 👑 [بديل الحسم الصامت المأمن] إخفاء كارت المستخدم فوراً دون ريفريش وطرد
+                                  // الإنعاش الصامت الفوري لإخفاء كارت المستخدم من شاشتك فوراً
                                   if (typeof setAllUsers === 'function') {
                                     setAllUsers(prev => prev.map(usr => {
                                       if (usr.username === user.username) {
@@ -187,10 +192,41 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose, allUsers,
                           </div>
                         </div>
                       ))}
+                      {usersToDiscover.length === 0 && (
+                        <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '11px', padding: '20px 0' }}>لا يوجد أعضاء جدد للاستكشاف حالياً في السحاب...</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ========================================================================== */}
+              {/* 🤝 اللوحة الثانية: معزولة تماماً وتظهر حصرياً عند اختيار تبويب الأصدقاء والطلبات الواردة */}
+              {/* ========================================================================== */}
+              {activeTab === 'my_friends_list' && (
+                <div className="friends-split-layout" style={{ display: 'flex', gap: '20px' }}>
+                  
+                  {/* 🤝 عمود الأصدقاء الحاليين المعتمدين سحابياً */}
+                  <div className="discover-column" style={{ flex: 1 }}>
+                    <h4 className="column-title">🤝 قائمة أصدقائي الحاليين</h4>
+                    <div className="users-scroll">
+                      {myFriends.map(u => (
+                        <div key={u.id || u._id || u.username} className="mini-user-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span>👤 {u.username}</span>
+                          <div style={{ display: 'flex', gap: '5px' }}>
+                            <button className="gold-btn-small" style={{ background: '#2980b9' }} onClick={() => handleStartChat(u)}>
+                              شات 💬
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      {myFriends.length === 0 && (
+                        <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '11px', padding: '20px 0' }}>قائمة أصدقائك شاغرة حالياً... ابدأ باستكشاف وإضافة أعضاء!</p>
+                      )}
                     </div>
                   </div>
 
-                  {/* 📩 جدار استقبال ومعالجة طلبات الصداقة الواردة المطور بالإنعاش الصامت وتأمين زري القبول والرفض */}
+                  {/* 📩 عمود استقبال طلبات الصداقة الواردة المعلقة */}
                   <div className="requests-column" style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.1)' }}>
                     <h4 className="column-title" style={{ color: 'var(--gold-primary)', fontSize: '13px', marginBottom: '12px' }}>📩 طلبات الصداقة الواردة المعلقة</h4>
                     <div className="users-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -199,34 +235,19 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose, allUsers,
                           <span style={{ color: '#fff', fontSize: '12px' }}>👤 {senderName}</span>
                           
                           <div style={{ display: 'flex', gap: '5px' }}>
-                            {/* ✔️ زر القبول المطور والمأمن من الريفريش والطرد كلياً */}
                             <button 
                               className="assign-btn-gold" 
                               style={{ padding: '3px 8px', fontSize: '11px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
                               onClick={() => {
                                 if (socket && user?.username) {
                                   socket.emit('accept_friend_request', { currentUser: user.username, targetUser: senderName });
-                                  alert(`✔️ 🎉 مبروك! تم قبول الطلب ودمج العضو ${senderName} في قائمة أصدقائك بنجاح!`);
-                                  
-                                  if (typeof setAllUsers === 'function') {
-                                    setAllUsers(prev => prev.map(usr => {
-                                      if (usr.username === user.username) {
-                                        const currentRequests = usr.friendRequests || [];
-                                        const currentFriends = usr.friends || [];
-                                        return { 
-                                          ...usr, 
-                                          friendRequests: currentRequests.filter(name => name !== senderName),
-                                          friends: [...currentFriends, senderName]
-                                        };
-                                      }
-                                      return usr;
-                                    }));
-                                  }
+                                  alert(`✔️ 🎉 مبروك! تم قبول الطلب ودمج العضو ${senderName} بنجاح!`);
                                 }
                               }}
                             >
                               قبول ✔️
                             </button>
+
 
                             {/* ❌ [تم التصحيح والتحصين] زر الرفض القاني الفعال بالإنعاش الصامت بدلاً من تكرار زر القبول القديم المكسور */}
                             <button 
