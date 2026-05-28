@@ -15,18 +15,18 @@ const ActionBar = ({ setShowDiscovery, setDiscoveryTab, setShowPrayerModal, setS
   return (
     <div className="ouro-action-bar">
       
-      {/* 🔍 زر البحث عن صديق الموصول بالدالة الذكية لإنهاء الـ no-unused-vars */}
+      {/* 🔍 زر البحث عن صديق المطور لتوجيه لوحة الاستكشاف الصافية */}
       <button 
         className="action-bar-btn gold-glow-btn" 
-        onClick={() => handleButtonClick('friends')} 
+        onClick={() => handleButtonClick('friends')} // يفتح التبويب friends للاستكشاف
       >
         🔍 البحث عن صديق
       </button>
       
-      {/* 🤝 زر الأصدقاء المطور الموصول بالدالة الذكية بنقاء معماري كامل */}
+      {/* 🤝 زر الأصدقاء المطور لتوجيه واستدعاء ملف الأصدقاء والطلبات المعزولة */}
       <button 
         className="action-bar-btn gold-glow-btn" 
-        onClick={() => handleButtonClick('friends')}
+        onClick={() => handleButtonClick('my_friends_list')} // 👑 [تم الحسم] توجيه النقر للتبويب المحدث المأمن
       >
         🤝 الأصدقاء
       </button>
