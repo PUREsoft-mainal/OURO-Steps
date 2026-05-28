@@ -49,7 +49,26 @@ function App() {
   // 👑 [تمت الزراعة والتحصين] متغيرات الـ State المخصصة لتغذية وبناء معرض بضائع السوق السحابية
   const [marketPosts, setMarketPosts] = useState([]);
   const [newPost, setNewPost] = useState({ description: "", price: "", files: null });
-  const handleDeletePost = (id) => { alert("🗑️ جاري حذف وإلغاء المنشور..."); };
+  // 👑 [دالة الحذف السحابية المحدثة] إطلاق نبضة الإبادة السيبرانية لكارت المنتج وتطهيره من MongoDB Atlas
+  const handleDeletePost = async (postId) => {
+    if (!window.confirm("🗑️ هل أنت متأكد من حذف هذه السلعة وإلغاء منشورها نهائياً من السحاب؟")) return;
+    
+    try {
+      const res = await axios.delete(`${API_BASE}/api/market/delete/${postId}`, {
+        data: { uploader: user?.username || user?.username }
+      });
+      
+      if (res.data.success) {
+        alert("🗑️ تم حذف السلعة وإبادة صورها الفيزيائية من السحاب بنجاح باهر!");
+        
+        // تحديث محلي صامت وفوري للمصفوفة لتختفي السلعة من الشاشة فوراً دون ريفريش
+        setMarketPosts(prev => prev.filter(p => p.id !== postId));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("❌ غير مصرح لك بالحذف أو فشل الاتصال بقاعدة البيانات السحابية.");
+    }
+  };
   // 👑 [داخل جسد دالة App] صياغة دالة الرفع السحابية الحركية بدلاً من السطر 53 الجامد
   const handleMarketUpload = async (e) => {
     e.preventDefault();
