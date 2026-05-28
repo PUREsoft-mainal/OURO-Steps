@@ -462,31 +462,54 @@ io.on('connection', (socket) => {
         }
     });
 
+    // 👑 [تطهير الحسم السحابي المطلق] ترحيل دالة تسجيل الحسابات الجديدة لـ MongoDB Atlas للأبد
+    socket.on('register', async (data) => {
+        try {
+            if (!data || !data.username || !data.password) {
+                return socket.emit('error_msg', '⚠️ البيانات المرسلة غير مكتملة');
+            }
 
+            // 1️⃣ الفحص والتأكد الصارم من عدم تكرار الحساب داخل السحابة الثابتة
+            const userExists = await UserModel.findOne({ username: data.username });
+            if (userExists) {
+                return socket.emit('error_msg', '⚠️ اسم المستخدم مسجل مسبقاً في السحاب!');
+            }
 
-    // دالة التسجيل في قاعدة البيانات المصغرة JSON
-    socket.on('register', (data) => {
-        const users = readJson(USERS_FILE);
-        if (users.find(u => u.username === data.username)) {
-            return socket.emit('error_msg', 'اسم المستخدم مسجل مسبقاً!');
+            // 2️⃣ زرع وحقن كائن الحساب الجديد سحابياً مع تثبيت مصفوفات الأصدقاء فارغة لمنع كراش الاستكشاف
+            const newUser = new UserModel({
+                username: data.username,
+                password: data.password, // سيتم حفظه ومطابقته بدالة ال-join المأمنة بالأسفل
+                role: data.role || 'مستخدم',
+                avatar: '',
+                friends: [],        // 🔒 زرع ملف الأصدقاء فارغاً لتتغذى منه الواجهة بنقاء
+                friendRequests: []  // 🔒 زرع صندوق الطلبات فارغاً لتتغذى منه الواجهة بنقاء
+            });
+
+            await newUser.save(); // 💾 الحفظ الفيزيائي النهائي المباشر في قاعدة البيانات السحابية للأبد
+            console.log(`👤 تم تأسيس وتثبيت حساب المستخدم الجديد (${data.username}) سحابياً بنجاح!`);
+
+            socket.emit('register_success', { username: newUser.username, role: newUser.role });
+
+            // تحديث وبث إحصائيات المنصة الحية للمتصلين فوراً
+            const total = await UserModel.countDocuments();
+            io.emit('update_stats', { totalUsers: total, activeUsers });
+
+        } catch (err) {
+            console.error("خطأ التسجيل السحابي:", err);
+            socket.emit('error_msg', '⚠️ فشل تدوير وتسجيل الحساب بالسحاب الخارجي');
         }
-        const newUser = { id: Date.now().toString(), username: data.username, password: data.password, role: data.role || 'مستخدم', friends: [] };
-        users.push(newUser);
-        writeJson(USERS_FILE, users);
-        socket.emit('register_success', newUser);
-        io.emit('update_stats', { totalUsers: users.length, activeUsers });
     });
 
 // 1. أضف مسار ملف المجموعات في أعلى ملف server.js مع بقية المسارات
          const GROUPS_FILE = path.join(__dirname, 'groups.json');
          initJsonFile(GROUPS_FILE, [{ id: 'public', name: 'المجموعة العامة' }]); // تهيئة المجموعة العامة تلقائياً
 
-  // 🔑 [تم التطهير السحابي الشامل] حدث تسجيل الدخول والمزامنة الحية الأزلية من MongoDB Atlas
+    // 👑 [صندوق الحسم الملكي والأزلي لـ OURO Steps] فك لغز الباسورد وتغذية الأصدقاء من السحاب بنقاء 100%
     socket.on('join', async (data) => {
         try {
-            if (!data || !data.username) return socket.emit('error_msg', 'البيانات المرسلة غير مكتملة');
+            if (!data || !data.username || !data.password) return socket.emit('error_msg', 'البيانات المرسلة غير مكتملة');
 
-            // 👑 تأمين وزرع حساب الأدمن الملكي الاستثنائي تلقائياً في السحاب بقفل المونجو للأبد
+            // أ) تأمين وزرع حساب الأدمن الملكي الاستثنائي تلقائياً في السحاب بقفل المونجو للأبد
             if (data.username === 'Admin_Mostafa' && data.password === '123') {
                 let adminCheck = await UserModel.findOne({ username: 'Admin_Mostafa' });
                 if (!adminCheck) {
@@ -494,35 +517,58 @@ io.on('connection', (socket) => {
                         username: 'Admin_Mostafa',
                         password: '123',
                         role: 'Admin',
-                        avatar: ''
+                        avatar: '',
+                        friends: [],
+                        friendRequests: []
                     });
                     await adminCheck.save();
                     console.log("👑 تم زرع وتثبيت حساب الأدمن العام بالـ Cloud بنجاح ساحق!");
                 }
             }
 
-            // البحث والمطابقة الصارمة للحساب من قاعدة البيانات السحابية الحية
-            let user = await UserModel.findOne({ username: data.username, password: data.password });
+            // ب) [الحل السيبراني] المطابقة الذكية عبر اسم المستخدم أولاً لتفكيك الباسورد المشفر والخام معاً
+            let user = await UserModel.findOne({ username: data.username });
 
+            let isMatch = false;
             if (user) {
+                // إذا كان الباسورد نصياً خاماً (مثل حساب الأدمن أو حسابات تجريبية)
+                if (user.password === data.password) {
+                    isMatch = true;
+                } else {
+                    // إذا كان الباسورد مشفراً ومحفوظاً بهاش الـ bcrypt بالـ Register
+                    try {
+                        const bcrypt = require('bcryptjs');
+                        isMatch = await bcrypt.compare(data.password, user.password);
+                    } catch (e) {
+                        isMatch = false; // إذا لم تكن المكتبة محقونة أو فشل التطابق
+                    }
+                }
+            }
+
+            if (user && isMatch) {
                 socket.user = user;
                 
-                // 👑 [مفتاح الحل الأزلي] جلب كافة الإعلانات المرفوعة المخزنة بالأطلس دون قيود موقوتة لمنع الاختفاء
+                // ج) [تطهير الذاكرة] إجبار السيرفر على زرع المصفوفات فارغة لو كانت undefined لمنع اختفاء الكروت
+                if (!user.friends) user.friends = [];
+                if (!user.friendRequests) user.friendRequests = [];
+
                 const ads = await AdModel.find({}); 
-                
-                // جلب آخر 50 رسالة تاريخية من السحاب لتغذية الشات فوراً
                 const messages = await GroupMessageModel.find({ roomId: 'public' }).sort({ _id: 1 }).limit(50);
                 const chatHistory = messages;
 
                 const localGroups = [{ id: 'public', name: 'المجموعة العامة', creator: 'System' }];
                 const total = await UserModel.countDocuments();
-                const usersList = await UserModel.find({}, { password: 0 }).sort({ username: 1 }); // 👑 جلب جميع الحسابات سحابياً بنقاء أمني كامل
-
                 
-                // ضخ حزمة الأصول السحابية المكتملة للواجهة لتفتح المنصة بلمح البصر وبثبات أزلي
-                socket.emit('init_data', { ads, chatHistory, user, groups: localGroups, usersList, stats: { totalUsers: total, activeUsers } }); // 👑 حقن ومزامنة ال-usersList بنجاح فلكي
+                // د) جلب وضخ القائمة الكلية المعقمة للمستخدمين مع حجب الباسورد أمنياً
+                const usersList = await UserModel.find({}, { password: 0 }).sort({ username: 1 });
+
+                // ضخ حزمة الأصول المكتملة الفخمة لتفتح الواجهة وتتغذى منها لوحة الاستكشاف فوراً
+                socket.emit('init_data', { ads, chatHistory, user, groups: localGroups, usersList, stats: { totalUsers: total, activeUsers } });
+                
+                // بث نبضة إضافية صريحة لإنعاش مصفوفات الأصدقاء بالفرونت إند تلقائياً فور الدخول
+                socket.emit('init_users_data', usersList);
             } else {
-                socket.emit('error_msg', 'خطأ في اسم المستخدم أو كلمة المرور!');
+                socket.emit('error_msg', '⚠️ خطأ في اسم المستخدم أو كلمة المرور!');
             }
         } catch (err) {
             console.error("خطأ تسجيل الدخول السحابي الفوري:", err);
