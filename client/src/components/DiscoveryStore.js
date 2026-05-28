@@ -149,15 +149,14 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose, allUsers,
         </div>
 
         <div className="discovery-body scrollbar-gold">
-          {loading ? <p className="gold-text">جاري التحميل والمزامنة الحية البصريّة...</p> : (
+          {loading && (!allUsers || allUsers.length === 0) ? <p className="gold-text">جاري التحميل والمزامنة الحية البصريّة...</p> : (
             <>
               {activeTab === 'friends' && (
                 <div className="friends-split-layout">
                   <div className="discover-column">
                     <h4 className="column-title">🔍 استكشاف وإضافة أصدقاء الجدد</h4>
                     <div className="users-scroll">
-                      {usersToDiscover.map(u => (
-                        <div key={u.id || u._id || u.username} className="mini-user-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        { (usersToDiscover && usersToDiscover.length > 0 ? usersToDiscover : (allUsers || []).filter(usr => usr.username !== user?.username)).map(u => (                        <div key={u.id || u._id || u.username} className="mini-user-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span>👤 {u.username}</span>
                           <div style={{ display: 'flex', gap: '5px' }}>
                             <button 
