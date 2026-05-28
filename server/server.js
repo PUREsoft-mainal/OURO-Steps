@@ -764,10 +764,11 @@ setInterval(() => {
 
 
 // تعديل مسار رفع بضائع السوق الملكي ليتلقى حتى 10 صور ويحسب مدة الـ 3 أشهر
-app.post('/api/market/upload', upload.array('marketImages', 10), (req, res) => {
+app.post('/api/upload-market', upload.array('marketImages', 10), (req, res) => {
     try {
-        if (!req.body.username) return res.status(400).json({ success: false, message: "بيانات المستخدم مفقودة" });
-
+        const userUploader = req.body.username || req.body.uploader;
+        if (!userUploader) return res.status(400).json({ success: false, message: "بيانات المستخدم مفقودة" });
+      
         const files = req.files || [];
         const imagesPaths = files.map(f => `/uploads/${f.filename}`);
 
@@ -778,7 +779,7 @@ app.post('/api/market/upload', upload.array('marketImages', 10), (req, res) => {
         const posts = readJson(MARKET_FILE);
         const newPost = {
             id: 'post_' + Date.now().toString(),
-            uploader: req.body.username,
+            uploader: userUploader, // 👑 [تم الحسم الجذري] ربط الحقل بالمتغير الشامل الموحد لمنع الاختفاء 
             description: req.body.description || '',
             price: req.body.price || 'غير محدد',
             images: imagesPaths,
@@ -802,8 +803,7 @@ app.post('/api/market/upload', upload.array('marketImages', 10), (req, res) => {
 app.delete('/api/market/delete/:id', (req, res) => {
     try {
         const { id } = req.params;
-        const { username } = req.body;
-        let posts = readJson(MARKET_FILE);
+        const username = req.body.username || req.body.uploader; // 👑 توحيد هوية طالب الحذف سيبرانياً        let posts = readJson(MARKET_FILE);
         const targetPost = posts.find(p => p.id === id);
 
         if (!targetPost) return res.status(404).json({ success: false, message: "المنشور غير موجود" });
