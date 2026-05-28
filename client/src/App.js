@@ -199,6 +199,13 @@ function App() {
               setActiveUsers(data.stats.activeUsers); 
           }
           setIsLogged(true); 
+          
+          if (data.usersList && typeof setAllUsers === 'function') {
+              setAllUsers(data.usersList);
+          }
+          if (typeof setLoading === 'function') {
+              setLoading(false); // 🔓 كسر سياج التحميل وتفجير الكروت فوراً بالواجهة
+          }
         }
       });
 
