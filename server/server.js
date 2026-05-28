@@ -1176,7 +1176,120 @@ app.post('/api/developer/delete-key', async (req, res) => {
     }
 });
 
+// ==========================================================================
+// 🪙 [الكمبلة البرمجية للمحفظة المشفرة] قنوات الـ Web3 وعملة OURO Coin بـ MongoDB Atlas
+// ==========================================================================
 
+// 1️⃣ [مسار جلب وتأسيس الحساب المالي] قراءة وتأمين رصيد العملة سحابياً
+app.post('/api/wallet/get-info', async (req, res) => {
+    try {
+        const { username } = req.body;
+        if (!username) return res.status(400).json({ success: false });
+
+        // مطابقة الحساب وجلب العقود والعملة المتاحة بالشبكة
+        let user = await UserModel.findOne({ username });
+        if (!user) return res.status(404).json({ success: false });
+
+        // 👑 [قفل التثبيت الأزلي] تثبيت رصيد الـ 21 مليون عملة للأدمن قسرياً ومنع إنشاء أي عملة إضافية للشبكة نهائياً
+        let currentBalance = user.ouroBalance || 0;
+        if (username === 'Admin_Mostafa') {
+            if (user.ouroBalance !== 21000000) {
+                user.ouroBalance = 21000000;
+                await user.save();
+            }
+            currentBalance = 21000000;
+        }
+
+        const contracts = await mongoose.model('DeveloperKey').find({ isContract: true }) || []; // جلب العقود إن وجدت
+        res.json({ success: true, ouroBalance: currentBalance, contracts });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 2️⃣ [مسار ربط MetaMask الحركي] قيد عنوان الاستقبال الخارجي بالحساب السحابي للأبد
+app.post('/api/wallet/link-metamask', async (req, res) => {
+    try {
+        const { username, ethAddress } = req.body;
+        await UserModel.updateOne({ username }, { $set: { metaMaskAddress: ethAddress } });
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
+
+// 3️⃣ [مسار التحويل المالي والضريبة 7%] تفتيت وحساب القنوات المفتوحة بين المحافظ سحابياً
+app.post('/api/wallet/transfer', async (req, res) => {
+    try {
+        const { sender, receiver, amount } = req.body;
+        const transferAmount = parseFloat(amount);
+
+        if (sender === receiver) return res.status(400).json({ success: false, message: "⚠️ لا يمكنك التحويل لنفس محفظتك سيبرانياً!" });
+
+        // جلب وقراءة بيانات المرسل والمستقبل مباشرة من الـ MongoDB Atlas الحية
+        let senderUser = await UserModel.findOne({ username: sender });
+        let receiverUser = await UserModel.findOne({ username: receiver });
+
+        if (!receiverUser) return res.status(404).json({ success: false, message: "⚠️ اسم المستخدم المستلم غير موجود على منصة OURO Steps!" });
+
+        // تثبيت رصيد الأدمن الوهمي للخصم الفعلي، وفحص أرصدة المستخدمين العاديين
+        let senderCurrentBalance = sender === 'Admin_Mostafa' ? 21000000 : (senderUser.ouroBalance || 0);
+        if (senderCurrentBalance < transferAmount) {
+            return res.status(400).json({ success: false, message: "❌ عذراً، رصيدك الحالي غير كافٍ لإتمام هذه المعاملة المالية!" });
+        }
+
+        // ⚖️ [معادلة الصيانة والضريبة] احتساب استقطاع الـ 7% وتوجيهها آلياً لخزينة الأدمن الملكية
+        const taxRate = 0.07;
+        const taxAmount = transferAmount * taxRate;
+        const finalReceivedAmount = transferAmount; // يحصل المستلم على القيمة كاملة ويُخصم الاجمالي + الضريبة من المرسل
+
+        // أ) خصم المبلغ والضريبة بالملي من حساب المرسل (إلا لو كان الأدمن فيظل ثابتاً بالإمداد الأصلي)
+        if (sender !== 'Admin_Mostafa') {
+            senderUser.ouroBalance = senderCurrentBalance - (transferAmount + taxAmount);
+            await senderUser.save();
+        }
+
+        // ب) ضخ القيمة المحولة كاملة في محفظة المستخدم المستلم سحابياً
+        if (receiver !== 'Admin_Mostafa') {
+            receiverUser.ouroBalance = (receiverUser.ouroBalance || 0) + finalReceivedAmount;
+            await receiverUser.save();
+        }
+
+        // ج) [صب الضريبة] تحويل قيمة الـ 7% قسرياً وحقنها بداخل محفظة الأدمن العام Mostafa للأبد
+        let adminUser = await UserModel.findOne({ username: 'Admin_Mostafa' });
+        if (adminUser && sender !== 'Admin_Mostafa') {
+            adminUser.ouroBalance = (adminUser.ouroBalance || 0) + taxAmount;
+            await adminUser.save();
+        }
+
+        // بث حزم التحديث اللحظي عبر السوكت لإنعاش الأرصدة بالمتصفحات فوراً دون ريفريش وطرد
+        io.emit('wallet_balance_updated', { username: sender, newBalance: senderUser.ouroBalance });
+        io.emit('wallet_balance_updated', { username: receiver, newBalance: receiverUser.ouroBalance });
+
+        res.json({ success: true, newSenderBalance: senderUser.ouroBalance });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "خطأ في معالجة الشبكة المالية السحابية.", error: err.message });
+    }
+});
+
+// 4️⃣ [مسار الأدمن لزرع العقود الذكية للعملات الخارجية]
+app.post('/api/wallet/admin/add-contract', async (req, res) => {
+    try {
+        const { username, contractName, contractAddress, symbol } = req.body;
+        if (username !== 'Admin_Mostafa') return res.status(403).json({ success: false, message: "غير مصرح لك" });
+
+        const newContract = new (mongoose.model('DeveloperKey'))({
+            id: 'contract_' + Date.now().toString(),
+            username: username,
+            keyLabel: contractName,
+            apiKey: contractAddress, // حفظ العنوان كعقد ذكي متصل
+            scopes: { all_features: false, prayer_times: false, virtual_flash: false, market: false, ads: false },
+            isContract: true, // شارة تمييز العقد سحابياً
+            contractName, contractAddress, symbol
+        });
+
+        await newContract.save();
+        res.json({ success: true, contract: newContract });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
 
 server.listen(PORT, "0.0.0.0", () => { 
     console.log(`🚀 السيرفر السحابي يعمل بنجاح على بورت ${PORT}`); 
