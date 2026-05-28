@@ -88,6 +88,25 @@ const AdSchema = new mongoose.Schema({
 });
 const AdModel = mongoose.model('Ad', AdSchema);
 
+// 👑 [الصندوق الأول - حماية التزوير السيبراني للعملة] حقول التوقيع الرقمي المشفر والملف السحابي
+const OuroLedgerSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true },
+    ouroBalance: { type: Number, default: 0 },
+    // الهاش المعقد والمقفل للقراءة فقط: يدمج اسم المستخدم، الرصيد، ومفتاح سري خاص بالخادم
+    cryptoSignature: { type: String, required: true } 
+});
+
+const OuroLedgerModel = mongoose.model('OuroLedger', OuroLedgerSchema);
+
+// دالة لتوليد التوقيع الرقمي المعقد لـ OURO Coin (يستحيل تزويره محلياً أو سحابياً)
+const calculateOuroSignature = (username, balance) => {
+    const crypto = require('crypto');
+    const secretServerSalt = "ouro_secure_deflationary_core_blockchain_2026_safe_salt_99";
+    return crypto.createHmac('sha256', secretServerSalt)
+                 .update(`${username}_${balance}_ouro_coin_immutable`)
+                 .digest('hex');
+};
+
 // 👑 معيار حفظ رسائل المجموعات التاريخية ومنع مسح الشات بـ MongoDB
 const GroupMessageSchema = new mongoose.Schema({
     id: { type: String, required: true },
@@ -1217,6 +1236,7 @@ app.post('/api/wallet/link-metamask', async (req, res) => {
 });
 
 // 3️⃣ [مسار التحويل المالي والضريبة 7%] تفتيت وحساب القنوات المفتوحة بين المحافظ سحابياً
+// ⚡ [الصندوق الثاني] مسار التحويل المالي المعقم كلياً بالفحص المجهري للتوقيع الرقمي المشفر لمنع التزوير
 app.post('/api/wallet/transfer', async (req, res) => {
     try {
         const { sender, receiver, amount } = req.body;
@@ -1224,49 +1244,68 @@ app.post('/api/wallet/transfer', async (req, res) => {
 
         if (sender === receiver) return res.status(400).json({ success: false, message: "⚠️ لا يمكنك التحويل لنفس محفظتك سيبرانياً!" });
 
-        // جلب وقراءة بيانات المرسل والمستقبل مباشرة من الـ MongoDB Atlas الحية
-        let senderUser = await UserModel.findOne({ username: sender });
+        // 1️⃣ قراءة ملف العملة للقراءة فقط من السحاب لكلا الطرفين (المرسل والمستقبل)
+        let senderLedger = await OuroLedgerModel.findOne({ username: sender });
+        let receiverLedger = await OuroLedgerModel.findOne({ username: receiver });
         let receiverUser = await UserModel.findOne({ username: receiver });
 
-        if (!receiverUser) return res.status(404).json({ success: false, message: "⚠️ اسم المستخدم المستلم غير موجود على منصة OURO Steps!" });
+        if (!receiverUser) return res.status(404).json({ success: false, message: "⚠️ اسم المستخدم المستلم غير موجود على المنصة!" });
 
-        // تثبيت رصيد الأدمن الوهمي للخصم الفعلي، وفحص أرصدة المستخدمين العاديين
-        let senderCurrentBalance = sender === 'Admin_Mostafa' ? 21000000 : (senderUser.ouroBalance || 0);
-        if (senderCurrentBalance < transferAmount) {
-            return res.status(400).json({ success: false, message: "❌ عذراً، رصيدك الحالي غير كافٍ لإتمام هذه المعاملة المالية!" });
+        // تهيئة ملف مالي جديد لو الحساب حديث العهد بالشبكة
+        if (!senderLedger) {
+            const initBal = sender === 'Admin_Mostafa' ? 21000000 : 0;
+            senderLedger = new OuroLedgerModel({ username: sender, ouroBalance: initBal, cryptoSignature: calculateOuroSignature(sender, initBal) });
+            await senderLedger.save();
+        }
+        if (!receiverLedger) {
+            receiverLedger = new OuroLedgerModel({ username: receiver, ouroBalance: 0, cryptoSignature: calculateOuroSignature(receiver, 0) });
+            await receiverLedger.save();
         }
 
-        // ⚖️ [معادلة الصيانة والضريبة] احتساب استقطاع الـ 7% وتوجيهها آلياً لخزينة الأدمن الملكية
+        // 🛡️ [جدار الحماية السيبراني ضد التزوير] التحقق من سلامة رقم التوقيع المشفر المخزن بالملف السحابي للمرسل
+        const validSenderSig = calculateOuroSignature(sender, senderLedger.ouroBalance);
+        if (senderLedger.cryptoSignature !== validSenderSig) {
+            return res.status(403).json({ success: false, message: "🚨 تحذير أمني: تم رصد محاولة تزوير رقمية في الرصيد! تم تجميد المعاملة فوراً وخطر الهوية." });
+        }
+
+        // فحص كفاية الرصيد الفعلي للمرسل
+        let senderCurrentBalance = senderLedger.ouroBalance;
+        if (senderCurrentBalance < transferAmount) {
+            return res.status(400).json({ success: false, message: "❌ عذراً، رصيدك الحالي غير كافٍ لإتمام هذه المعاملة!" });
+        }
+
+        // احتساب ضريبة الـ 7% الانكماشية الثابتة وتوجيهها آلياً للأدمن
         const taxRate = 0.07;
         const taxAmount = transferAmount * taxRate;
-        const finalReceivedAmount = transferAmount; // يحصل المستلم على القيمة كاملة ويُخصم الاجمالي + الضريبة من المرسل
 
-        // أ) خصم المبلغ والضريبة بالملي من حساب المرسل (إلا لو كان الأدمن فيظل ثابتاً بالإمداد الأصلي)
+        // 2️⃣ التحديث الفيزيائي النهائي المباشر وتوليد هاش توقيع جديد ومقفل بالملف السحابي
         if (sender !== 'Admin_Mostafa') {
-            senderUser.ouroBalance = senderCurrentBalance - (transferAmount + taxAmount);
-            await senderUser.save();
+            senderLedger.ouroBalance = senderCurrentBalance - (transferAmount + taxAmount);
+            senderLedger.cryptoSignature = calculateOuroSignature(sender, senderLedger.ouroBalance);
+            await senderLedger.save();
         }
 
-        // ب) ضخ القيمة المحولة كاملة في محفظة المستخدم المستلم سحابياً
         if (receiver !== 'Admin_Mostafa') {
-            receiverUser.ouroBalance = (receiverUser.ouroBalance || 0) + finalReceivedAmount;
-            await receiverUser.save();
+            receiverLedger.ouroBalance = receiverLedger.ouroBalance + transferAmount;
+            receiverLedger.cryptoSignature = calculateOuroSignature(receiver, receiverLedger.ouroBalance);
+            await receiverLedger.save();
         }
 
-        // ج) [صب الضريبة] تحويل قيمة الـ 7% قسرياً وحقنها بداخل محفظة الأدمن العام Mostafa للأبد
-        let adminUser = await UserModel.findOne({ username: 'Admin_Mostafa' });
-        if (adminUser && sender !== 'Admin_Mostafa') {
-            adminUser.ouroBalance = (adminUser.ouroBalance || 0) + taxAmount;
-            await adminUser.save();
+        // صب الضريبة بقفل الأمان في حساب الأدمن الملكي Mostafa
+        let adminLedger = await OuroLedgerModel.findOne({ username: 'Admin_Mostafa' });
+        if (adminLedger && sender !== 'Admin_Mostafa') {
+            adminLedger.ouroBalance = adminLedger.ouroBalance + taxAmount;
+            adminLedger.cryptoSignature = calculateOuroSignature('Admin_Mostafa', adminLedger.ouroBalance);
+            await adminLedger.save();
         }
 
-        // بث حزم التحديث اللحظي عبر السوكت لإنعاش الأرصدة بالمتصفحات فوراً دون ريفريش وطرد
-        io.emit('wallet_balance_updated', { username: sender, newBalance: senderUser.ouroBalance });
-        io.emit('wallet_balance_updated', { username: receiver, newBalance: receiverUser.ouroBalance });
+        // بث التحديث اللحظي للإنعاش البصري صامتاً فالمتصفحات
+        io.emit('wallet_balance_updated', { username: sender, newBalance: senderLedger.ouroBalance });
+        io.emit('wallet_balance_updated', { username: receiver, newBalance: receiverLedger.ouroBalance });
 
-        res.json({ success: true, newSenderBalance: senderUser.ouroBalance });
+        res.json({ success: true, newSenderBalance: senderLedger.ouroBalance });
     } catch (err) {
-        res.status(500).json({ success: false, message: "خطأ في معالجة الشبكة المالية السحابية.", error: err.message });
+        res.status(500).json({ success: false, message: "خطأ في معالجة الشبكة المالية المشفرة.", error: err.message });
     }
 });
 
