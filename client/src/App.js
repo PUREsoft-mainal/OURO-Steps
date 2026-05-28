@@ -41,7 +41,9 @@ function App() {
   const [totalUsers, setTotalUsers] = useState(0);
   const [activeUsers, setActiveUsers] = useState(0);
   const [showDiscovery, setShowDiscovery] = useState(false);
-  const [discoveryTab, setDiscoveryTab] = useState('friends'); 
+  const [discoveryTab, setDiscoveryTab] = useState('friends');
+  const [allUsers, setAllUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [currentGroup, setCurrentGroup] = useState({ id: 'public', name: 'المجموعة العامة' });
   const [groups, setGroups] = useState([{ id: 'public', name: 'المجموعة العامة' }]);
   const [showPrayerModal, setShowPrayerModal] = useState(false); // حالة فتح وإغلاق نافذة الصلاة
@@ -129,6 +131,31 @@ function App() {
         setMarketPosts(prev => prev.filter(p => p.id !== data.postId));
       });
     }
+
+      // 👑 [الصندوق الثاني] دالة فتح مسارات السوكت لشحن وقراءة الأصدقاء من الـ MongoDB Atlas
+  useEffect(() => {
+    if (isLogged && socket) {
+      setLoading(true);
+
+      // 1. استقبال مصفوفة الحسابات الكلية فور إقلاع ودخول المنصة الملكية
+      socket.on('init_users_data', (usersList) => {
+        setAllUsers(usersList || []);
+        setLoading(false);
+      });
+
+      // 2. المزامنة اللحظية الفورية وإعادة فرز القوائم عند قبول أو رفض أو إرسال أي طلب
+      socket.on('friend_updated', (data) => {
+        setAllUsers(data.usersList || []);
+      });
+    }
+
+    return () => {
+      if (socket) {
+        socket.off('init_users_data');
+        socket.off('friend_updated');
+      }
+    };
+  }, [isLogged, socket]);
 
     // تنظيف واقتلاع مستمعات السوكت عند إغلاق التصفح لحماية الذاكرة العشوائية للمتصفح
     return () => {
@@ -408,6 +435,9 @@ return (
             socket={socket} 
             API_BASE={API_BASE} 
             defaultTab={discoveryTab} 
+            allUsers={allUsers}     // 👈 حقن وتمرير المصفوفة السحابية هنا
+            setAllUsers={setAllUsers} // 👈 حقن وتمرير دالة التحديث الصامتة هنا
+            loading={loading}         // 👈 حقن حالة التحميل التلقائي هنا
             onClose={() => setShowDiscovery(false)} 
           />
         )}
