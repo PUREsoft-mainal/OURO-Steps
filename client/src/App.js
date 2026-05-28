@@ -53,7 +53,12 @@ function App() {
   const handleMarketUpload = (e) => { e.preventDefault(); alert("📣 جاري معالجة ورفع سلعتك سحابياً..."); };
   const handleDeletePost = (id) => { alert("🗑️ جاري حذف وإلغاء المنشور..."); };
 
-  
+    // دالة لجلب البضائع من السحاب لتشغيل ودعم تفعيل الـ State بالملف
+  useEffect(() => {
+    if (isLogged && setMarketPosts) {
+      axios.get(`${API_BASE}/api/market`).then(res => setMarketPosts(res.data || [])).catch(() => {});
+    }
+  }, [isLogged, API_BASE]);
 
   // 👑 1. المنظومة المركزية الشاملة والموحدة لإدارة أحداث السوكت (مخصصة ومطهرة للبث الحي والرسائل فقط دون تداخل)
   useEffect(() => {
