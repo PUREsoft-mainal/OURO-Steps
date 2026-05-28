@@ -384,7 +384,7 @@ return (
     <div className="app-container" style={{ backgroundImage: "url('/assets/background.png')", backgroundSize: 'cover' }}>
       <div className="app-overlay">
         
-        {/* 👑 [تم التطهير وإبادة الاستدعاء القديم المكرر] نظام السقف الإلكتروني الملكي المحدث والمزود بمربع العملة وزر الشراء (+) المباشر */}
+        {/* 👑 [نظام السقف الإلكتروني الملكي الموحد] مربع العملة بالأبعاد الدقيقة وزر الشراء (+) دون أي تكرار للوجو بالأسفل */}
         <Header 
           activeUsers={activeUsers} 
           totalUsers={totalUsers} 
@@ -414,6 +414,9 @@ return (
             </div>
           }
         />
+        
+        {/* 🧱 [تم سحق وإبادة وسم الفراغ والترحيب المكرر بنجاح 100% لمنع الازدواج البصري للوجو] */}
+
         
         {/* 2. الفراغ الملكي الفاصل المستقل لعرض جملة الترحيب واللوجو حرّاً بانتظام أزلي */}
         <div className="header-center">
