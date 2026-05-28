@@ -53,6 +53,9 @@ function App() {
   // 👑 [تمت الزراعة والتحصين] متغيرات الـ State المخصصة لتغذية وبناء معرض بضائع السوق السحابية
   const [marketPosts, setMarketPosts] = useState([]);
   const [newPost, setNewPost] = useState({ description: "", price: "", files: null });
+    // 👑 [الصندوق الأول] حقول الـ States المالية المخصصة للمحفظة الرقمية والدمج التبادلي للعملة
+  const [showWalletModal, setShowWalletModal] = useState(false);
+  const [ouroBalance, setOuroBalance] = useState(0); // رصيد المستخدم الحالي
   // 👑 [دالة الحذف السحابية المحدثة] إطلاق نبضة الإبادة السيبرانية لكارت المنتج وتطهيره من MongoDB Atlas
   const handleDeletePost = async (postId) => {
     if (!window.confirm("🗑️ هل أنت متأكد من حذف هذه السلعة وإلغاء منشورها نهائياً من السحاب؟")) return;
@@ -186,6 +189,7 @@ function App() {
       // 🔊 3. مستمع المزامنة التاريخية وتطهير سجل قاعدة البيانات من الكائنات التالفة لمنع خطأ #31
       socket.on('init_data', (data) => { 
         if (data.user) {
+          setOuroBalance(data.user.username === 'Admin_Mostafa' ? 21000000 : (data.user.ouroBalance || 0)); // 👑 تثبيت رصيد ال-21 مليون للأدمن قسرياً للأبد فالسحاب
           setAds(data.ads || []); 
           
           const sanitizedHistory = (data.chatHistory || []).map(m => ({
@@ -381,6 +385,36 @@ return (
         
         {/* 1. شريط نظام السقف الإلكتروني */}
         <Header activeUsers={activeUsers} totalUsers={totalUsers} user={user} />
+
+          {/* 👑 [الصندوق الثاني] تحديث وتزويد نظام السقف بمربع العملة الملكي وزر الشراء (+) المباشر */}
+        <Header 
+          activeUsers={activeUsers} 
+          totalUsers={totalUsers} 
+          user={user} 
+          ouroBalance={ouroBalance} // تمرير الرصيد المحدث
+          onBuyCoin={() => {
+            alert(`🪙 لطلب شحن وشراء عملات OURO Coin الفاخرة، الرجاء الاتصال الفوري بـ الإدارة والأدمن العام Mostafa عبر الهواتف الرسمية المأمنة سيبرانياً:\n\n📞 01027411921\n📞 01080166413\n\n(سيقوم الأدمن بالدخول فوراً وتحويل الكمية المطلوبة لمحفظتك الرقمية سحابياً)`);
+          }}
+          renderCoinBadge={
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(0,0,0,0.5)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--gold-primary)' }}>
+              <span style={{ color: 'var(--gold-primary)', fontSize: '11px', fontWeight: 'bold' }}>🪙 OURO:</span>
+              {/* 📟 المربع المالي الملتزم بالأبعاد الفزيائية الدقيقة المطلوبة (عرض 30px وارتفاع 13px) */}
+              <div className="scrollbar-gold" style={{ width: '30px', height: '13px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', borderRadius: '2px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <span style={{ color: '#fff', fontSize: '9px', fontWeight: 'bold' }}>{user?.username === 'Admin_Mostafa' ? '21M' : ouroBalance}</span>
+              </div>
+              {/* ＋ زر الشراء المحصن بأرقام هاتفك الذكي للاتصال الفوري */}
+              <button 
+                type="button" 
+                onClick={() => window.open("tel:01027411921")}
+                style={{ background: 'var(--gold-primary)', color: '#000', border: 'none', width: '14px', height: '14px', borderRadius: '50%', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyAll: 'center', padding: 0 }}
+                title="اضغط هنا للاتصال الفوري بالأدمن Mostafa لشحن محفظتك الرقمية"
+              >
+                +
+              </button>
+            </div>
+          }
+        />
+
         
         {/* 2. الفراغ الملكي الفاصل المستقل لعرض جملة الترحيب واللوجو حرّاً */}
         <div className="header-center">
@@ -407,6 +441,7 @@ return (
             })()
           }
           setShowApiKeyModal={setShowApiKeyModal} // 👈 قُم بحقن هذا السطر هنا لتتصل التروس ببعضها
+          setShowWalletModal={setShowWalletModal} // 👈 حقن دالة استدعاء المحفظة هنا
         />
 
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
@@ -462,6 +497,20 @@ return (
             user={user}
             API_BASE={API_BASE}
             onClose={() => setShowApiKeyModal(false)}
+          />
+        )}
+
+        {/* 👑 [الصندوق الرابع] تفعيل وإطلاق مكوّن المحفظة الرقمية المستقل الجديد بكافة ميزاته وحركياته المالية والتحويل التبادلي وضريبة الـ 7% */}
+        {showWalletModal && (
+          <OuroWalletModal 
+            user={user}
+            API_BASE={API_BASE}
+            onClose={() => setShowWalletModal(false)}
+            ouroBalance={ouroBalance}
+            setOuroBalance={setOuroBalance}
+            onTransferSuccess={(updatedBalance) => {
+              setOuroBalance(updatedBalance); // تحديث فوري فخام للرصيد فالسقف صامتاً
+            }}
           />
         )}
 
