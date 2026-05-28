@@ -157,9 +157,7 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose, allUsers,
         <div className="discovery-body scrollbar-gold">
           {loading && (!allUsers || allUsers.length === 0) ? <p className="gold-text">جاري التحميل والمزامنة الحية البصريّة...</p> : (
             <>
-              {/* ========================================================================== */}
-              {/* 🔍 اللوحة الأولى: تظهر حصرياً عند اختيار تبويب البحث والاستكشاف للأعضاء الجدد */}
-              {/* ========================================================================== */}
+              {/* 👑 [لوحة البحث والاستكشاف النظيفة] معقمة 100% لإنهاء كراش السطر 144 للأبد */}
               {activeTab === 'friends' && (
                 <div className="friends-split-layout">
                   <div className="discover-column" style={{ width: '100%', flex: '1' }}>
@@ -203,6 +201,7 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose, allUsers,
                   </div>
                 </div>
               )}
+
 
               {/* ========================================================================== */}
               {/* 🤝 اللوحة الثانية: معزولة تماماً وتظهر حصرياً عند اختيار تبويب الأصدقاء والطلبات الواردة */}
