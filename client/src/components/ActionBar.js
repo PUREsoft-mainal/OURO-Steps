@@ -2,8 +2,7 @@ import React from 'react';
 import '../App.css';
 
 // 👑 استقبال setShowPrayerModal لتوجيه نقرة زر الكعبة المشرفة نافذياً
-const ActionBar = ({ setShowDiscovery, setDiscoveryTab, setShowPrayerModal, setShowMarket }) => {  
-  // دالة ذكية للتحكم في فتح النافذة وتوجيه التبويب في نفس اللحظة
+const ActionBar = ({ setShowDiscovery, setDiscoveryTab, setShowPrayerModal, setShowMarket }) => {  // دالة ذكية للتحكم في فتح النافذة وتوجيه التبويب في نفس اللحظة
   const handleButtonClick = (tabName) => {
     setDiscoveryTab(tabName);
     setShowDiscovery(true);
