@@ -297,17 +297,6 @@ function App() {
 
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
         <div className="main-content">
-
-          <Market 
-            user={user}
-            marketPosts={marketPosts}
-            handleMarketUpload={handleMarketUpload}
-            handleDeletePost={handleDeletePost}
-            setNewPost={setNewPost}
-            newPost={newPost}
-            apiBase={API_BASE}
-            onClose={() => setShowMarket(false)}
-          />
           
           {/* الجانب الأيمن: المجموعات وأدوات الأدمن وتمرير السوكيت الفعال */}
           <GroupsSidebar 
@@ -347,6 +336,26 @@ function App() {
             API_BASE={API_BASE} 
             defaultTab={discoveryTab} 
             onClose={() => setShowDiscovery(false)} 
+          />
+        )}
+
+        /* ✅ [تعديل الحسم الحركي] تمرير دالة الإغلاق المباشرة والمعزولة تماماً لمنع التعليق: */
+        {showMarket && (
+          <Market 
+            user={user}
+            marketPosts={marketPosts}
+            handleMarketUpload={handleMarketUpload}
+            handleDeletePost={handleDeletePost}
+            setNewPost={setNewPost}
+            newPost={newPost}
+            apiBase={API_BASE}
+            onClose={(e) => {
+              if (e) {
+                e.preventDefault();
+                e.stopPropagation(); // 🔒 منع تداخل النقرات السحابية كلياً
+              }
+              setShowMarket(false); // 👑 اختفاء النافذة فوراً والعودة بصفاء للشاشة الرئيسية
+            }}
           />
         )}
 
