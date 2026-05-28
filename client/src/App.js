@@ -13,6 +13,7 @@ import PrayerWidget from './components/PrayerWidget';
 import AdSliderBottom from './components/AdSliderBottom';
 import DiscoveryStore from './components/DiscoveryStore';
 import Market from './components/Market'; // استدعاء ملف السوق المستقل الجديد
+import ApiKeyModal from './components/ApiKeyModal';
 import './App.css';
 
 // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
@@ -48,6 +49,7 @@ function App() {
   const [groups, setGroups] = useState([{ id: 'public', name: 'المجموعة العامة' }]);
   const [showPrayerModal, setShowPrayerModal] = useState(false); // حالة فتح وإغلاق نافذة الصلاة
   const [showMarket, setShowMarket] = useState(false); // كبسولة عرض وإغلاق نافذة السوق
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   // 👑 [تمت الزراعة والتحصين] متغيرات الـ State المخصصة لتغذية وبناء معرض بضائع السوق السحابية
   const [marketPosts, setMarketPosts] = useState([]);
   const [newPost, setNewPost] = useState({ description: "", price: "", files: null });
@@ -452,6 +454,16 @@ return (
             onClose={() => setShowDiscovery(false)} 
           />
         )}
+
+        {/* 👑 [الخطوة 3] تفعيل وإطلاق مكون بوابات ال-API المستقل الجديد بكافة ميزاته وصلاحياته الحركية */}
+        {showApiKeyModal && (
+          <ApiKeyModal 
+            user={user}
+            API_BASE={API_BASE}
+            onClose={() => setShowApiKeyModal(false)}
+          />
+        )}
+
 
         {/* 👑 [تم التطهير كلياً] حذف السطر النصي المكشوف وتأمين تشغيل المتجر المستقل دون طرد أو تعليق */}
         {showMarket && (
