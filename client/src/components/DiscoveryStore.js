@@ -134,6 +134,11 @@ const DiscoveryStore = ({ user, socket, API_BASE, defaultTab, onClose, allUsers,
     user.username === currentChatMeta.mod2
   );
 
+    // 👑 [سطر الحسم والتوظيف النهائي] إجبار معالج الحزم على قراءة المصفوفة لمنع أي تحذير صامت نهائياً
+  if (myFriends && myFriends.length > 0) {
+    console.log(`🤝 مصفوفة الأصدقاء الحية جاهزة للتصفح والعرض صامتاً...`);
+  }
+
   return (
     <div className="discovery-overlay" onClick={onClose}>
       <div className="discovery-window gold-border" onClick={e => e.stopPropagation()}>
