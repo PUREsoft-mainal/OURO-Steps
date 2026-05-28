@@ -624,8 +624,7 @@ io.on('connection', (socket) => {
 
 // مسارات الـ API المحلية لخدمة المتجر والملفات والسوق وسجلات الشات المستقلة
 app.get('/api/users', async (req, res) => { try { const allUsers = await UserModel.find({}, { password: 0 }).sort({ username: 1 }); res.json(allUsers); } catch (err) { res.json([]); } });
-app.get('/api/market', (req, res) => res.json(readJson(MARKET_FILE)));
-
+app.get('/api/market', async (req, res) => { try { const posts = await MarketModel.find({}).sort({ _id: -1 }); res.json(posts); } catch(err) { res.json([]); } });
 // ==========================================================================
 // 🕋 المخطط الهيكلي للشات الخاص (Private Conversations) بـ MongoDB Atlas
 // ==========================================================================
