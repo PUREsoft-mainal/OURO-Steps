@@ -384,30 +384,29 @@ return (
     <div className="app-container" style={{ backgroundImage: "url('/assets/background.png')", backgroundSize: 'cover' }}>
       <div className="app-overlay">
         
-        {/* 1. شريط نظام السقف الإلكتروني */}
-        <Header activeUsers={activeUsers} totalUsers={totalUsers} user={user} />
-
-          {/* 👑 [الصندوق الثاني] تحديث وتزويد نظام السقف بمربع العملة الملكي وزر الشراء (+) المباشر */}
+        {/* 👑 [تم التطهير وإبادة الاستدعاء القديم المكرر] نظام السقف الإلكتروني الملكي المحدث والمزود بمربع العملة وزر الشراء (+) المباشر */}
         <Header 
           activeUsers={activeUsers} 
           totalUsers={totalUsers} 
           user={user} 
-          ouroBalance={ouroBalance} // تمرير الرصيد المحدث
+          ouroBalance={ouroBalance} 
           onBuyCoin={() => {
             alert(`🪙 لطلب شحن وشراء عملات OURO Coin الفاخرة، الرجاء الاتصال الفوري بـ الإدارة والأدمن العام Mostafa عبر الهواتف الرسمية المأمنة سيبرانياً:\n\n📞 01027411921\n📞 01080166413\n\n(سيقوم الأدمن بالدخول فوراً وتحويل الكمية المطلوبة لمحفظتك الرقمية سحابياً)`);
           }}
           renderCoinBadge={
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(0,0,0,0.5)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--gold-primary)' }}>
               <span style={{ color: 'var(--gold-primary)', fontSize: '11px', fontWeight: 'bold' }}>🪙 OURO:</span>
-              {/* 📟 المربع المالي الملتزم بالأبعاد الفزيائية الدقيقة المطلوبة (عرض 30px وارتفاع 13px) */}
+              
+              {/* 📟 المربع المالي الملتزم بالأبعاد الفيزيائية الحادة (عرض 30px وارتفاع 13px) */}
               <div className="scrollbar-gold" style={{ width: '30px', height: '13px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', borderRadius: '2px', border: '1px solid rgba(255,255,255,0.1)' }}>
                 <span style={{ color: '#fff', fontSize: '9px', fontWeight: 'bold' }}>{user?.username === 'Admin_Mostafa' ? '21M' : ouroBalance}</span>
               </div>
-              {/* ＋ زر الشراء المحصن بأرقام هاتفك الذكي للاتصال الفوري */}
+              
+              {/* ＋ زر الشراء المحصن بأرقام هواتفك الذكية للاتصال الفوري */}
               <button 
                 type="button" 
                 onClick={() => window.open("tel:01027411921")}
-                style={{ background: 'var(--gold-primary)', color: '#000', border: 'none', width: '14px', height: '14px', borderRadius: '50%', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyAll: 'center', padding: 0 }}
+                style={{ background: 'var(--gold-primary)', color: '#000', border: 'none', width: '14px', height: '14px', borderRadius: '50%', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
                 title="اضغط هنا للاتصال الفوري بالأدمن Mostafa لشحن محفظتك الرقمية"
               >
                 +
@@ -415,7 +414,12 @@ return (
             </div>
           }
         />
-
+        
+        {/* 2. الفراغ الملكي الفاصل المستقل لعرض جملة الترحيب واللوجو حرّاً بانتظام أزلي */}
+        <div className="header-center">
+          <div className="welcome-msg">مرحباً بكم فى عالمكم الجديد</div>
+          <img src="/assets/logo.png" className="mini-logo" alt="logo" />
+        </div>
         
         {/* 2. الفراغ الملكي الفاصل المستقل لعرض جملة الترحيب واللوجو حرّاً */}
         <div className="header-center">
