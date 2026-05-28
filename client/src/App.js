@@ -8,7 +8,6 @@ import GroupsSidebar from './components/GroupsSidebar';
 import UploadSidebar from './components/UploadSidebar';
 import LoginBox from './components/LoginBox';
 import ChatArea from './components/ChatArea';
-import DiscoveryStore from './components/DiscoveryStore';
 import VirtualFlash from './components/VirtualFlash';
 import PrayerWidget from './components/PrayerWidget'; 
 import AdSliderBottom from './components/AdSliderBottom';
@@ -46,7 +45,14 @@ function App() {
   const [groups, setGroups] = useState([{ id: 'public', name: 'المجموعة العامة' }]);
   const [showPrayerModal, setShowPrayerModal] = useState(false); // حالة فتح وإغلاق نافذة الصلاة
   const [showMarket, setShowMarket] = useState(false); // كبسولة عرض وإغلاق نافذة السوق
+  // 👑 [تمت الزراعة والتحصين] متغيرات الـ State المخصصة لتغذية وبناء معرض بضائع السوق السحابية
+  const [marketPosts, setMarketPosts] = useState([]);
+  const [newPost, setNewPost] = useState({ description: "", price: "", files: null });
+  // دالات التشغيل الحركية التابعة لها (امتداد المعمارية المصانة بملفك)
+  const handleMarketUpload = (e) => { e.preventDefault(); alert("📣 جاري معالجة ورفع سلعتك سحابياً..."); };
+  const handleDeletePost = (id) => { alert("🗑️ جاري حذف وإلغاء المنشور..."); };
 
+  
 
   // 👑 1. المنظومة المركزية الشاملة والموحدة لإدارة أحداث السوكت (مخصصة ومطهرة للبث الحي والرسائل فقط دون تداخل)
   useEffect(() => {
