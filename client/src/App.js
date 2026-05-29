@@ -402,12 +402,16 @@ return (
                 <span style={{ color: '#fff', fontSize: '9px', fontWeight: 'bold' }}>{user?.username === 'Admin_Mostafa' ? '21M' : ouroBalance}</span>
               </div>
               
-              {/* ＋ زر الشراء المحصن بأرقام هواتفك الذكية للاتصال الفوري */}
+              {/* ✅ وضَع مكانه هذا الزر المطور والموجه لتفجير بوابتك الداخلية فوراً دون لسان جديد: */}
               <button 
                 type="button" 
-                onClick={() => window.open("tel:01027411921")}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowCoinPurchaseModal(true); // 👑 [تم الحسم الجذري] إجبار النقر على تفجير بوابة التداول الداخلي فوراً على نفس الشاشة
+                }}
                 style={{ background: 'var(--gold-primary)', color: '#000', border: 'none', width: '14px', height: '14px', borderRadius: '50%', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-                title="اضغط هنا للاتصال الفوري بالأدمن Mostafa لشحن محفظتك الرقمية"
+                title="اضغط هنا لفتح بوابة التداول والتحويل الداخلي لعملة OURO"
               >
                 +
               </button>
