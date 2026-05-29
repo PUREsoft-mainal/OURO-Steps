@@ -393,7 +393,6 @@ return (
           user={user} 
           ouroBalance={ouroBalance} 
           onBuyCoin={() => setShowCoinPurchaseModal(true)} // 👑 [تم الحسم] زر الـ (+) يفتح الآن بوابة التداول فوراً على الشاشة
-          }}
           renderCoinBadge={
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(0,0,0,0.5)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--gold-primary)' }}>
               <span style={{ color: 'var(--gold-primary)', fontSize: '11px', fontWeight: 'bold' }}>🪙 OURO:</span>
