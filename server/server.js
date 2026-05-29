@@ -88,14 +88,20 @@ const AdSchema = new mongoose.Schema({
 });
 const AdModel = mongoose.model('Ad', AdSchema);
 
-// 👑 [الصندوق الأول - حماية التزوير السيبراني للعملة] حقول التوقيع الرقمي المشفر والملف السحابي
+// 👑 [موديل البلوكشين المركزي] صياغة بنك الـ 21 مليون عملة فريدة بأرقامها التسلسلية الصارمة للأبد
+const OuroTokenSchema = new mongoose.Schema({
+    tokenId: { type: String, required: true, unique: true }, // الرقم التسلسلي (OuRo27411921...)
+    owner: { type: String, required: true, default: 'Admin_Mostafa' } // المالك الحالي للعملة (إما الأدمن أو المستخدم)
+});
+const OuroTokenModel = mongoose.model('OuroToken', OuroTokenSchema);
+
+// تحديث جدول المحافظ للقراءة فقط ليدعم تخزين العناوين الفريدة والرموز الأمنية
 const OuroLedgerSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
+    publicAddress: { type: String, required: true, unique: true }, // عنوان المحفظة الفريد (0x7627OURO...)
     ouroBalance: { type: Number, default: 0 },
-    // الهاش المعقد والمقفل للقراءة فقط: يدمج اسم المستخدم، الرصيد، ومفتاح سري خاص بالخادم
-    cryptoSignature: { type: String, required: true } 
+    cryptoSignature: { type: String, required: true }
 });
-
 const OuroLedgerModel = mongoose.model('OuroLedger', OuroLedgerSchema);
 
 // دالة لتوليد التوقيع الرقمي المعقد لـ OURO Coin (يستحيل تزويره محلياً أو سحابياً)
