@@ -1315,7 +1315,7 @@ app.post('/api/wallet/get-info', async (req, res) => {
 });
 
 // ==========================================================================
-// 💸 [تأمين الميكانيكية التزامنية] مسار التحويل البلوكتشيني الرياضي الموجه بالـ ID دون كراش 500
+// 💸 [قفل الأمان المالي المطلق] محرك التداول والخصم الرياضي المعكوس المحمي كلياً
 // ==========================================================================
 app.post('/api/wallet/transfer', async (req, res) => {
     try {
@@ -1326,10 +1326,7 @@ app.post('/api/wallet/transfer', async (req, res) => {
             return res.status(400).json({ success: false, message: "⚠️ كمية الحوالة غير صالحة برمجياً" });
         }
 
-        // 1️⃣ استدعاء ومطابقة الملف المالي المستقل للمرسل من السحاب مباشرة
-        let senderLedger = await OuroUserLedgerModel.findOne({ username: sender });
-        
-        // المطابقة الذكية والسريعة للمستقبل عبر الـ ID أو اسم الحساب
+        // 🔍 1. البحث والمطابقة الذكية للمستقبل عبر الـ ID أو اسم الحساب
         const mongoose = require('mongoose');
         let query = { username: receiver.trim() };
         if (mongoose.Types.ObjectId.isValid(receiver.trim())) query = { _id: receiver.trim() };
@@ -1338,20 +1335,30 @@ app.post('/api/wallet/transfer', async (req, res) => {
         if (!receiverUser) return res.status(404).json({ success: false, message: "⚠️ الـ ID أو الحساب المستهدف غير موجود كلياً بالمنصة!" });
         if (sender === receiverUser.username) return res.status(400).json({ success: false, message: "⚠️ لا يمكنك التحويل لنفس محفظتك!" });
 
+        // 🧠 2. حساب الأرصدة الرياضية المعكوسة (العملات الخارجة للمستخدمين كلياً)
+        const allUserTokensSum = await OuroUserLedgerModel.aggregate([
+            { $match: { username: { $ne: 'Admin_Mostafa' } } },
+            { $group: { _id: null, total: { $sum: "$ouroBalance" } } }
+        ]);
+        const totalMintedToUsers = (allUserTokensSum.length > 0) ? allUserTokensSum[0].total : 0;
+        const adminComputedBalance = OURO_MAX_SUPPLY - totalMintedToUsers;
+
+        // 💾 3. جلب وتأمين زرع مستندات القراءة فقط للمرسل والمستقبل فالسحاب لمنع الـ null crash
+        let senderLedger = await OuroUserLedgerModel.findOne({ username: sender });
+        if (!senderLedger) {
+            const initBal = (sender === 'Admin_Mostafa') ? adminComputedBalance : 0;
+            senderLedger = new OuroUserLedgerModel({ username: sender, ouroBalance: initBal });
+            await senderLedger.save();
+        }
+
         let receiverLedger = await OuroUserLedgerModel.findOne({ username: receiverUser.username });
         if (!receiverLedger) {
             receiverLedger = new OuroUserLedgerModel({ username: receiverUser.username, ouroBalance: 0 });
             await receiverLedger.save();
         }
 
-        // 2️⃣ حساب الأرصدة الرياضية المعكوسة للتأكد من المزامنة الصارمة
-        const allUserTokensSum = await OuroUserLedgerModel.aggregate([
-            { $match: { username: { $ne: 'Admin_Mostafa' } } },
-            { $group: { _id: null, total: { $sum: "$ouroBalance" } } }
-        ]);
-        const totalMintedToUsers = (allUserTokensSum.length > 0) ? allUserTokensSum.total : 0;
-        
-        let senderBal = (sender === 'Admin_Mostafa') ? (OURO_MAX_SUPPLY - totalMintedToUsers) : (senderLedger ? senderLedger.ouroBalance : 0);
+        // فحص كفاية الأرصدة للمحافظ العادية
+        let senderBal = (sender === 'Admin_Mostafa') ? adminComputedBalance : senderLedger.ouroBalance;
         const taxAmount = Math.ceil(transferAmount * 0.07);
         const totalCost = transferAmount + taxAmount;
 
@@ -1359,50 +1366,40 @@ app.post('/api/wallet/transfer', async (req, res) => {
             return res.status(400).json({ success: false, message: `❌ رصيدك بالملف السحابي غير كافٍ! الحوالة تتطلب ${transferAmount} عملة + ${taxAmount} عملة ضريبة الشبكة.` });
         }
 
-        // 3️⃣ [تنفيذ الخصم والصك الكسول داخل الملفات المعزولة]
-        if (!senderLedger) {
-            senderLedger = new OuroUserLedgerModel({ username: sender, ouroBalance: senderBal });
-        }
-
+        // ⚡ 4. تنفيذ عمليات الخصم والصك الكسول داخل الجداول المستقلة سحابياً بنقاء 100%
         if (sender === 'Admin_Mostafa') {
-            // رصيد الأدمن ينقص فيزيائياً بمقدار العملات التي تخرج منه وتتحول للمستخدمين
-            senderLedger.ouroBalance = senderBal - transferAmount;
+            senderLedger.ouroBalance = adminComputedBalance - transferAmount;
             await senderLedger.save();
         } else {
-            // خصم القيمة الإجمالية شاملة الضريبة من حساب المرسل العادي
             senderLedger.ouroBalance = senderBal - totalCost;
             await senderLedger.save();
         }
 
-        // ضخ الأصول الحقيقية في محفظة المستخدم المستقبل مباشرة
         receiverLedger.ouroBalance = (receiverLedger.ouroBalance || 0) + transferAmount;
         await receiverLedger.save();
 
-        // تدوير ضريبة الـ 7% وحقنها بداخل خزينة الأدمن Mostafa تلقائياً
+        // صب وتدوير ضريبة الـ 7% تلقائياً في حساب خزينة الأدمن Mostafa المستقلة
         let adminLedger = await OuroUserLedgerModel.findOne({ username: 'Admin_Mostafa' });
         if (adminLedger && sender !== 'Admin_Mostafa') {
             adminLedger.ouroBalance = (adminLedger.ouroBalance || 0) + taxAmount;
             await adminLedger.save();
         }
 
-        // 📡 [تأمين وحقن قنوات السوكت بذكاء] فحص وجود قنوات البث الحية لمنع حدوث الانهيار أو الـ 500 كلياً
+        // 📡 5. المزامنة والإنعاش الصامت الآمن عبر قنوات السوكت الخارجية دون حشو مكرر
         try {
-            const socketIo = global.io || (req.app ? req.app.get('socketio') : null) || (typeof io !== 'undefined' ? io : null);
+            const socketIo = global.io || (req.app ? req.app.get('socketio') : null);
             if (socketIo && typeof socketIo.emit === 'function') {
                 socketIo.emit('wallet_balance_updated', { username: sender, newBalance: senderLedger.ouroBalance });
                 socketIo.emit('wallet_balance_updated', { username: receiverUser.username, newBalance: receiverLedger.ouroBalance });
             }
-        } catch (socketErr) {
-            console.log("📡 تنبيه صامت: جاري المزامنة عبر الاتصال المباشر لقاعدة البيانات...");
-        }
+        } catch (e) { console.log("تنبيه مزامنة صامت"); }
 
-        // طباعة السيريال الرقمي الصارم للمعاملة الحالية لتوثيق الأمان الكسول
-        console.log(`💸 [Ouro Core Transfer Success] تم تمرير الحوالة بأمان ونقاء فلكي كامل!`);
+        console.log(`🎉 [Ouro Core Unified Transfer Success]`);
+        return res.json({ success: true, newSenderBalance: senderLedger.ouroBalance });
 
-        res.json({ success: true, newSenderBalance: senderLedger.ouroBalance });
     } catch (err) { 
-        console.error("خطأ التداول الحركي الرياضي الكسول:", err);
-        res.status(500).json({ success: false, message: "🚨 فشل محرك البلوكشين، تأكد من سلامة كود السوكت المركزي بالسيرفر." }); 
+        console.error("خطأ التداول الرياضي المعكوس الجذري:", err);
+        return res.status(500).json({ success: false, message: "🚨 خطأ داخلي بالخادم أثناء تمرير الأصول الحية بقفل البلوكشين." }); 
     }
 });
 
