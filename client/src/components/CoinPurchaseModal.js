@@ -3,20 +3,24 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const CoinPurchaseModal = ({ user, API_BASE, onClose, setOuroBalance }) => {
-  const [transferData, setTransferData] = useState({ targetAddress: "", amount: "" });
-  const [myWalletInfo, setMyWalletInfo] = useState({ balance: 0, address: "جاري توليد عنوان محفظتك الفريد..." });
+  const [transferData, setTransferData] = useState({ targetId: "", amount: "" });
+  const [myOuroBalance, setMyOuroBalance] = useState(0);
   const [loading, setLoading] = useState(true);
+  
+  // حقول الأدمن لإضافة عقد ذكي خارجي جديد
+  const [newContract, setNewContract] = useState({ name: "", address: "", symbol: "" });
+  const [smartContracts, setSmartContracts] = useState([]);
 
-  // 1️⃣ استدعاء وقراءة ملف محفظتك الفريدة وعنوان البلوكشين المخصص لك من السحاب فوراً
+  const isAdmin = user?.username === 'Admin_Mostafa' || user?.role === 'Admin';
+
+  // 1️⃣ جلب بيانات الرصيد الحالي والعقود الذكية المعتمدة من السحاب فوراً
   useEffect(() => {
     if (user?.username) {
       axios.post(`${API_BASE}/api/wallet/get-info`, { username: user.username })
         .then(res => {
           if (res.data.success) {
-            setMyWalletInfo({
-              balance: res.data.ouroBalance,
-              address: res.data.publicAddress
-            });
+            setMyOuroBalance(res.data.ouroBalance);
+            setSmartContracts(res.data.contracts || []);
             if (typeof setOuroBalance === 'function') setOuroBalance(res.data.ouroBalance);
           }
           setLoading(false);
@@ -25,98 +29,120 @@ const CoinPurchaseModal = ({ user, API_BASE, onClose, setOuroBalance }) => {
     }
   }, [user?.username, API_BASE, setOuroBalance]);
 
-  // 2️⃣ دالة تشغيل التداول المالي الداخلي المشفر بضريبة الـ 7% القياسية
+  // 2️⃣ دالة تشغيل التداول والتحويل الداخلي المباشر عبر الـ ID وبضريبة الـ 7%
   const handleInternalTransfer = async (e) => {
     e.preventDefault();
-    const amt = parseFloat(transferData.amount);
-    
-    if (!transferData.targetAddress.trim() || isNaN(amt) || amt <= 0) {
-      return alert("⚠️ الرجاء إدخال عنوان محفظة المستقبل بدقة، وتحديد كمية صالحة للتحويل!");
-    }
+    const amt = parseInt(transferData.amount);
+    if (!transferData.targetId.trim() || isNaN(amt) || amt <= 0) return alert("⚠️ الرجاء إدخال ID المستقبل وتحديد كمية صالحة!");
 
     try {
       setLoading(true);
       const res = await axios.post(`${API_BASE}/api/wallet/transfer`, {
         sender: user?.username,
-        receiver: transferData.targetAddress.trim(), // السيرفر يدعم الاستقبال بالاسم أو العنوان السحابي الموحد
+        receiver: transferData.targetId.trim(), // الاستقبال المباشر بالـ ID الفريد للمستقبل
         amount: amt
       });
 
       if (res.data.success) {
-        setTransferData({ targetAddress: "", amount: "" });
-        setMyWalletInfo(prev => ({ ...prev, balance: res.data.newSenderBalance }));
+        setTransferData({ targetId: "", amount: "" });
+        setMyOuroBalance(res.data.newSenderBalance);
         if (typeof setOuroBalance === 'function') setOuroBalance(res.data.newSenderBalance);
-        alert(`💸⚡ [معاملة مالية مشفرة ناجحة]\n\nتم إرسال العملات فوراً عبر الشبكة!\n💰 الكمية المحولة: ${amt} OURO\n⚖️ ضريبة التحويل (7%): ${(amt * 0.07).toFixed(2)} OURO دُفعت للأدمن`);
+        alert(`💸⚡ [تحويل ناجح بالـ ID]\n\n💰 الكمية المحولة: ${amt} OURO\n⚖️ الضريبة (7%): ${(amt * 0.07).toFixed(2)} OURO دُفعت للأدمن`);
         onClose();
       }
     } catch (err) {
-      alert(err.response?.data?.message || "❌ فشل إتمام التداول، رصيدك الحالي غير كافٍ أو العنوان خاطئ.");
+      alert(err.response?.data?.message || "❌ فشل التحويل، تحقق من رصيدك أو الـ ID.");
     } finally {
       setLoading(false);
     }
   };
 
+  // 📜 3️⃣ [صلاحية الأدمن فقط] دالة حقن وزرع عقد ذكي جديد بالصفحة المنبثقة للزر (+)
+  const handleAddContract = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.post(`${API_BASE}/api/wallet/admin/add-contract`, {
+        username: user?.username,
+        contractName: newContract.name,
+        contractAddress: newContract.address,
+        symbol: newContract.symbol
+      });
+      if (res.data.success) {
+        setSmartContracts(prev => [...prev, res.data.contract]);
+        setNewContract({ name: "", address: "", symbol: "" });
+        alert(`📜 تم زرع العقد الذكي للعملة (${res.data.contract.symbol}) سحابياً بنجاح!`);
+      }
+    } catch (err) { alert("❌ فشل زرع العقد السحابي."); }
+  };
+
   return (
     <div className="discovery-overlay" onClick={onClose}>
-      <div className="discovery-window gold-border" onClick={e => e.stopPropagation()} style={{ width: '92%', maxWidth: '580px', background: '#070707', padding: '20px', borderRadius: '12px' }}>
+      <div className="discovery-window gold-border" onClick={e => e.stopPropagation()} style={{ width: '92%', maxWidth: '580px', background: '#070707', padding: '20px' }}>
         
         <div className="discovery-tabs" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h3 style={{ color: 'var(--gold-primary)', margin: 0, fontSize: '15px' }}>🪙 شبكة تداول ومحافظ OURO Coin الداخلية</h3>
-          <button className="close-discovery" onClick={onClose} style={{ background: 'none', border: 'none', color: '#c0392b', fontSize: '22px', cursor: 'pointer', fontWeight: 'bold' }}>×</button>
+          {/* 👤 جـ) إظهار رصيد محفظة OURO والـ ID الفريد بجانب اسم المستخدم مباشرة بسقف الصفحة المنبثقة */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'right' }}>
+            <span style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold' }}>👤 الحساب: <strong style={{ color: 'var(--gold-primary)' }}>{user?.username}</strong></span>
+            <small style={{ color: '#27ae60', fontSize: '10px', fontFamily: 'monospace' }}>🆔 معرف الحساب الفريد: {user?._id || user?.id || "Ouro_User_ID"}</small>
+            <span style={{ color: '#fff', fontSize: '12px' }}>🪙 رصيدك الحالي: <strong style={{ color: 'var(--gold-primary)' }}>{user?.username === 'Admin_Mostafa' ? '21,000,000' : myOuroBalance} OURO</strong></span>
+          </div>
+          <button className="close-discovery" onClick={onClose}>✖</button>
         </div>
 
-        <div className="discovery-body scrollbar-gold" style={{ padding: '0 5px' }}>
+        <div className="discovery-body scrollbar-gold">
           
-          {/* 🪙 أ) مربع رصيد محفظة OURO الملكية اللامع المتموضع في سقف الصفحة العائمة */}
-          <div className="facebook-post-card gold-border" style={{ padding: '15px', background: 'linear-gradient(135deg, #151515 0%, #000000 100%)', textAlign: 'center', marginBottom: '15px', borderRadius: '8px' }}>
-            <h5 style={{ color: 'var(--text-muted)', margin: '0 0 5px 0', fontSize: '11px', letterSpacing: '1px' }}>رصيد محفظتك الرقمية الحالي</h5>
-            <h1 style={{ color: 'var(--gold-primary)', margin: 0, fontSize: '28px', fontWeight: 'bold', textShadow: '0 0 10px rgba(212,175,55,0.4)' }}>
-              {user?.username === 'Admin_Mostafa' ? '21,000,000' : myWalletInfo.balance} <small style={{ fontSize: '12px', color: '#fff' }}>OURO</small>
-            </h1>
-            <small style={{ color: '#27ae60', fontSize: '9px', display: 'block', marginTop: '4px' }}>🔒 ملف مالي محمي أزلياً - غير قابل للتزوير سيبرانياً</small>
-          </div>
-
-          {/* 🔗 ب) مربع عرض عنوان المحفظة الفريد والمشفر للمستخدم الحالي (قراءة فقط) أسفل الرصيد مباشرة */}
-          <div style={{ background: '#000000', padding: '10px 12px', borderRadius: '6px', border: '1px solid rgba(212,175,55,0.15)', marginBottom: '20px' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: 'bold', display: 'block' }}>🔑 عنوان محفظتك الرقمية الفريد داخل البلوكشين (قراءة فقط):</span>
-            <code style={{ display: 'block', color: '#27ae60', fontSize: '11px', wordBreak: 'break-all', marginTop: '6px', userSelect: 'all', fontWeight: '500', fontFamily: 'monospace' }}>
-              {myWalletInfo.address}
-            </code>
-          </div>
-
-          {/* فورم التحويل والتداول المباشر بين العناوين والمحافظ */}
+          {/* فورم التداول السريع الموجه بالـ ID */}
           <form className="market-upload-form gold-border" onSubmit={handleInternalTransfer} style={{ background: 'rgba(255,255,255,0.01)', padding: '15px', borderRadius: '8px' }}>
-            <h4 style={{ color: '#fff', margin: '0 0 15px 0', fontSize: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '6px' }}>💸 إطلاق وإرسال حوالة مالية داخلية فورية</h4>
+            <h4 style={{ color: '#fff', margin: '0 0 15px 0', fontSize: '12px' }}>⚡ إرسال حوالة داخلية فورية بالـ ID الفريد للمستقبل</h4>
             
-            <label style={{ color: 'var(--gold-primary)', display: 'block', marginBottom: '6px', fontSize: '11px', fontWeight: 'bold' }}>👤 عنوان محفظة الطرف المستقبل (أو اسم حسابه الموحد):</label>
             <input 
               type="text" 
-              placeholder="أدخل عنوان محفظة المستقبل بدقة (0xOuro...)..." 
-              value={transferData.targetAddress}
-              onChange={e => setTransferData({ ...transferData, targetAddress: e.target.value })}
+              placeholder="👤 أدخل الـ ID الخاص بالحساب المستلم بدقة..." 
+              value={transferData.targetId}
+              onChange={e => setTransferData({ ...transferData, targetId: e.target.value })}
               required 
-              style={{ width: '100%', padding: '10px', marginBottom: '15px', background: '#000', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px', fontSize: '12px' }}
+              style={{ width: '100%', padding: '10px', marginBottom: '15px', background: '#000', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px' }}
             />
 
-            <label style={{ color: 'var(--gold-primary)', display: 'block', marginBottom: '6px', fontSize: '11px', fontWeight: 'bold' }}>💰 كمية عملات OURO المراد تحويلها قسرياً:</label>
             <input 
               type="number" 
-              step="any"
-              placeholder="حدد عدد العملات المراد إرسالها..." 
+              placeholder="💰 عدد عملات OURO المراد إرسالها..." 
               value={transferData.amount}
               onChange={e => setTransferData({ ...transferData, amount: e.target.value })}
               required 
-              style={{ width: '100%', padding: '10px', marginBottom: '15px', background: '#000', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px', fontSize: '12px' }}
+              style={{ width: '100%', padding: '10px', marginBottom: '15px', background: '#000', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px' }}
             />
 
-            <button type="submit" className="gold-btn" style={{ width: '100%', fontWeight: 'bold', fontSize: '13px', paddingTop: '10px', paddingBottom: '10px' }} disabled={loading}>
-              {loading ? "جاري فحص وتوقيع المعاملة بالهاش المشفر..." : "🚀 بث وتحويل العملات عبر السحاب فورا"}
+            <button type="submit" className="gold-btn" style={{ width: '100%' }} disabled={loading}>
+              {loading ? "جاري المعالجة الحية..." : "🚀 إطلاق وتحويل العملات بالـ ID فوراً"}
             </button>
           </form>
 
-          <div style={{ marginTop: '12px', textAlign: 'center', fontSize: '9px', color: 'var(--text-muted)' }}>
-            ⚙️ نظام حرق الشبكة الانكماشي: يتم استقطاع ضريبة ثابتة بقيمة 7% تُوجه آلياً لخزينة الأدمن Mostafa [▲].
-          </div>
+          {/* 📜 د) [مربع إدخال وصيانة العقود الذكية الخارجية] يظهر فى صفحة الأدمن فقط داخل الصفحة المنبثقة للزر (+) */}
+          {isAdmin && (
+            <form className="market-upload-form gold-border" onSubmit={handleAddContract} style={{ background: 'rgba(212,175,55,0.02)', padding: '15px', borderRadius: '8px', marginTop: '20px', borderColor: '#27ae60' }}>
+              <h4 style={{ color: '#27ae60', margin: '0 0 12px 0', fontSize: '12px' }}>🛠️ لوحة الأدمن الملكية: ربط وحقن عقد ذكي خارجي للشبكة (Smart Contract)</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px' }}>
+                <input type="text" placeholder="اسم العملة (Tether)..." value={newContract.name} onChange={e => setNewContract({...newContract, name: e.target.value})} required style={{padding:'6px'}} />
+                <input type="text" placeholder="العقد الذكي (0x...)..." value={newContract.address} onChange={e => setNewContract({...newContract, address: e.target.value})} required style={{padding:'6px'}} />
+                <input type="text" placeholder="الرمز (USDT)..." value={newContract.symbol} onChange={e => setNewContract({...newContract, symbol: e.target.value})} required style={{padding:'6px'}} />
+              </div>
+              <button type="submit" className="gold-btn" style={{ width: '100%', marginTop: '10px', background: '#27ae60', padding:'6px' }}>حقن وبناء العقد الذكي فالسحاب</button>
+            </form>
+          )}
+
+          {/* استعراض قائمة العقود الخارجية المحقونة تحت لوحة المطورين */}
+          {smartContracts.length > 0 && (
+            <div style={{ marginTop: '20px' }}>
+              <small style={{ color: 'var(--gold-primary)', display: 'block', marginBottom: '5px' }}>📋 العقود الخارجية المتصلة بالمنصة:</small>
+              {smartContracts.map(c => (
+                <div key={c.id || c.address} style={{ display: 'flex', justifyContent: 'space-between', background: '#000', padding: '6px 10px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '5px', fontSize: '11px' }}>
+                  <span style={{ color: '#fff' }}>💎 {c.contractName || c.label} ({c.symbol})</span>
+                  <code style={{ color: 'var(--text-muted)' }}>{c.contractAddress || c.apiKey}</code>
+                </div>
+              ))}
+            </div>
+          )}
 
         </div>
       </div>
