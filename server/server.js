@@ -1209,22 +1209,25 @@ app.post('/api/wallet/get-info', async (req, res) => {
 
         if (!userCheck) return res.status(404).json({ success: false, message: "⚠️ حساب المستخدم غير مسجل بالمنصة" });
 
-        // 🔒 [توليد عنوان المحفظة البلوكتشيني الفريد] إذا كان الحساب لا يمتلك محفظة مخزنة، يتم توليد الهاش فوراً
+        // 🔒 [تحديث البادئة الملكية للعنوان الفريد] إذا كان الحساب لا يمتلك محفظة، يتم توليد الهاش بالبادئة المطلوبة فوراً
         if (!ledger) {
             const crypto = require('crypto');
             const initBal = username === 'Admin_Mostafa' ? 21000000 : 0;
             
-            // صياغة عنوان تشفيري معقد فريد يستحيل تكراره أو تخمينه يبدأ بشارة عملتنا 0xOuro
-            const secureAddress = '0xOuro' + crypto.createHash('sha256').update(`${username}_${Date.now()}_ouro_blockchain_address`).digest('hex').substring(0, 34);
+            // قنص وتوليد هاش فريد ثابت للمستخدم عبر تشفير SHA-256 لضمان عدم تكرار الخاتمة
+            const userUniqueHash = crypto.createHash('sha256').update(`${username}_immutable_ouro_seed`).digest('hex').substring(0, 16);
+            
+            // 👑 [دمج البادئة المطلوبة بالأرقام والحروف الفريدة للمستخدم بثبات كامل مدى الحياة]
+            const secureAddress = '0x7627OUROamek11619917627h38j4l5G84P8354' + userUniqueHash;
             
             ledger = new OuroLedgerModel({ 
                 username: username, 
                 ouroBalance: initBal, 
-                publicAddress: secureAddress, // ختم وقيد عنوان المحفظة الفريد أزلياً فالسحاب
+                publicAddress: secureAddress, // قيد وحفظ العنوان البلوكتشيني المخصص للأبد فالسحاب
                 cryptoSignature: calculateOuroSignature(username, initBal) 
             });
             await ledger.save();
-            console.log(`🪙 تم توليد وصك عنوان محفظة فريد ومشفر بنجاح للحساب (${username})`);
+            console.log(`🪙 تم صك عنوان محفظة بهوية المنصة المخصصة للحساب (${username}): ${secureAddress}`);
         }
 
         // 👑 [قفل التثبيت الأزلي الصارم] تثبيت الإمداد الكلي ومنع تزوير رصيد الـ 21 مليون للأدمن Mostafa نهائياً
