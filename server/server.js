@@ -1237,11 +1237,12 @@ app.post('/api/wallet/get-info', async (req, res) => {
             await ledger.save();
         }
 
-        // ضخ حزمة البيانات المعقمة للواجهة لتنبثق فخمة بداخل الصفحة العائمة للزر (+)
+        // ✅ [تطهير وتعديل الحسم بـ server.js] ضخ البيانات وتحديث البادئة الاحتياطية لتتطابق فلكياً مع هويتنا
         res.json({ 
             success: true, 
             ouroBalance: ledger.ouroBalance, 
-            publicAddress: ledger.publicAddress || "0xOuroWalletAddressPending", // تمرير عنوان المحفظة المفرد
+            // إذا تزامنت المحفظة يمررها السيرفر فوراً، وإذا تأخرت يمرر البادئة الملكية متبوعة باسم المستخدم كصمام أمان أزلي للأدمن والجميع
+            publicAddress: ledger.publicAddress || ('0x7627OUROamek11619917627h38j4l5G84P8354' + username), 
             contracts: [] 
         });
 
