@@ -1234,14 +1234,16 @@ app.post('/api/developer/delete-key', async (req, res) => {
     }
 });
 
-// 👑 [تطهير وإلغاء العناوين الطويلة] جلب الرصيد والعقود للمستخدم بالـ ID المباشر صامتاً
+// ==========================================================================
+// 👑 1️⃣ [مسار جلب وتأسيس الحساب المالي المصفى 100%]
+// ==========================================================================
 app.post('/api/wallet/get-info', async (req, res) => {
     try {
         const { username } = req.body;
-        if (!username) return res.status(400).json({ success: false });
+        if (!username) return res.status(400).json({ success: false, message: "⚠️ البيانات ناقصة" });
 
         let user = await UserModel.findOne({ username });
-        if (!user) return res.status(404).json({ success: false });
+        if (!user) return res.status(404).json({ success: false, message: "⚠️ الحساب غير مسجل" });
 
         // تثبيت رصيد الـ 21 مليون للأدمن Mostafa ومنع تزويره نهائياً للأبد فالسحاب
         if (username === 'Admin_Mostafa' && user.ouroBalance !== 21000000) {
@@ -1249,9 +1251,14 @@ app.post('/api/wallet/get-info', async (req, res) => {
             await user.save();
         }
 
-        const contracts = await DeveloperKeyModel.find({ isContract: true }) || [];
+        // 👑 [التصحيح المجهري] القراءة الشرعية من اسم الموديل الصحيح لضمان عدم انهيار الشبكة
+        const contracts = await mongoose.model('DeveloperKey').find({ isContract: true }).catch(() => []) || [];
+        
         res.json({ success: true, ouroBalance: user.ouroBalance || 0, contracts });
-    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+    } catch (err) { 
+        console.error("خطأ get-info:", err);
+        res.status(500).json({ success: false, error: err.message }); 
+    }
 });
 
 // 2️⃣ [مسار ربط MetaMask الحركي] قيد عنوان الاستقبال الخارجي بالحساب السحابي للأبد
@@ -1263,15 +1270,20 @@ app.post('/api/wallet/link-metamask', async (req, res) => {
     } catch (err) { res.status(500).json({ success: false }); }
 });
 
-// 👑 [تداول حركي معزول وسريع عبر الـ ID والأسماء]
+// ==========================================================================
+// 👑 2️⃣ [مسار التداول الفوري بالـ ID والأقسام دون أدنى كراش]
+// ==========================================================================
 app.post('/api/wallet/transfer', async (req, res) => {
     try {
-        const { sender, receiver, amount } = req.body; // receiver يمثل إما الـ ID الفريد أو اسم المستخدم المستهدف
+        const { sender, receiver, amount } = req.body; 
         const transferAmount = parseInt(amount);
 
-        if (isNaN(transferAmount) || transferAmount <= 0) return res.status(400).json({ success: false, message: "⚠️ كمية غير صالحة" });
+        if (isNaN(transferAmount) || transferAmount <= 0) {
+            return res.status(400).json({ success: false, message: "⚠️ كمية غير صالحة" });
+        }
 
         let senderUser = await UserModel.findOne({ username: sender });
+        if (!senderUser) return res.status(404).json({ success: false, message: "⚠️ حساب المرسل غير موجود" });
         
         // 🔒 المطابقة الذكية والسريعة للمستقبل عبر الـ ID الفريد _id أو الـ username
         const mongoose = require('mongoose');
@@ -1312,11 +1324,18 @@ app.post('/api/wallet/transfer', async (req, res) => {
             await adminUser.save();
         }
 
-        io.emit('wallet_balance_updated', { username: sender, newBalance: senderUser.ouroBalance });
-        io.emit('wallet_balance_updated', { username: receiverUser.username, newBalance: receiverUser.ouroBalance });
+        // تأمين البث اللحظي عبر السوكت بفحص الوجود لمنع كراش المعاملات مالياً
+        if (global.io || (req.app && req.app.get('socketio'))) {
+            const ioInstance = global.io || req.app.get('socketio');
+            ioInstance.emit('wallet_balance_updated', { username: sender, newBalance: senderUser.ouroBalance });
+            ioInstance.emit('wallet_balance_updated', { username: receiverUser.username, newBalance: receiverUser.ouroBalance });
+        }
 
         res.json({ success: true, newSenderBalance: senderUser.ouroBalance });
-    } catch (err) { res.status(500).json({ success: false, message: "خطأ بالشبكة المالية." }); }
+    } catch (err) { 
+        console.error("خطأ الشبكة المالية للتحويل الحركي:", err);
+        res.status(500).json({ success: false, message: "خطأ داخلي بالخادم أثناء تمرير الأصول الحية." }); 
+    }
 });
 
 // 4️⃣ [مسار الأدمن لزرع العقود الذكية للعملات الخارجية]
