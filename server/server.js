@@ -505,7 +505,7 @@ io.on('connection', (socket) => {
         }
     });
 
-     // 👑 [التأمين السيبراني النهائي] ترحيل دالة التسجيل وحقن المحافظ والبادئة الملكية لـ MongoDB Atlas للأبد
+    // 👑 [المعمارية الموحدة لـ OURO Steps] دالة التسجيل وحقن المحافظ عبر الـ ID الفريد سحابياً بـ MongoDB Atlas للأبد
     socket.on('register', async (data) => {
         try {
             if (!data || !data.username || !data.password) {
@@ -518,33 +518,36 @@ io.on('connection', (socket) => {
                 return socket.emit('error_msg', '⚠️ اسم المستخدم مسجل مسبقاً في السحاب!');
             }
 
-            // 2️⃣ زرع وحقن كائن الحساب الجديد سحابياً في جدول المستخدمين
+            // 2️⃣ [توليد المعرف الفريد المشترك] إنشاء كائن الـ Object ID من مجمع حزم المونجو فوراً
+            const mongoose = require('mongoose');
+            const newUserId = new mongoose.Types.ObjectId();
+
+            // 3️⃣ [محرك صياغة عنوان البلوكشين] دمج البادئة الفخمة مع الـ ID الفريد لحسابك بثبات كلي أزلي
+            const secureAddress = '0x7627OUROamek11619917627h38j4l5G84P8354' + newUserId.toString();
+
+            // 4️⃣ زرع وحقن كائن الحساب الجديد سحابياً في جدول المستخدمين الرئيسي مع تبيت الهوية الموحدة
             const newUser = new UserModel({
+                _id: newUserId, // ربط ال-ID المشترك والمعرف الأصلي للمستخدم
                 username: data.username,
                 password: data.password, 
                 role: data.role || 'مستخدم',
                 avatar: '',
                 friends: [],        
-                friendRequests: []  
+                friendRequests: [],
+                ouroWalletAddress: secureAddress // قيد وحفظ عنوان المحفظة بداخل جينات حساب المستخدم مباشرة
             });
             await newUser.save(); 
 
-            // 🪙 [حقن التأسيس التلقائي للمحفظة الرقمية المخصصة] صك البادئة الملكية والثابتة للمستخدم الجديد فوراً
-            const crypto = require('crypto');
-            const userUniqueHash = crypto.createHash('sha256').update(`${data.username}_immutable_ouro_seed`).digest('hex').substring(0, 16);
-            
-            // صياغة وعزل العنوان الفريد المخصص مدى الحياة للمستخدم الجديد
-            const secureAddress = '0x7627OUROamek11619917627h38j4l5G84P8354' + userUniqueHash;
-            
+            // 5️⃣ زرع وحقن السجل المالي المقفل للقراءة فقط تزامناً مع نفس الهوية المعقمة فالسحاب
             const newLedger = new OuroLedgerModel({
                 username: data.username,
                 ouroBalance: 0, // يبدأ برصيد صفر عملة متسلسلة حتى يتم الشحن من الأدمن
-                publicAddress: secureAddress, // ختم العنوان الملكي المخصص أزلياً فالسحاب
+                publicAddress: secureAddress, // ختم نفس العنوان الفريد المشتق من ال-ID أزلياً فالسحاب
                 cryptoSignature: calculateOuroSignature(data.username, 0) // ختم قفل التوقيع الرقمي لمنع التزوير
             });
             await newLedger.save();
 
-            console.log(`👤 تم تأسيس الحساب ومحفظته المخصصة بنجاح فلكي للحساب الجديد: ${data.username}`);
+            console.log(`👤 🪙 تم تأسيس الهوية الثلاثية الموحدة بالـ ID بنجاح للحساب الجديد: ${data.username}`);
             socket.emit('register_success', { username: newUser.username, role: newUser.role });
 
             // تحديث وبث إحصائيات المنصة الحية للمتصلين فوراً
@@ -552,8 +555,8 @@ io.on('connection', (socket) => {
             io.emit('update_stats', { totalUsers: total, activeUsers });
 
         } catch (err) {
-            console.error("خطأ التسجيل السحابي المطور:", err);
-            socket.emit('error_msg', '⚠️ فشل تدوير وتسجيل الحساب ومحفظته بالسحاب الخارجي');
+            console.error("خطأ التسجيل السحابي المطور بالـ ID:", err);
+            socket.emit('error_msg', '⚠️ فشل تدوير وتسجيل الحساب ومحفظته الموحدة بالسحاب الخارجي');
         }
     });
 
@@ -1313,7 +1316,7 @@ app.post('/api/wallet/transfer', async (req, res) => {
         let senderLedger = await OuroLedgerModel.findOne({ username: sender });
         if (!senderLedger) return res.status(404).json({ success: false, message: "⚠️ محفظة المرسل غير مؤسسة سحابياً" });
 
-        // 🔍 [محرك المطابقة التبادلية والذكي للشبكة] قبول الإرسال بالعنوان الطويل 0x7627 OR باسم الحساب تبادلياً كالفيس بوك
+        // 🔍 [محرك المطابقة التبادلية والذكي للشبكة] البحث الفوري عن المستقبل بالاسم أو بالعنوان المشتق من الـ ID
         let receiverLedger = await OuroLedgerModel.findOne({
             $or: [
                 { publicAddress: receiver.trim() },
