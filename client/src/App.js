@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
+import UserProfile from './components/UserProfile';
 import Header from './components/Header';
 import AdSlider from './components/AdSlider'; 
 import ActionBar from './components/ActionBar'; 
