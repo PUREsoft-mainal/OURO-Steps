@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
-import UserProfile from './components/UserProfile';
 import Header from './components/Header';
 import AdSlider from './components/AdSlider'; 
 import ActionBar from './components/ActionBar'; 
@@ -450,13 +449,6 @@ return (
           }
           setShowApiKeyModal={setShowApiKeyModal} // 👈 قُم بحقن هذا السطر هنا لتتصل التروس ببعضها
           setShowWalletModal={setShowWalletModal} // 👈 حقن دالة استدعاء المحفظة هنا
-        />
-
-                        
-        <UserProfile 
-          username={user && user.username ? user.username : "مستخدم ملكي"} 
-          onLogout={() => { window.location.reload(); }} 
-          user={user} 
         />
 
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
