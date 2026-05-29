@@ -15,6 +15,7 @@ import DiscoveryStore from './components/DiscoveryStore';
 import Market from './components/Market'; // استدعاء ملف السوق المستقل الجديد
 import ApiKeyModal from './components/ApiKeyModal';
 import OuroWalletModal from './components/OuroWalletModal';
+import CoinPurchaseModal from './components/CoinPurchaseModal'; // 👑 حقن بوابة التداول الداخلي لـ OURO
 import './App.css';
 
 // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
@@ -57,6 +58,7 @@ function App() {
     // 👑 [الصندوق الأول] حقول الـ States المالية المخصصة للمحفظة الرقمية والدمج التبادلي للعملة
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [ouroBalance, setOuroBalance] = useState(0); // رصيد المستخدم الحالي
+  const [showCoinPurchaseModal, setShowCoinPurchaseModal] = useState(false);
   // 👑 [دالة الحذف السحابية المحدثة] إطلاق نبضة الإبادة السيبرانية لكارت المنتج وتطهيره من MongoDB Atlas
   const handleDeletePost = async (postId) => {
     if (!window.confirm("🗑️ هل أنت متأكد من حذف هذه السلعة وإلغاء منشورها نهائياً من السحاب؟")) return;
@@ -390,8 +392,7 @@ return (
           totalUsers={totalUsers} 
           user={user} 
           ouroBalance={ouroBalance} 
-          onBuyCoin={() => {
-            alert(`🪙 لطلب شحن وشراء عملات OURO Coin الفاخرة، الرجاء الاتصال الفوري بـ الإدارة والأدمن العام Mostafa عبر الهواتف الرسمية المأمنة سيبرانياً:\n\n📞 01027411921\n📞 01080166413\n\n(سيقوم الأدمن بالدخول فوراً وتحويل الكمية المطلوبة لمحفظتك الرقمية سحابياً)`);
+          onBuyCoin={() => setShowCoinPurchaseModal(true)} // 👑 [تم الحسم] زر الـ (+) يفتح الآن بوابة التداول فوراً على الشاشة
           }}
           renderCoinBadge={
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(0,0,0,0.5)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--gold-primary)' }}>
@@ -515,6 +516,17 @@ return (
             }}
           />
         )}
+
+        {/* 👑 [البصمة الختامية للويب] إطلاق بوابة التداول الداخلي لعملة المنصة بنقاء تزامني سحابي 100% */}
+        {showCoinPurchaseModal && (
+          <CoinPurchaseModal 
+            user={user}
+            API_BASE={API_BASE}
+            setOuroBalance={setOuroBalance}
+            onClose={() => setShowCoinPurchaseModal(false)}
+          />
+        )}
+
 
 
         {/* 👑 [تم التطهير كلياً] حذف السطر النصي المكشوف وتأمين تشغيل المتجر المستقل دون طرد أو تعليق */}
