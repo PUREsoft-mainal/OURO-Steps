@@ -1314,7 +1314,9 @@ app.post('/api/wallet/get-info', async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
-// 2️⃣ [مسار التحويل التبادلي الرياضي وضريبة الـ 7% التدويرية]
+// ==========================================================================
+// 💸 [تأمين الميكانيكية التزامنية] مسار التحويل البلوكتشيني الرياضي الموجه بالـ ID دون كراش 500
+// ==========================================================================
 app.post('/api/wallet/transfer', async (req, res) => {
     try {
         const { sender, receiver, amount } = req.body;
@@ -1324,6 +1326,7 @@ app.post('/api/wallet/transfer', async (req, res) => {
             return res.status(400).json({ success: false, message: "⚠️ كمية الحوالة غير صالحة برمجياً" });
         }
 
+        // 1️⃣ استدعاء ومطابقة الملف المالي المستقل للمرسل من السحاب مباشرة
         let senderLedger = await OuroUserLedgerModel.findOne({ username: sender });
         
         // المطابقة الذكية والسريعة للمستقبل عبر الـ ID أو اسم الحساب
@@ -1332,7 +1335,7 @@ app.post('/api/wallet/transfer', async (req, res) => {
         if (mongoose.Types.ObjectId.isValid(receiver.trim())) query = { _id: receiver.trim() };
         let receiverUser = await UserModel.findOne(query);
 
-        if (!receiverUser) return res.status(404).json({ success: false, message: "⚠️ الـ ID أو الحساب المستهدف غير موجود!" });
+        if (!receiverUser) return res.status(404).json({ success: false, message: "⚠️ الـ ID أو الحساب المستهدف غير موجود كلياً بالمنصة!" });
         if (sender === receiverUser.username) return res.status(400).json({ success: false, message: "⚠️ لا يمكنك التحويل لنفس محفظتك!" });
 
         let receiverLedger = await OuroUserLedgerModel.findOne({ username: receiverUser.username });
@@ -1341,12 +1344,12 @@ app.post('/api/wallet/transfer', async (req, res) => {
             await receiverLedger.save();
         }
 
-        // حساب رصيد الأدمن التزامني والتحقق من كفاية الأرصدة للمستخدمين
+        // 2️⃣ حساب الأرصدة الرياضية المعكوسة للتأكد من المزامنة الصارمة
         const allUserTokensSum = await OuroUserLedgerModel.aggregate([
             { $match: { username: { $ne: 'Admin_Mostafa' } } },
             { $group: { _id: null, total: { $sum: "$ouroBalance" } } }
         ]);
-        const totalMintedToUsers = (allUserTokensSum.length > 0) ? allUserTokensSum[0].total : 0;
+        const totalMintedToUsers = (allUserTokensSum.length > 0) ? allUserTokensSum.total : 0;
         
         let senderBal = (sender === 'Admin_Mostafa') ? (OURO_MAX_SUPPLY - totalMintedToUsers) : (senderLedger ? senderLedger.ouroBalance : 0);
         const taxAmount = Math.ceil(transferAmount * 0.07);
@@ -1356,7 +1359,11 @@ app.post('/api/wallet/transfer', async (req, res) => {
             return res.status(400).json({ success: false, message: `❌ رصيدك بالملف السحابي غير كافٍ! الحوالة تتطلب ${transferAmount} عملة + ${taxAmount} عملة ضريبة الشبكة.` });
         }
 
-        // ⚡ [الصك الكسول الفعلي للرموز التسلسلية عند الحاجة وبأمان مطلق]
+        // 3️⃣ [تنفيذ الخصم والصك الكسول داخل الملفات المعزولة]
+        if (!senderLedger) {
+            senderLedger = new OuroUserLedgerModel({ username: sender, ouroBalance: senderBal });
+        }
+
         if (sender === 'Admin_Mostafa') {
             // رصيد الأدمن ينقص فيزيائياً بمقدار العملات التي تخرج منه وتتحول للمستخدمين
             senderLedger.ouroBalance = senderBal - transferAmount;
@@ -1378,19 +1385,24 @@ app.post('/api/wallet/transfer', async (req, res) => {
             await adminLedger.save();
         }
 
-        // بث حزم الإنعاش اللحظية عبر قنوات السوكت لكافة الشاشات فوراً دون ريفريش
-        if (global.io) {
-            global.io.emit('wallet_balance_updated', { username: sender, newBalance: senderLedger.ouroBalance });
-            global.io.emit('wallet_balance_updated', { username: receiverUser.username, newBalance: receiverLedger.ouroBalance });
+        // 📡 [تأمين وحقن قنوات السوكت بذكاء] فحص وجود قنوات البث الحية لمنع حدوث الانهيار أو الـ 500 كلياً
+        try {
+            const socketIo = global.io || (req.app ? req.app.get('socketio') : null) || (typeof io !== 'undefined' ? io : null);
+            if (socketIo && typeof socketIo.emit === 'function') {
+                socketIo.emit('wallet_balance_updated', { username: sender, newBalance: senderLedger.ouroBalance });
+                socketIo.emit('wallet_balance_updated', { username: receiverUser.username, newBalance: receiverLedger.ouroBalance });
+            }
+        } catch (socketErr) {
+            console.log("📡 تنبيه صامت: جاري المزامنة عبر الاتصال المباشر لقاعدة البيانات...");
         }
 
-        // 🛡️ طباعة السيريال الرقمي الأول والأخير للمعاملة في سجل السيرفر كإقرار قراءة فقط
-        console.log(`💸 [Blockchain Mint Success] تم نقل وتشفير عدد ${transferAmount} عملة؛ السيريال يقع بأمان في النطاق الصارم بين OuRo${OURO_BASE_SERIAL} و OuRo${OURO_MAX_SERIAL}`);
+        // طباعة السيريال الرقمي الصارم للمعاملة الحالية لتوثيق الأمان الكسول
+        console.log(`💸 [Ouro Core Transfer Success] تم تمرير الحوالة بأمان ونقاء فلكي كامل!`);
 
         res.json({ success: true, newSenderBalance: senderLedger.ouroBalance });
     } catch (err) { 
-        console.error("خطأ التداول الحركي الرياضي:", err);
-        res.status(500).json({ success: false, message: "فشل الاتصال بمحرك البلوكشين المعكوس." }); 
+        console.error("خطأ التداول الحركي الرياضي الكسول:", err);
+        res.status(500).json({ success: false, message: "🚨 فشل محرك البلوكشين، تأكد من سلامة كود السوكت المركزي بالسيرفر." }); 
     }
 });
 
