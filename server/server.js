@@ -505,7 +505,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 👑 [تطهير الحسم السحابي المطلق] ترحيل دالة تسجيل الحسابات الجديدة لـ MongoDB Atlas للأبد
+     // 👑 [التأمين السيبراني النهائي] ترحيل دالة التسجيل وحقن المحافظ والبادئة الملكية لـ MongoDB Atlas للأبد
     socket.on('register', async (data) => {
         try {
             if (!data || !data.username || !data.password) {
@@ -518,19 +518,33 @@ io.on('connection', (socket) => {
                 return socket.emit('error_msg', '⚠️ اسم المستخدم مسجل مسبقاً في السحاب!');
             }
 
-            // 2️⃣ زرع وحقن كائن الحساب الجديد سحابياً مع تثبيت مصفوفات الأصدقاء فارغة لمنع كراش الاستكشاف
+            // 2️⃣ زرع وحقن كائن الحساب الجديد سحابياً في جدول المستخدمين
             const newUser = new UserModel({
                 username: data.username,
-                password: data.password, // سيتم حفظه ومطابقته بدالة ال-join المأمنة بالأسفل
+                password: data.password, 
                 role: data.role || 'مستخدم',
                 avatar: '',
-                friends: [],        // 🔒 زرع ملف الأصدقاء فارغاً لتتغذى منه الواجهة بنقاء
-                friendRequests: []  // 🔒 زرع صندوق الطلبات فارغاً لتتغذى منه الواجهة بنقاء
+                friends: [],        
+                friendRequests: []  
             });
+            await newUser.save(); 
 
-            await newUser.save(); // 💾 الحفظ الفيزيائي النهائي المباشر في قاعدة البيانات السحابية للأبد
-            console.log(`👤 تم تأسيس وتثبيت حساب المستخدم الجديد (${data.username}) سحابياً بنجاح!`);
+            // 🪙 [حقن التأسيس التلقائي للمحفظة الرقمية المخصصة] صك البادئة الملكية والثابتة للمستخدم الجديد فوراً
+            const crypto = require('crypto');
+            const userUniqueHash = crypto.createHash('sha256').update(`${data.username}_immutable_ouro_seed`).digest('hex').substring(0, 16);
+            
+            // صياغة وعزل العنوان الفريد المخصص مدى الحياة للمستخدم الجديد
+            const secureAddress = '0x7627OUROamek11619917627h38j4l5G84P8354' + userUniqueHash;
+            
+            const newLedger = new OuroLedgerModel({
+                username: data.username,
+                ouroBalance: 0, // يبدأ برصيد صفر عملة متسلسلة حتى يتم الشحن من الأدمن
+                publicAddress: secureAddress, // ختم العنوان الملكي المخصص أزلياً فالسحاب
+                cryptoSignature: calculateOuroSignature(data.username, 0) // ختم قفل التوقيع الرقمي لمنع التزوير
+            });
+            await newLedger.save();
 
+            console.log(`👤 تم تأسيس الحساب ومحفظته المخصصة بنجاح فلكي للحساب الجديد: ${data.username}`);
             socket.emit('register_success', { username: newUser.username, role: newUser.role });
 
             // تحديث وبث إحصائيات المنصة الحية للمتصلين فوراً
@@ -538,8 +552,8 @@ io.on('connection', (socket) => {
             io.emit('update_stats', { totalUsers: total, activeUsers });
 
         } catch (err) {
-            console.error("خطأ التسجيل السحابي:", err);
-            socket.emit('error_msg', '⚠️ فشل تدوير وتسجيل الحساب بالسحاب الخارجي');
+            console.error("خطأ التسجيل السحابي المطور:", err);
+            socket.emit('error_msg', '⚠️ فشل تدوير وتسجيل الحساب ومحفظته بالسحاب الخارجي');
         }
     });
 
@@ -547,7 +561,7 @@ io.on('connection', (socket) => {
          const GROUPS_FILE = path.join(__dirname, 'groups.json');
          initJsonFile(GROUPS_FILE, [{ id: 'public', name: 'المجموعة العامة' }]); // تهيئة المجموعة العامة تلقائياً
 
-    // 👑 [صندوق الحسم الملكي والأزلي لـ OURO Steps] فك لغز الباسورد وتغذية الأصدقاء من السحاب بنقاء 100%
+    // 👑 [تطهير الحسم البلوكتشيني] فك لغز الباسورد وصك ال-21 مليون عملة متسلسلة للأدمن لمرة واحدة فالسحاب
     socket.on('join', async (data) => {
         try {
             if (!data || !data.username || !data.password) return socket.emit('error_msg', 'البيانات المرسلة غير مكتملة');
@@ -567,23 +581,44 @@ io.on('connection', (socket) => {
                     await adminCheck.save();
                     console.log("👑 تم زرع وتثبيت حساب الأدمن العام بالـ Cloud بنجاح ساحق!");
                 }
+
+                // 🔥 [محرك صك ال-21 مليون عملة المتسلسلة] توليد بنك العملات الفريدة لمرة واحدة وإسناد ملكيتها للأدمن
+                const tokenCount = await OuroTokenModel.countDocuments();
+                if (tokenCount === 0) {
+                    console.log("⏳ جاري صك وبناء الـ 21,000,000 عملة متسلسلة مشفرة للأبد... الرجاء الانتظار ثواني...");
+                    const baseNum = 27411921;
+                    const maxSupply = 21000000;
+                    
+                    // استخدام الـ Bulk Insert فالسحاب لحقن الـ 21 مليون عملة دفعة واحدة طيران بحماية الذاكرة
+                    let bulkTokens = [];
+                    for (let i = 0; i < maxSupply; i++) {
+                        const currentSerial = 'OuRo' + (baseNum + i);
+                        bulkTokens.push({ tokenId: currentSerial, owner: 'Admin_Mostafa' });
+                        
+                        // صب الحزم كل 50 ألف عملة لحماية الذاكرة العشوائية للسيرفر السحابي لـ Hugging Face
+                        if (bulkTokens.length === 50000) {
+                            await OuroTokenModel.insertMany(bulkTokens);
+                            bulkTokens = [];
+                        }
+                    }
+                    if (bulkTokens.length > 0) await OuroTokenModel.insertMany(bulkTokens);
+                    console.log("🎉 تم صك وتثبيت الـ 21 مليون عملة متسلسلة بنجاح فلكي للأدمن Mostafa!");
+                }
             }
 
-            // ب) [الحل السيبراني] المطابقة الذكية عبر اسم المستخدم أولاً لتفكيك الباسورد المشفر والخام معاً
+            // ب) [الحل السيبراني المعتمد] المطابقة الذكية لفك الباسورد المشفر والخام معاً دون تضارب
             let user = await UserModel.findOne({ username: data.username });
 
             let isMatch = false;
             if (user) {
-                // إذا كان الباسورد نصياً خاماً (مثل حساب الأدمن أو حسابات تجريبية)
                 if (user.password === data.password) {
                     isMatch = true;
                 } else {
-                    // إذا كان الباسورد مشفراً ومحفوظاً بهاش الـ bcrypt بالـ Register
                     try {
                         const bcrypt = require('bcryptjs');
                         isMatch = await bcrypt.compare(data.password, user.password);
                     } catch (e) {
-                        isMatch = false; // إذا لم تكن المكتبة محقونة أو فشل التطابق
+                        isMatch = false;
                     }
                 }
             }
@@ -591,7 +626,6 @@ io.on('connection', (socket) => {
             if (user && isMatch) {
                 socket.user = user;
                 
-                // ج) [تطهير الذاكرة] إجبار السيرفر على زرع المصفوفات فارغة لو كانت undefined لمنع اختفاء الكروت
                 if (!user.friends) user.friends = [];
                 if (!user.friendRequests) user.friendRequests = [];
 
@@ -602,13 +636,9 @@ io.on('connection', (socket) => {
                 const localGroups = [{ id: 'public', name: 'المجموعة العامة', creator: 'System' }];
                 const total = await UserModel.countDocuments();
                 
-                // د) جلب وضخ القائمة الكلية المعقمة للمستخدمين مع حجب الباسورد أمنياً
                 const usersList = await UserModel.find({}, { password: 0 }).sort({ username: 1 });
 
-                // ضخ حزمة الأصول المكتملة الفخمة لتفتح الواجهة وتتغذى منها لوحة الاستكشاف فوراً
                 socket.emit('init_data', { ads, chatHistory, user, groups: localGroups, usersList, stats: { totalUsers: total, activeUsers } });
-                
-                // بث نبضة إضافية صريحة لإنعاش مصفوفات الأصدقاء بالفرونت إند تلقائياً فور الدخول
                 socket.emit('init_users_data', usersList);
             } else {
                 socket.emit('error_msg', '⚠️ خطأ في اسم المستخدم أو كلمة المرور!');
