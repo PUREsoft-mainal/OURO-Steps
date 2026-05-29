@@ -63,6 +63,15 @@ const PrayerAssetSchema = new mongoose.Schema({
 });
 const PrayerAssetModel = mongoose.model('PrayerAsset', PrayerAssetSchema);
 
+// 👑 [الملف السحابي المستقل لكل مستخدم] جدول إدارة وحفظ العملات الحقيقية المتسلسلة ومنع التلاعب
+const OuroUserLedgerSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true },
+    ouroBalance: { type: Number, default: 0 }, // عدد العملات الفعلي المحفوظ سحابياً لكل مستخدم
+    updatedAt: { type: Date, default: Date.now }
+});
+
+const OuroUserLedgerModel = mongoose.model('OuroUserLedger', OuroUserLedgerSchema);
+
 // 👑 معيار معمارية الحسابات الملكية والأصدقاء بـ MongoDB
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
@@ -1234,44 +1243,41 @@ app.post('/api/developer/delete-key', async (req, res) => {
     }
 });
 
-// ==========================================================================
-// 👑 1️⃣ [مسار جلب وتأسيس الحساب المالي المصفى 100%]
-// ==========================================================================
+// 👑 مسار جلب الرصيد: يقرأ عدد العملات فقط من الملف المستقل ويعرضه بالواجهة
 app.post('/api/wallet/get-info', async (req, res) => {
     try {
         const { username } = req.body;
-        if (!username) return res.status(400).json({ success: false, message: "⚠️ البيانات ناقصة" });
+        if (!username) return res.status(400).json({ success: false });
 
-        let user = await UserModel.findOne({ username });
-        if (!user) return res.status(404).json({ success: false, message: "⚠️ الحساب غير مسجل" });
-
-        // تثبيت رصيد الـ 21 مليون للأدمن Mostafa ومنع تزويره نهائياً للأبد فالسحاب
-        if (username === 'Admin_Mostafa' && user.ouroBalance !== 21000000) {
-            user.ouroBalance = 21000000;
-            await user.save();
+        // 🔍 القراءة المباشرة والصارمة من الملف المالي المستقل للمستخدم
+        let userLedger = await OuroUserLedgerModel.findOne({ username });
+        
+        // تأسيس ملف مالي فوري برصيد صفر لو الحساب جديد بالشبكة
+        if (!userLedger) {
+            const initBal = username === 'Admin_Mostafa' ? 21000000 : 0;
+            userLedger = new OuroUserLedgerModel({ username, ouroBalance: initBal });
+            await userLedger.save();
         }
 
-        // 👑 [التصحيح المجهري] القراءة الشرعية من اسم الموديل الصحيح لضمان عدم انهيار الشبكة
-        const contracts = await mongoose.model('DeveloperKey').find({ isContract: true }).catch(() => []) || [];
-        
-        // ✅ قُم بتحديثه وحقن مواصفات وعنوان عقد عملتك الذكي والشرعي فوراً:
+        // قفل رصيد الأدمن عند الـ 21 مليون لضمان استقرار الإمداد الكلي للعملة
+        if (username === 'Admin_Mostafa' && userLedger.ouroBalance !== 21000000) {
+            userLedger.ouroBalance = 21000000;
+            await userLedger.save();
+        }
+
         res.json({ 
             success: true, 
-            ouroBalance: user.ouroBalance || 0, 
+            ouroBalance: userLedger.ouroBalance, // 🪙 المتصفح يقرأ هذا العدد ويعرضه فقط
             contracts: [
                 {
                     id: "contract_ouro_genesis_2026",
                     contractName: "OURO Coin Master Contract",
                     symbol: "OURO",
-                    // هذا عنوان العقد الذكي الخاص بك المولد برمجياً والمطابق للبادئة البلوكتشينية الفاخرة لمنصتك
                     contractAddress: "0x7627OUROamek11619917627h38j4l5G84P8354000000000000000000000000000000000000" 
                 }
-           ] 
+            ] 
         });
-    } catch (err) { 
-        console.error("خطأ get-info:", err);
-        res.status(500).json({ success: false, error: err.message }); 
-    }
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
 // 2️⃣ [مسار ربط MetaMask الحركي] قيد عنوان الاستقبال الخارجي بالحساب السحابي للأبد
@@ -1283,72 +1289,64 @@ app.post('/api/wallet/link-metamask', async (req, res) => {
     } catch (err) { res.status(500).json({ success: false }); }
 });
 
-// ==========================================================================
-// 👑 2️⃣ [مسار التداول الفوري بالـ ID والأقسام دون أدنى كراش]
-// ==========================================================================
+// 👑 مسار التحويل: سحب وإرسال العملات فيزيائياً وتحديث الملفات المستقلة سحابياً
 app.post('/api/wallet/transfer', async (req, res) => {
     try {
-        const { sender, receiver, amount } = req.body; 
+        const { sender, receiver, amount } = req.body;
         const transferAmount = parseInt(amount);
 
-        if (isNaN(transferAmount) || transferAmount <= 0) {
-            return res.status(400).json({ success: false, message: "⚠️ كمية غير صالحة" });
-        }
+        if (isNaN(transferAmount) || transferAmount <= 0) return res.status(400).json({ success: false, message: "⚠️ كمية غير صالحة" });
 
-        let senderUser = await UserModel.findOne({ username: sender });
-        if (!senderUser) return res.status(404).json({ success: false, message: "⚠️ حساب المرسل غير موجود" });
+        // 🔍 استدعاء ومطابقة الملفات المالية المستقلة للطرفين من السحاب مباشرة
+        let senderLedger = await OuroUserLedgerModel.findOne({ username: sender });
         
-        // 🔒 المطابقة الذكية والسريعة للمستقبل عبر الـ ID الفريد _id أو الـ username
         const mongoose = require('mongoose');
         let query = { username: receiver.trim() };
-        if (mongoose.Types.ObjectId.isValid(receiver.trim())) {
-            query = { _id: receiver.trim() };
-        }
+        if (mongoose.Types.ObjectId.isValid(receiver.trim())) query = { _id: receiver.trim() };
         let receiverUser = await UserModel.findOne(query);
 
-        if (!receiverUser) return res.status(404).json({ success: false, message: "⚠️ الـ ID أو الحساب المستهدف غير مسجل بالمنصة!" });
-        if (senderUser.username === receiverUser.username) return res.status(400).json({ success: false, message: "⚠️ لا يمكنك التحويل لنفسك!" });
+        if (!receiverUser) return res.status(404).json({ success: false, message: "⚠️ الحساب المستهدف غير موجود!" });
+        if (sender === receiverUser.username) return res.status(400).json({ success: false, message: "⚠️ لا يمكنك التحويل لنفسك!" });
 
-        let senderBal = senderUser.ouroBalance || 0;
+        let receiverLedger = await OuroUserLedgerModel.findOne({ username: receiverUser.username });
+        if (!receiverLedger) {
+            receiverLedger = new OuroUserLedgerModel({ username: receiverUser.username, ouroBalance: 0 });
+            await receiverLedger.save();
+        }
+
+        let senderBal = senderLedger ? senderLedger.ouroBalance : 0;
         const taxAmount = Math.ceil(transferAmount * 0.07);
         const totalCost = transferAmount + taxAmount;
 
         if (senderBal < totalCost && sender !== 'Admin_Mostafa') {
-            return res.status(400).json({ success: false, message: `❌ رصيدك غير كافٍ! تتطلب المعاملة ${transferAmount} عملة + ${taxAmount} عملة ضريبة الشبكة.` });
+            return res.status(400).json({ success: false, message: `❌ رصيدك بالملف المستقل غير كافٍ! تتطلب المعاملة ${transferAmount} عملة + ${taxAmount} عملة ضريبة الشبكة.` });
         }
 
-        // نقل الأرقام الحقيقية وخصمها من المرسل وضخها للمستقبل آلياً فالسحاب
+        // 💸 الخصم والإرسال الفعلي المباشر داخل الملفات السحابية المعزولة
         if (sender !== 'Admin_Mostafa') {
-            senderUser.ouroBalance = senderBal - totalCost;
-            await senderUser.save();
+            senderLedger.ouroBalance = senderBal - totalCost;
+            await senderLedger.save();
         } else {
-            // الخصم الفعلي والناقص من رصيد الأدمن الملكي تزامناً مع الحوالة الخارجة منه
-            senderUser.ouroBalance = (senderUser.ouroBalance || 21000000) - transferAmount;
-            await senderUser.save();
+            senderLedger.ouroBalance = (senderLedger.ouroBalance || 21000000) - transferAmount;
+            await senderLedger.save();
         }
 
-        receiverUser.ouroBalance = (receiverUser.ouroBalance || 0) + transferAmount;
-        await receiverUser.save();
+        receiverLedger.ouroBalance = (receiverLedger.ouroBalance || 0) + transferAmount;
+        await receiverLedger.save();
 
-        // صب ضريبة الـ 7% قسرياً في حساب خزينة الأدمن Mostafa
-        let adminUser = await UserModel.findOne({ username: 'Admin_Mostafa' });
-        if (adminUser && sender !== 'Admin_Mostafa') {
-            adminUser.ouroBalance = (adminUser.ouroBalance || 0) + taxAmount;
-            await adminUser.save();
+        // ضخ ضريبة الـ 7% في حساب خزينة الأدمن Mostafa المستقلة
+        let adminLedger = await OuroUserLedgerModel.findOne({ username: 'Admin_Mostafa' });
+        if (adminLedger && sender !== 'Admin_Mostafa') {
+            adminLedger.ouroBalance = (adminLedger.ouroBalance || 0) + taxAmount;
+            await adminLedger.save();
         }
 
-        // تأمين البث اللحظي عبر السوكت بفحص الوجود لمنع كراش المعاملات مالياً
-        if (global.io || (req.app && req.app.get('socketio'))) {
-            const ioInstance = global.io || req.app.get('socketio');
-            ioInstance.emit('wallet_balance_updated', { username: sender, newBalance: senderUser.ouroBalance });
-            ioInstance.emit('wallet_balance_updated', { username: receiverUser.username, newBalance: receiverUser.ouroBalance });
-        }
+        // بث نبضات تحديث الأعداد الصافية للمتصفحات فوراً لقراءتها وعرضها فقط
+        io.emit('wallet_balance_updated', { username: sender, newBalance: senderLedger.ouroBalance });
+        io.emit('wallet_balance_updated', { username: receiverUser.username, newBalance: receiverLedger.ouroBalance });
 
-        res.json({ success: true, newSenderBalance: senderUser.ouroBalance });
-    } catch (err) { 
-        console.error("خطأ الشبكة المالية للتحويل الحركي:", err);
-        res.status(500).json({ success: false, message: "خطأ داخلي بالخادم أثناء تمرير الأصول الحية." }); 
-    }
+        res.json({ success: true, newSenderBalance: senderLedger.ouroBalance });
+    } catch (err) { res.status(500).json({ success: false, message: "خطأ في معالجة الحساب المالي للملفات السحابية." }); }
 });
 
 // 4️⃣ [مسار الأدمن لزرع العقود الذكية للعملات الخارجية]
