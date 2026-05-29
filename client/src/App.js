@@ -452,7 +452,14 @@ return (
 
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
         <div className="main-content">
-          
+            
+            /* ❌ تأكد من تحديث وسم الاستدعاء بملف App.js ليصبح محقوناً هكذا: */
+          <UserProfile 
+            username={user?.username} 
+            onLogout={handleLogout} 
+            user={user} // 👈 قُم بتمرير كائن الـ user هنا ليتصل شريان المحفظة بالواجهة بنجاح
+          />
+    
           {/* الجانب الأيمن: المجموعات وأدوات الأدمن وتمرير السوكيت الفعال */}
           <GroupsSidebar 
             groups={groups} 
