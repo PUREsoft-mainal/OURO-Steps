@@ -1196,32 +1196,54 @@ app.post('/api/developer/delete-key', async (req, res) => {
 });
 
 // ==========================================================================
-// 🪙 [الكمبلة البرمجية للمحفظة المشفرة] قنوات الـ Web3 وعملة OURO Coin بـ MongoDB Atlas
+// 🪙 1️⃣ [مسار جلب وتأسيس الحساب البلوكتشيني] توليد وحفظ عناوين محافظ فريدة سحابياً
 // ==========================================================================
-
-// 1️⃣ [مسار جلب وتأسيس الحساب المالي] قراءة وتأمين رصيد العملة سحابياً
 app.post('/api/wallet/get-info', async (req, res) => {
     try {
         const { username } = req.body;
-        if (!username) return res.status(400).json({ success: false });
+        if (!username) return res.status(400).json({ success: false, message: "⚠️ اسم المستخدم مفقود رقمياً" });
 
-        // مطابقة الحساب وجلب العقود والعملة المتاحة بالشبكة
-        let user = await UserModel.findOne({ username });
-        if (!user) return res.status(404).json({ success: false });
+        // 1️⃣ قراءة ومطابقة الحساب المالي مباشرة من ملف الذاكرة السحابية للقراءة فقط بالأطلس
+        let ledger = await OuroLedgerModel.findOne({ username });
+        let userCheck = await UserModel.findOne({ username });
 
-        // 👑 [قفل التثبيت الأزلي] تثبيت رصيد الـ 21 مليون عملة للأدمن قسرياً ومنع إنشاء أي عملة إضافية للشبكة نهائياً
-        let currentBalance = user.ouroBalance || 0;
-        if (username === 'Admin_Mostafa') {
-            if (user.ouroBalance !== 21000000) {
-                user.ouroBalance = 21000000;
-                await user.save();
-            }
-            currentBalance = 21000000;
+        if (!userCheck) return res.status(404).json({ success: false, message: "⚠️ حساب المستخدم غير مسجل بالمنصة" });
+
+        // 🔒 [توليد عنوان المحفظة البلوكتشيني الفريد] إذا كان الحساب لا يمتلك محفظة مخزنة، يتم توليد الهاش فوراً
+        if (!ledger) {
+            const crypto = require('crypto');
+            const initBal = username === 'Admin_Mostafa' ? 21000000 : 0;
+            
+            // صياغة عنوان تشفيري معقد فريد يستحيل تكراره أو تخمينه يبدأ بشارة عملتنا 0xOuro
+            const secureAddress = '0xOuro' + crypto.createHash('sha256').update(`${username}_${Date.now()}_ouro_blockchain_address`).digest('hex').substring(0, 34);
+            
+            ledger = new OuroLedgerModel({ 
+                username: username, 
+                ouroBalance: initBal, 
+                publicAddress: secureAddress, // ختم وقيد عنوان المحفظة الفريد أزلياً فالسحاب
+                cryptoSignature: calculateOuroSignature(username, initBal) 
+            });
+            await ledger.save();
+            console.log(`🪙 تم توليد وصك عنوان محفظة فريد ومشفر بنجاح للحساب (${username})`);
         }
 
-        const contracts = await mongoose.model('DeveloperKey').find({ isContract: true }) || []; // جلب العقود إن وجدت
-        res.json({ success: true, ouroBalance: currentBalance, contracts });
+        // 👑 [قفل التثبيت الأزلي الصارم] تثبيت الإمداد الكلي ومنع تزوير رصيد الـ 21 مليون للأدمن Mostafa نهائياً
+        if (username === 'Admin_Mostafa' && ledger.ouroBalance !== 21000000) {
+            ledger.ouroBalance = 21000000;
+            ledger.cryptoSignature = calculateOuroSignature('Admin_Mostafa', 21000000);
+            await ledger.save();
+        }
+
+        // ضخ حزمة البيانات المعقمة للواجهة لتنبثق فخمة بداخل الصفحة العائمة للزر (+)
+        res.json({ 
+            success: true, 
+            ouroBalance: ledger.ouroBalance, 
+            publicAddress: ledger.publicAddress || "0xOuroWalletAddressPending", // تمرير عنوان المحفظة المفرد
+            contracts: [] 
+        });
+
     } catch (err) {
+        console.error("خطأ جلب وتأسيس الحساب المشفر:", err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
