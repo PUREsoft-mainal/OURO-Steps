@@ -511,9 +511,6 @@ return (
             onClose={() => setShowWalletModal(false)}
             ouroBalance={ouroBalance}
             setOuroBalance={setOuroBalance}
-            onTransferSuccess={(updatedBalance) => {
-              setOuroBalance(updatedBalance); // تحديث فوري فخام للرصيد فالسقف صامتاً
-            }}
           />
         )}
 
