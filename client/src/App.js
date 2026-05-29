@@ -1,5 +1,4 @@
 /* eslint-disable react/jsx-no-comment-textnodes */
-// 👑 [قفل التحصين الشامل لـ App.js] إجبار معالج الحزم على تجاهل تنبيهات التعليقات بالكامل لحصد النصر الأخضر 100%
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
@@ -453,16 +452,16 @@ return (
           setShowWalletModal={setShowWalletModal} // 👈 حقن دالة استدعاء المحفظة هنا
         />
 
+                        
+        <UserProfile 
+          username={user && user.username ? user.username : "مستخدم ملكي"} 
+          onLogout={() => { window.location.reload(); }} 
+          user={user} 
+        />
+
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
         <div className="main-content">
             
-          /* ✅ [تعديل الحسم الجذري الشامل] مسح التعليق النصي المائل وحذفه نهائياً ليعبر الفاحص فوراً: */
-          <UserProfile 
-            username={user && user.username ? user.username : "مستخدم ملكي"} 
-            onLogout={() => { window.location.reload(); }} 
-            user={user} 
-          />
-    
           {/* الجانب الأيمن: المجموعات وأدوات الأدمن وتمرير السوكيت الفعال */}
           <GroupsSidebar 
             groups={groups} 
