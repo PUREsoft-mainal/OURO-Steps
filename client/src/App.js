@@ -452,6 +452,7 @@ return (
           setShowApiKeyModal={setShowApiKeyModal} // 👈 قُم بحقن هذا السطر هنا لتتصل التروس ببعضها
           setShowWalletModal={setShowWalletModal} // 👈 حقن دالة استدعاء المحفظة هنا
           setShowCenterModal={setShowCenterModal} 
+          setShowFlashModal={setShowFlashModal} // 👈 تمرير دالة الفلاشة الجديدة هنا
         />
 
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
@@ -539,6 +540,19 @@ return (
             API_BASE={API_BASE}
             onClose={() => setShowCenterModal(false)}
           />
+        )}
+
+        {/* 📟 [تحويل الفلاشة الموقوتة لـ Modal منبثق فخم وعزل تمدد القاع بصرياً] */}
+        {showFlashModal && (
+          <div className="discovery-overlay" onClick={() => setShowFlashModal(false)}>
+            <div className="discovery-window gold-border" onClick={e => e.stopPropagation()} style={{ width: '90%', maxWidth: '600px', background: '#0a0a0a', padding: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h3 style={{ color: '#e67e22', margin: 0, fontSize: '14px' }}>📟 منظومة الفلاشة الإلكترونية الموقوتة بـ 72 ساعة</h3>
+                <button className="close-discovery" onClick={() => setShowFlashModal(false)}>❌</button>
+              </div>
+              <VirtualFlash user={user} socket={socket} />
+            </div>
+          </div>
         )}
 
         {/* 👑 [تم التطهير كلياً] حذف السطر النصي المكشوف وتأمين تشغيل المتجر المستقل دون طرد أو تعليق */}
