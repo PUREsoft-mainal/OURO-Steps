@@ -1,7 +1,7 @@
 import React from 'react';
 import '../App.css';
 
-// 👑 [النسخة القياسية الكاملة لـ OURO Steps] استقبال معطيات النوافذ والتحويل السحابي والسنتر المكتسح
+// 👑 [النسخة القياسية الكاملة لـ OURO Steps] استقبال معطيات النوافذ والتحويل السحابي والسنتر المكتسح والفلاشة
 const ActionBar = ({ 
   setShowDiscovery, 
   setDiscoveryTab, 
@@ -10,7 +10,8 @@ const ActionBar = ({
   friendRequestsCount, 
   setShowApiKeyModal,
   setShowWalletModal,
-  setShowCenterModal
+  setShowCenterModal,
+  setShowFlashModal
 }) => {    
   
   // 👑 دالة ذكية معقمة لتفتيت التنبيهات وإطلاق النوافذ الموجهة فوراً دون تضارب
@@ -109,6 +110,19 @@ const ActionBar = ({
         }}
       >
         🏛️ سنتر/اجتماعات
+      </button>
+
+      {/* 📟 [نقل وتوطين الفلاشة الرقمية الموقوتة] زر إطلاق واستدعاء صندوق الفلاشة العائم بدقة بصرية ممتدة */}
+      <button 
+        className="action-bar-btn gold-glow-btn" 
+        style={{ borderColor: '#e67e22', background: 'rgba(230,126,34,0.05)' }} // تمييز فوسفوري برتقالي نيون للفلاشة
+        onClick={() => {
+          if (typeof setShowFlashModal === 'function') {
+            setShowFlashModal(true); // تفعيل النافذة العائمة المنبثقة للفلاشة الإلكترونية فوراً
+          }
+        }}
+      >
+        📟 الفلاشة الإلكترونية
       </button>
 
     </div>
