@@ -595,21 +595,13 @@ return (
           </div>
         )}
 
-        {/* 👑 2. حاوية بقية الأدوات السفلية المستقرة بانتظام ممتد */}
-        <div className="spacer-wrapper-zone" style={{ padding: '0 20px', width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '15px' }}> 
+        {/* 👑 [القفل القياسي الصافي] الحاوية السفلية المستقرة بنقاء تام دون أي تكرار */}
+        <div className="spacer-wrapper-zone" style={{ padding: '0 20px', width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '5px' }}> 
+          <div className="disclaimer-bar" style={{ margin: '15px 0 10px 0' }}> 👑 منصة OURO Steps - تجربة ملكية فريدة 2026 </div>
+        </div> 
 
-          {/* 📟 ج) الفلاشة الافتراضية الموقوتة بـ 72 ساعة مستقرة في موضعها السفلي الاحترافي بنجاح وثبات كامل */}
-          <VirtualFlash user={user} socket={socket} />
-    
-          {/* 7. شريط الإقرارات والبار السفلي الأزلي للمنصة */}
-          <div className="disclaimer-bar" style={{ margin: '5px 0 0 0' }}>
-            👑 منصة OURO Steps - تجربة ملكية فريدة 2026
-          </div>
-
-        </div> {/* إغلاق حاوية التتابع الفرعية بشكل صحيح */}
-
-      </div> {/* إغلاق app-overlay */}
-    </div> // إغلاق app-container
+      </div> {/* إغلاق app-overlay الشرعي */}
+    </div> // إغلاق app-container الشرعي
   );
 };
 
