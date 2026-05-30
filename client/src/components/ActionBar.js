@@ -1,8 +1,17 @@
 import React from 'react';
 import '../App.css';
 
-// 👑 [النسخة القياسية المعقمة والمكتملة] استقبال معطيات الدوال وتوجيه النقرات الفاخرة لـ OURO Steps
-const ActionBar = ({ setShowDiscovery, setDiscoveryTab, setShowPrayerModal, setShowMarket, friendRequestsCount, setShowApiKeyModal }) => {    
+// 👑 [النسخة القياسية الكاملة لـ OURO Steps] استقبال معطيات النوافذ والتحويل السحابي والسنتر المكتسح
+const ActionBar = ({ 
+  setShowDiscovery, 
+  setDiscoveryTab, 
+  setShowPrayerModal, 
+  setShowMarket, 
+  friendRequestsCount, 
+  setShowApiKeyModal,
+  setShowWalletModal,
+  setShowCenterModal
+}) => {    
   
   // 👑 دالة ذكية معقمة لتفتيت التنبيهات وإطلاق النوافذ الموجهة فوراً دون تضارب
   const handleButtonClick = (tabName) => {
@@ -75,6 +84,33 @@ const ActionBar = ({ setShowDiscovery, setDiscoveryTab, setShowPrayerModal, setS
       >
         ⚙️ مفاتيح API
       </button>
+
+      {/* 🪙 زر إطلاق واستدعاء المحفظة الرقمية الملكية الحية وعملة OURO Coin والـ Web3 */}
+      <button 
+        className="action-bar-btn gold-glow-btn" 
+        style={{ borderColor: '#d4af37' }} 
+        onClick={() => {
+          if (typeof setShowWalletModal === 'function') {
+            setShowWalletModal(true); 
+          }
+        }}
+      >
+        🪙 المحفظة الملكية
+      </button>
+
+      {/* 🏛️ [الكمبلة التعليمية المكتسحة] زر إطلاق السنتر والاجتماعات والبث الحي والمذكرات */}
+      <button 
+        className="action-bar-btn gold-glow-btn" 
+        style={{ borderColor: '#9b59b6', background: 'rgba(155,89,182,0.05)' }} 
+        onClick={() => {
+          if (typeof setShowCenterModal === 'function') {
+            setShowCenterModal(true); 
+          }
+        }}
+      >
+        🏛️ سنتر/اجتماعات
+      </button>
+
     </div>
   );
 };
