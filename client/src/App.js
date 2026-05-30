@@ -551,7 +551,6 @@ return (
                 <h3 style={{ color: '#e67e22', margin: 0, fontSize: '14px' }}>📟 منظومة الفلاشة الإلكترونية الموقوتة بـ 72 ساعة</h3>
                 <button className="close-discovery" onClick={() => setShowFlashModal(false)}>❌</button>
               </div>
-              <VirtualFlash user={user} socket={socket} />
             </div>
           </div>
         )}
