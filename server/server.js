@@ -37,6 +37,26 @@ const MarketSchema = new mongoose.Schema({
 // تثبيت الموديل باسم MarketModel ليتطابق مع دوال الرفع والحذف التي صببناها سابقاً
 const MarketModel = mongoose.model('Market', MarketSchema);
 
+// ==========================================================================
+// 🏛️ [موديل السنتر والاجتماعات] هيكل حفظ قاعات البث، الفيديوهات وساعات المشاهدة
+// ==========================================================================
+const OuroCenterSchema = new mongoose.Schema({
+    roomId: { type: String, required: true, unique: true },
+    host: { type: String, required: true }, // المعلم أو منشئ السنتر
+    allVideos: [
+        {
+            title: { type: String, required: true },
+            watchHours: { type: String, default: "0.0" }, // ساعات المشاهدة التراكمية كاليوتيوب
+            date: { type: String }
+        }
+    ],
+    allImages: [{ url: { type: String }, title: { type: String } }],
+    allPdfs: [{ url: { type: String }, title: { type: String }, size: { type: String } }],
+    createdAt: { type: Date, default: Date.now }
+});
+
+const OuroCenterModel = mongoose.model('OuroCenter', OuroCenterSchema);
+
 // 🔑 [صياغة قفل بوابات المطورين] هيكل حفظ وإصدار مفاتيح الـ API سحابياً بـ MongoDB Atlas للأبد
 const DeveloperKeySchema = new mongoose.Schema({
     id: { type: String, required: true, unique: true },
@@ -1423,6 +1443,88 @@ app.post('/api/wallet/admin/add-contract', async (req, res) => {
         res.json({ success: true, contract: newContract });
     } catch (err) { res.status(500).json({ success: false }); }
 });
+
+// ==========================================================================
+// 🏛️ [بوابة السنتر والاجتماعات] مسارات الدفع والاستدعاء اللحظي للمحاضرات
+// ==========================================================================
+
+// 1. [مسار استئجار القاعة وبدء البث] خصم 50 عملة من المعلم وضخها تلقائياً لخزينة الأدمن Mostafa
+app.post('/api/center/rent-room', async (req, res) => {
+    try {
+        const { username, cost } = req.body;
+        const rentCost = parseInt(cost) || 50;
+
+        // جلب وقراءة حساب المعلم وحساب الأدمن من الملف المالي المستقل
+        let teacherLedger = await OuroUserLedgerModel.findOne({ username });
+        let adminLedger = await OuroUserLedgerModel.findOne({ username: 'Admin_Mostafa' });
+
+        if (!teacherLedger) {
+            teacherLedger = new OuroUserLedgerModel({ username, ouroBalance: 0 });
+            await teacherLedger.save();
+        }
+
+        // فحص كفاية رصيد المعلم (إلا لو كان الأدمن نفسه فيعبر مجاناً)
+        if (teacherLedger.ouroBalance < rentCost && username !== 'Admin_Mostafa') {
+            return res.status(400).json({ success: false, message: `❌ رصيدك الحالي من عملات OURO غير كافٍ لاستئجار السنتر! تكلفة البث ${rentCost} عملة.` });
+        }
+
+        // تنفيذ الخصم الفعلي من المعلم وتحويل القيمة مباشرة لخزينة الأدمن الملكية
+        if (username !== 'Admin_Mostafa') {
+            teacherLedger.ouroBalance -= rentCost;
+            await teacherLedger.save();
+            
+            if (adminLedger) {
+                adminLedger.ouroBalance += rentCost;
+                await adminLedger.save();
+            }
+        }
+
+        // توليد غرفة بث فريدة مشفرة فالسحاب للسنتر التعليمي
+        const generatedRoomId = 'room_' + Date.now().toString();
+        const newCenterRoom = new OuroCenterModel({
+            roomId: generatedRoomId,
+            host: username,
+            allVideos: [
+                { title: "💻 محاضرة كورس الويب الشامل - الجلسة الأولى", watchHours: "124.5", date: "2026/05/28" },
+                { title: "📱 كورس الأندرويد لـ Google Play - الدرس التأسيسي", watchHours: "89.2", date: "2026/05/29" }
+            ]
+        });
+        await newCenterRoom.save();
+
+        // بث نبضة السوكت الحية لتحديث الرصيد فالسقف تلقائياً فور الخصم
+        if (global.io) {
+            global.io.emit('wallet_balance_updated', { username, newBalance: teacherLedger.ouroBalance });
+        }
+
+        res.json({ success: true, roomId: generatedRoomId });
+    } catch (err) {
+        console.error("خطأ استئجار السنتر:", err);
+        res.status(500).json({ success: false, message: "فشل الاتصال بقفل السنتر السحابي." });
+    }
+});
+
+// 2. [مستمع قنوات السوكت للسنتر] المزامنة الحية وضخ حزم البيانات والوسائط الأربعة
+if (global.io) {
+    global.io.on('connection', (socket) => {
+        // قنوات جلب بيانات السنتر للأعضاء والطلاب فور نقر الزر
+        socket.on('get_center_status', async (data) => {
+            try {
+                // جلب أحدث قاعة بث مسجلة فالسحاب
+                const latestCenter = await OuroCenterModel.findOne({}).sort({ createdAt: -1 });
+                if (latestCenter) {
+                    socket.emit('center_data_package', {
+                        videos: latestCenter.allVideos,
+                        images: latestCenter.allImages,
+                        pdfs: latestCenter.allPdfs
+                    });
+                } else {
+                    socket.emit('center_data_package', { videos: [], images: [], pdfs: [] });
+                }
+            } catch (e) { console.error(e); }
+        });
+    });
+}
+
 
 server.listen(PORT, "0.0.0.0", () => { 
     console.log(`🚀 السيرفر السحابي يعمل بنجاح على بورت ${PORT}`); 
