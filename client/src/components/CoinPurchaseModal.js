@@ -88,6 +88,22 @@ const CoinPurchaseModal = ({ user, API_BASE, onClose, setOuroBalance }) => {
           <button className="close-discovery" onClick={onClose}>✖</button>
         </div>
 
+          {/* 👑 [إضافة التحديث المالي الملكي] حقن وتثبيت التعريفة الرسمية للعملة دون خسارة أي ميزة بالملف */}
+        <div style={{ 
+          background: 'rgba(212,175,55,0.05)', 
+          border: '1px solid rgba(212,175,55,0.2)', 
+          padding: '10px', 
+          borderRadius: '6px', 
+          marginBottom: '15px', 
+          fontSize: '11px', 
+          color: 'var(--gold-primary, #d4af37)', 
+          fontWeight: 'bold', 
+          textAlign: 'center', 
+          letterSpacing: '0.5px' 
+        }}>
+          ⚖️ السعر المالي المعتمد للعملة: 1 OURO Coin = 1.00 EGP (جنيه مصري واحد ثابت للأبد)
+        </div>
+
         <div className="discovery-body scrollbar-gold">
           
           <form className="market-upload-form gold-border" onSubmit={handleInternalTransfer} style={{ background: 'rgba(255,255,255,0.01)', padding: '15px', borderRadius: '8px' }}>
