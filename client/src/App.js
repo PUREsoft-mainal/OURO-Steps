@@ -17,6 +17,7 @@ import Market from './components/Market'; // استدعاء ملف السوق ا
 import ApiKeyModal from './components/ApiKeyModal';
 import OuroWalletModal from './components/OuroWalletModal';
 import CoinPurchaseModal from './components/CoinPurchaseModal'; // 👑 حقن بوابة التداول الداخلي لـ OURO
+import OuroCenterModal from './components/OuroCenterModal';
 import './App.css';
 
 // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
@@ -60,6 +61,7 @@ function App() {
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [ouroBalance, setOuroBalance] = useState(0); // رصيد المستخدم الحالي
   const [showCoinPurchaseModal, setShowCoinPurchaseModal] = useState(false);
+  const [showCenterModal, setShowCenterModal] = useState(false);
   // 👑 [دالة الحذف السحابية المحدثة] إطلاق نبضة الإبادة السيبرانية لكارت المنتج وتطهيره من MongoDB Atlas
   const handleDeletePost = async (postId) => {
     if (!window.confirm("🗑️ هل أنت متأكد من حذف هذه السلعة وإلغاء منشورها نهائياً من السحاب؟")) return;
@@ -449,6 +451,9 @@ return (
           }
           setShowApiKeyModal={setShowApiKeyModal} // 👈 قُم بحقن هذا السطر هنا لتتصل التروس ببعضها
           setShowWalletModal={setShowWalletModal} // 👈 حقن دالة استدعاء المحفظة هنا
+          setShowApiKeyModal={setShowApiKeyModal}
+          setShowWalletModal={setShowWalletModal}
+          setShowCenterModal={setShowCenterModal} 
         />
 
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
@@ -528,7 +533,15 @@ return (
           />
         )}
 
-
+        {/* 👑 [تفعيل مشروع السنتر المكتسح] إطلاق نافذة السنتر والاجتماعات العائمة بكافة قنوات البث والأزرار الأربعة */}
+        {showCenterModal && (
+          <OuroCenterModal 
+            user={user}
+            socket={socket}
+            API_BASE={API_BASE}
+            onClose={() => setShowCenterModal(false)}
+          />
+        )}
 
         {/* 👑 [تم التطهير كلياً] حذف السطر النصي المكشوف وتأمين تشغيل المتجر المستقل دون طرد أو تعليق */}
         {showMarket && (
