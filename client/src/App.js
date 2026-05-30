@@ -62,6 +62,7 @@ function App() {
   const [ouroBalance, setOuroBalance] = useState(0); // رصيد المستخدم الحالي
   const [showCoinPurchaseModal, setShowCoinPurchaseModal] = useState(false);
   const [showCenterModal, setShowCenterModal] = useState(false);
+  const [showFlashModal, setShowFlashModal] = useState(false);
   // 👑 [دالة الحذف السحابية المحدثة] إطلاق نبضة الإبادة السيبرانية لكارت المنتج وتطهيره من MongoDB Atlas
   const handleDeletePost = async (postId) => {
     if (!window.confirm("🗑️ هل أنت متأكد من حذف هذه السلعة وإلغاء منشورها نهائياً من السحاب؟")) return;
