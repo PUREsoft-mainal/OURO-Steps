@@ -58,18 +58,24 @@ const OuroCenterSchema = new mongoose.Schema({
 const OuroCenterModel = mongoose.model('OuroCenter', OuroCenterSchema);
 
 // 🔑 [صياغة قفل بوابات المطورين] هيكل حفظ وإصدار مفاتيح الـ API سحابياً بـ MongoDB Atlas للأبد
+// 👑 [تحديث جدول مطوري الـ API] حقن صلاحيات المحفظة والسنتر ومؤشر التجميد المالي الشامل
 const DeveloperKeySchema = new mongoose.Schema({
     id: { type: String, required: true, unique: true },
-    username: { type: String, required: true }, // صاحب المفتاح
-    keyLabel: { type: String, required: true }, // وصف المفتاح (مثال: تطبيق الموبايل)
-    apiKey: { type: String, required: true, unique: true }, // المفتاح السري المشفر
+    username: { type: String, required: true },
+    keyLabel: { type: String, required: true },
+    apiKey: { type: String, required: true, unique: true },
     scopes: {
-        all_features: { type: Boolean, default: false }, // مزايا المنصة كلياً
-        prayer_times: { type: Boolean, default: false }, // مواقيت الصلاة
-        virtual_flash: { type: Boolean, default: false }, // الفلاشة
-        market: { type: Boolean, default: false },        // المتجر
-        ads: { type: Boolean, default: false }            // الإعلانات
+        all_features: { type: Boolean, default: false },
+        prayer_times: { type: Boolean, default: true }, // مجاني
+        virtual_flash: { type: Boolean, default: false }, // 50 OURO
+        market: { type: Boolean, default: false },        // 20 OURO
+        ads: { type: Boolean, default: true },          // مجاني
+        wallet: { type: Boolean, default: false },       // 10 OURO 👑 [مضاف]
+        center: { type: Boolean, default: false }        // 20 OURO 👑 [مضاف]
     },
+    monthlyCost: { type: Number, default: 0 }, // تكلفة الاشتراك الإجمالية المجموعة
+    isActive: { type: Boolean, default: true }, // 🔒 مؤشر تشغيل أو تجميد المفتاح عند نفاذ الرصيد
+    isContract: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -1238,23 +1244,75 @@ const generateSecureApiKey = () => {
 };
 
 // 1️⃣ [مسار توليد المفتاح] استخراج وحفظ مفتاح الـ API ومطابقة الخصائص المحددة فالسحاب
-app.post('/api/developer/generate-key', async (req, res) => {
+// ==========================================================================
+// ⚙️ [محرك الـ API المركزي المطور] حاسبة الأسعار، الخصم المالي المسبق، والتجميد الآلي
+// ==========================================================================
+app.post('/api/developer/create-key', async (req, res) => {
     try {
         const { username, keyLabel, scopes } = req.body;
-        if (!username || !keyLabel) return res.status(400).json({ success: false, message: "البيانات ناقصة" });
 
-        const newKeyData = new DeveloperKeyModel({
+        // 1. حساب قيمة الخصم التراكمية بناءً على تعريفة الأسعار المعتمدة بالملي
+        let totalMonthlyCost = 0;
+        if (scopes.all_features) {
+            totalMonthlyCost = 75; // المزايا كلياً بـ 75 عملة شهرياً
+        } else {
+            if (scopes.virtual_flash) totalMonthlyCost += 50;
+            if (scopes.market) totalMonthlyCost += 20;
+            if (scopes.wallet) totalMonthlyCost += 10;
+            if (scopes.center) totalMonthlyCost += 20;
+            // مواقيت الصلاة وشريط الإعلانات مجانية تماماً (0 عملة)
+        }
+
+        // 2. جلب الملف المالي المستقل للمطور من السحاب للخصم الفوري المسبق
+        let userLedger = await OuroUserLedgerModel.findOne({ username });
+        if (!userLedger) {
+            userLedger = new OuroUserLedgerModel({ username, ouroBalance: 0 });
+            await userLedger.save();
+        }
+
+        // فحص كفاية رصيد المطور قبل السماح باستخراج المفتاح
+        if (userLedger.ouroBalance < totalMonthlyCost && username !== 'Admin_Mostafa') {
+            return res.status(400).json({ 
+                success: false, 
+                message: `❌ رصيدك الحالي (${userLedger.ouroBalance} OURO) غير كافٍ لتغطية قيمة اشتراك المفتاح المطلوبة البالغة ${totalMonthlyCost} OURO شهرياً! الرجاء شحن محفظتك أولاً.` 
+            });
+        }
+
+        // 3. الخصم الفيزيائي الفوري لقيمة الاشتراك شهرياً وضخها لخزينة الأدمن Mostafa
+        if (username !== 'Admin_Mostafa' && totalMonthlyCost > 0) {
+            userLedger.ouroBalance -= totalMonthlyCost;
+            await userLedger.save();
+
+            let adminLedger = await OuroUserLedgerModel.findOne({ username: 'Admin_Mostafa' });
+            if (adminLedger) {
+                adminLedger.ouroBalance += totalMonthlyCost;
+                await adminLedger.save();
+            }
+        }
+
+        // 4. توليد شفرة مفتاح الـ API المشفرة والفريدة
+        const crypto = require('crypto');
+        const generatedApiKey = 'ouro_api_' + crypto.randomBytes(16).toString('hex');
+
+        const newApiKeyDoc = new (mongoose.model('DeveloperKey'))({
             id: 'key_' + Date.now().toString(),
-            username: username,
-            keyLabel: keyLabel,
-            apiKey: generateSecureApiKey(), // توليد مفتاح مشفر معقم
-            scopes: scopes
+            username,
+            keyLabel,
+            apiKey: generatedApiKey,
+            scopes,
+            monthlyCost: totalMonthlyCost,
+            isActive: true // ينطلق نشطاً بنجاح
         });
+        await newApiKeyDoc.save();
 
-        await newKeyData.save(); // الحفظ النهائي المستمر داخل MongoDB Atlas
-        res.json({ success: true, newKey: newKeyData });
+        // بث نبضة السوكت لإنعاش الرصيد فالسقف تلقائياً فور الخصم المسبق
+        if (global.io) {
+            global.io.emit('wallet_balance_updated', { username, newBalance: userLedger.ouroBalance });
+        }
+
+        res.json({ success: true, key: newApiKeyDoc, newBalance: userLedger.ouroBalance });
     } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+        res.status(500).json({ success: false, message: "فشل استخراج مفتاح الـ API السحابي." });
     }
 });
 
