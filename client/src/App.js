@@ -451,8 +451,6 @@ return (
           }
           setShowApiKeyModal={setShowApiKeyModal} // 👈 قُم بحقن هذا السطر هنا لتتصل التروس ببعضها
           setShowWalletModal={setShowWalletModal} // 👈 حقن دالة استدعاء المحفظة هنا
-          setShowApiKeyModal={setShowApiKeyModal}
-          setShowWalletModal={setShowWalletModal}
           setShowCenterModal={setShowCenterModal} 
         />
 
