@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-no-comment-textnodes */
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
@@ -6,14 +8,27 @@ const ApiKeyModal = ({ user, API_BASE, onClose }) => {
   const [loading, setLoading] = useState(true);
   const [keyName, setKeyName] = useState("");
   
-  // 🔒 مصفوفة الخصائص والصلاحيات المتاحة للمطورين في منصة OURO Steps
+  // 🔒 مصفوفة الخصائص والصلاحيات المتاحة للمطورين في منصة OURO Steps المحدثة بالملي
   const [scopes, setScopes] = useState({
-    all_features: false, // استخدام API للتفاعل مع الوجهة بجميع مزايا المنصة
-    prayer_times: false, // مواقيت الصلاة
-    virtual_flash: false, // الفلاشة الإلكترونية
-    market: false,        // المتجر
-    ads: false            // الإعلانات
+    all_features: false,   // استخدام API بجميع مزايا المنصة كلياً (75 OURO)
+    prayer_times: true,   // مواقيت الصلاة (مجانية للأبد)
+    virtual_flash: false,  // الفلاشة (50 OURO)
+    market: false,         // المتجر (20 OURO) 
+    wallet: false,         // المحفظة (10 OURO) 👑 مضاف
+    center: false,         // السنتر والاجتماعات (20 OURO) 👑 مضاف
+    ads: true             // الإعلانات (مجانية للأبد)
   });
+
+  // 💹 دالة حاسبة الأسعار اللحظية المجموعة والمطابقة للتعريفة الاقتصادية المطلوبة بالملي
+  const calculateLiveCost = () => {
+    if (scopes.all_features) return 75;
+    let cost = 0;
+    if (scopes.virtual_flash) cost += 50;
+    if (scopes.market) cost += 20;
+    if (scopes.wallet) cost += 10;
+    if (scopes.center) cost += 20;
+    return cost;
+  };
 
   // 1️⃣ جلب قائمة المفاتيح المستخرجة المخزنة للمستخدم الحالي سحابياً
   useEffect(() => {
@@ -27,32 +42,33 @@ const ApiKeyModal = ({ user, API_BASE, onClose }) => {
     }
   }, [user?.username, API_BASE]);
 
-  // 2️⃣ خاصية تبديل علامات الصح (Checkbox) للخصائص المرادة
+    // 2️⃣ خاصية تبديل علامات الصح (Checkbox) للخصائص المرادة بنقاء
   const handleScopeChange = (scopeKey) => {
+    if (scopeKey === 'prayer_times' || scopeKey === 'ads') return; // مجانية ثابتة لراحة المستخدم
     setScopes(prev => ({ ...prev, [scopeKey]: !prev[scopeKey] }));
   };
 
-  // 🔑 3️⃣ دالة توليد واستخراج المفتاح السحابي الثابت الجديد
+  // 🔑 3️⃣ دالة توليد واستخراج المفتاح السحابي المحدثة بالخصم المسبق والتطابق التام
   const handleGenerateKey = async (e) => {
     e.preventDefault();
     if (!keyName.trim()) return alert("⚠️ الرجاء كتابة اسم أو وصف للمفتاح (مثال: تطبيق الأندرويد)!");
 
     try {
-      const res = await axios.post(`${API_BASE}/api/developer/generate-key`, {
+      // 🔒 توجيه الطلب للمسار المركزي المطور لحساب الخصم المسبق والتجميد المالي
+      const res = await axios.post(`${API_BASE}/api/developer/create-key`, {
         username: user?.username,
-        keyLabel: keyName,
+        keyLabel: keyName.trim(),
         scopes: scopes
       });
 
       if (res.data.success) {
-        setKeysList(prev => [res.data.newKey, ...prev]);
+        setKeysList(prev => [res.data.key, ...prev]);
         setKeyName("");
-        // تصفير الخصائص بعد النجاح
-        setScopes({ all_features: false, prayer_times: false, virtual_flash: false, market: false, ads: false });
-        alert(`🔑 تم استخراج مفتاح الـ API بنجاح! احتفظ به سراً لمشاركته في تطبيقك:\n\n${res.data.newKey.apiKey}`);
+        setScopes({ all_features: false, prayer_times: true, virtual_flash: false, market: false, wallet: false, center: false, ads: true });
+        alert(`🔑 تم استخراج مفتاح الـ API بنجاح!\n💰 تم خصم قيمة الاشتراك الإجمالية البالغة: ${res.data.key.monthlyCost} OURO من محفظتك الموصولة.\n\nرمز المفتاح:\n${res.data.key.apiKey}`);
       }
     } catch (err) {
-      alert("❌ فشل استخراج المفتاح من السحاب، تأكد من اتصال قاعدة البيانات.");
+      alert(err.response?.data?.message || "❌ فشل استخراج المفتاح، رصيدك السحابي غير كافٍ لتغطية الاشتراك.");
     }
   };
 
@@ -65,23 +81,20 @@ const ApiKeyModal = ({ user, API_BASE, onClose }) => {
         setKeysList(prev => prev.filter(k => k.id !== keyId));
         alert("🗑️ تم حذف المفتاح وتطهير الصلاحيات السيبرانية بنجاح.");
       }
-    } catch (err) {
-      alert("❌ فشل حذف المفتاح.");
-    }
+    } catch (err) { alert("❌ فشل حذف المفتاح."); }
   };
 
   return (
     <div className="discovery-overlay" onClick={onClose}>
-      <div className="discovery-window gold-border" onClick={e => e.stopPropagation()} style={{ width: '90%', maxWidth: '750px' }}>
+      <div className="discovery-window gold-border" onClick={e => e.stopPropagation()} style={{ width: '92%', maxWidth: '750px', background: '#070707' }}>
         
         <div className="discovery-tabs" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ color: 'var(--gold-primary)', margin: 0 }}>⚙️ بوابة مطوري OURO Steps (API Gateway)</h3>
-          <button className="close-discovery" onClick={onClose}>❌ إغلاق</button>
+          <button className="close-discovery" onClick={onClose}>❌</button>
         </div>
 
         <div className="discovery-body scrollbar-gold" style={{ maxHeight: '70vh', overflowY: 'auto', padding: '15px' }}>
           
-          {/* فورم استخراج مفتاح جديد ومطابقة الخصائص كالفيس بوك تماماً */}
           <form className="market-upload-form gold-border" onSubmit={handleGenerateKey} style={{ background: 'rgba(255,255,255,0.01)', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
             <h4 style={{ color: '#fff', margin: '0 0 10px 0' }}>🔑 استخراج مفتاح API جديد للموبايل والتطبيقات</h4>
             <input 
@@ -92,67 +105,90 @@ const ApiKeyModal = ({ user, API_BASE, onClose }) => {
               required 
               style={{ width: '100%', padding: '8px', marginBottom: '15px', background: '#000', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px' }}
             />
-            
             <h5 style={{ color: 'var(--gold-primary)', margin: '0 0 10px 0' }}>🛡️ حدد الصلاحيات والخصائص المراد مشاركتها للمفتاح:</h5>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(0,0,0,0.4)', padding: '12px', borderRadius: '6px', border: '1px solid rgba(212,175,55,0.1)' }}>
               
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fff', fontSize: '12px', cursor: 'pointer' }}>
                 <input type="checkbox" checked={scopes.all_features} onChange={() => handleScopeChange('all_features')} />
-                🌟 استخدام API للتفاعل مع الوجهة بجميع مزايا المنصة كلياً
+                🌟 استخدام API للتفاعل بجميع مزايا المنصة كلياً (75 OURO / ش)
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-muted)', fontSize: '12px', cursor: 'not-allowed' }}>
+                <input type="checkbox" checked={scopes.prayer_times} disabled />
+                🕋 مشاركة منظومة ومواقيت الصلاة الفلكية (مجاني)
               </label>
 
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fff', fontSize: '12px', cursor: 'pointer' }}>
-                <input type="checkbox" checked={scopes.prayer_times} onChange={() => handleScopeChange('prayer_times')} />
-                🕋 مشاركة منظومة ومواقيت الصلاة الفلكية
+                <input type="checkbox" checked={scopes.virtual_flash} disabled={scopes.all_features} onChange={() => handleScopeChange('virtual_flash')} />
+                📟 مشاركة تفاعل الفلاشة الإلكترونية الموقوتة (50 OURO / ش)
               </label>
 
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fff', fontSize: '12px', cursor: 'pointer' }}>
-                <input type="checkbox" checked={scopes.virtual_flash} onChange={() => handleScopeChange('virtual_flash')} />
-                📟 مشاركة تفاعل الفلاشة الإلكترونية الموقوتة
+                <input type="checkbox" checked={scopes.market} disabled={scopes.all_features} onChange={() => handleScopeChange('market')} />
+                🛍️ مشاركة معرض سلع ومنشورات المتجر الملكي (20 OURO / ش)
+              </label>
+
+              {/* 👑 حقن خانات الاختيار الـ Checkbox للمحفظة والسنتر المطلوبة بالملي */}
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fff', fontSize: '12px', cursor: 'pointer' }}>
+                <input type="checkbox" checked={scopes.wallet} disabled={scopes.all_features} onChange={() => handleScopeChange('wallet')} />
+                🪙 مشاركة وتأمين بوابة المحفظة الرقمية الملكية (10 OURO / ش)
               </label>
 
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fff', fontSize: '12px', cursor: 'pointer' }}>
-                <input type="checkbox" checked={scopes.market} onChange={() => handleScopeChange('market')} />
-                🛍️ مشاركة معرض سلع ومنشورات المتجر الملكي
+                <input type="checkbox" checked={scopes.center} disabled={scopes.all_features} onChange={() => handleScopeChange('center')} />
+                🏛️ مشاركة البث الحي المباشر لـ السنتر والاجتماعات (20 OURO / ش)
               </label>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fff', fontSize: '12px', cursor: 'pointer' }}>
-                <input type="checkbox" checked={scopes.ads} onChange={() => handleScopeChange('ads')} />
-                📣 مشاركة وبث شريط الإعلانات التفاعلي
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-muted)', fontSize: '12px', cursor: 'not-allowed' }}>
+                <input type="checkbox" checked={scopes.ads} disabled />
+                📣 مشاركة وبث شريط الإعلانات التفاعلي (مجاني)
               </label>
 
             </div>
-            <button type="submit" className="gold-btn" style={{ width: '100%', marginTop: '12px' }}>توليد وإصدار المفتاح السحابي الثابت</button>
+
+            {/* 📊 لوحة العرض اللحظية للمبلغ الاجمالي للاشتراك التراكمي المجموع تلقائياً */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: 'rgba(212,175,55,0.04)', borderRadius: '4px', border: '1px solid rgba(212,175,55,0.12)', marginTop: '12px' }}>
+              <span style={{ color: '#fff', fontSize: '12px' }}>📊 قيمة اشتراك المفتاح المستحق المجموعة:</span>
+              <strong style={{ color: 'var(--gold-primary)', fontSize: '13px' }}>{calculateLiveCost()} OURO / شهرياً</strong>
+            </div>
+
+            <button type="submit" className="gold-btn" style={{ width: '100%', marginTop: '12px', fontWeight: 'bold' }}>توليد وإصدار المفتاح السحابي الثابت</button>
           </form>
 
-          {/* لوحة إدارة وعرض المفاتيح الحالية المستخرجة للمستخدم */}
-          <h4 style={{ color: 'var(--gold-primary)', borderBottom: '1px solid rgba(212,175,55,0.2)', paddingBottom: '5px' }}>📋 مفاتيح الـ API النشطة الخاصة بك</h4>
+          <h4 style={{ color: 'var(--gold-primary)', borderBottom: '1px solid rgba(212,175,55,0.2)', paddingBottom: '5px', marginTop: '20px' }}>📋 مفاتيح الـ API النشطة الخاصة بك</h4>
           <div className="users-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
             {loading ? <p className="gold-text">جاري تحميل لوحة المطورين...</p> : (
               keysList.map(k => (
                 <div key={k.id} className="mini-user-card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px', background: 'rgba(0,0,0,0.6)', border: '1px solid var(--border-glass)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <strong style={{ color: '#e5c158', fontSize: '13px' }}>📌 {k.label}</strong>
+                    <strong style={{ color: '#e5c158', fontSize: '13px' }}>📌 {k.keyLabel || k.label}</strong>
                     <button onClick={() => handleDeleteKey(k.id)} style={{ background: 'none', border: 'none', color: '#c0392b', fontSize: '18px', cursor: 'pointer', fontWeight: 'bold' }}>×</button>
                   </div>
                   
-                  {/* عرض الرمز السري للمفتاح بأمان مع إمكانية تحديده */}
                   <div style={{ display: 'flex', gap: '5px', background: '#000', padding: '6px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
                     <code style={{ color: '#27ae60', fontSize: '11px', wordBreak: 'break-all', userSelect: 'all' }}>{k.apiKey}</code>
                   </div>
                   
-                  {/* شريط عرض الصلاحيات المختومة للمفتاح الحركي */}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-                    <small style={{ color: 'var(--text-muted)', fontSize: '10px' }}>الصلاحيات النشطة:</small>
-                    {Object.keys(k.scopes).filter(s => k.scopes[s]).map(s => (
-                      <span key={s} style={{ background: 'rgba(212,175,55,0.1)', color: 'var(--gold-primary)', fontSize: '9px', padding: '1px 5px', borderRadius: '3px', border: '1px solid rgba(212,175,55,0.2)' }}>
-                        {s === 'all_features' && '🌟 كامل المنصة'}
-                        {s === 'prayer_times' && '🕋 مواقيت الصلاة'}
-                        {s === 'virtual_flash' && '📟 الفلاشة'}
-                        {s === 'market' && '🛍️ المتجر'}
-                        {s === 'ads' && '📣 الإعلانات'}
-                      </span>
-                    ))}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+                      <small style={{ color: 'var(--text-muted)', fontSize: '10px' }}>الصلاحيات:</small>
+                      {k.scopes && Object.keys(k.scopes).filter(s => k.scopes[s]).map(s => (
+                        <span key={s} style={{ background: 'rgba(212,175,55,0.1)', color: 'var(--gold-primary)', fontSize: '8px', padding: '1px 4px', borderRadius: '2px' }}>
+                          {s === 'all_features' && '🌟 كامل المنصة'}
+                          {s === 'prayer_times' && '🕋 الصلاة'}
+                          {s === 'virtual_flash' && '📟 الفلاشة'}
+                          {s === 'market' && '🛍️ المتجر'}
+                          {s === 'wallet' && '🪙 المحفظة'}
+                          {s === 'center' && '🏛️ السنتر'}
+                          {s === 'ads' && '📣 الإعلانات'}
+                        </span>
+                      ))}
+                    </div>
+                    
+                    {/* عرض تكلفة تجديد كل مفتاح مسحوبة من السيرفر كدليل أمان إضافي موثق */}
+                    <span style={{ color: k.isActive ? '#27ae60' : '#c0392b', fontSize: '10px', fontWeight: 'bold' }}>
+                      {k.isActive ? `🟢 نشط (${k.monthlyCost || 0} OURO)` : '🔴 مجمد'}
+                    </span>
                   </div>
                 </div>
               ))
