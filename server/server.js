@@ -1413,65 +1413,52 @@ const isValidOuroTokenSerial = (tokenId) => {
     return (!isNaN(serialNum) && serialNum >= OURO_BASE_SERIAL && serialNum <= OURO_MAX_SERIAL);
 };
 
-// 1️⃣ [مسار جلب الرصيد الحركي المعكوس]
+// ==========================================================================
+// 🪙 1️⃣ [إعادة ضبط مسار الجلب] قراءة الرصيد الفعلي الموثق مباشرة من ملف الصك الجديد
+// ==========================================================================
 app.post('/api/wallet/get-info', async (req, res) => {
     try {
         const { username } = req.body;
-        if (!username) return res.status(400).json({ success: false });
+        if (!username) return res.status(400).json({ success: false, message: "⚠️ اسم المستخدم مفقود رقمياً" });
 
-        let userLedger = await OuroUserLedgerModel.findOne({ username });
-        if (!userLedger) {
-            userLedger = new OuroUserLedgerModel({ username, ouroBalance: 0 });
-            await userLedger.save();
-        }
+        // 🔍 [محرك قراءة ملف الصك الجديد] حساب عدد وثائق العملات الحقيقية الملوّدة والممسوكة باسم المستخدم بالأطلس
+        const actualMintedBalance = await OuroTokenModel.countDocuments({ owner: username });
 
-        // 🧠 [المنطق المعكوس الحاسم] حساب إجمالي العملات التي خرجت للمستخدمين سحابياً لخصمها من الأدمن آلياً
-        const allUserTokensSum = await OuroUserLedgerModel.aggregate([
-            { $match: { username: { $ne: 'Admin_Mostafa' } } },
-            { $group: { _id: null, total: { $sum: "$ouroBalance" } } }
-        ]);
-        const totalMintedToUsers = (allUserTokensSum.length > 0) ? allUserTokensSum[0].total : 0;
-
-        // رصيد الأدمن = الإمداد الكلي (21 مليون) مطروحاً منه ما يمتلكه بقية المستخدمين بالفعل
-        let displayBalance = userLedger.ouroBalance;
-        if (username === 'Admin_Mostafa') {
-            displayBalance = OURO_MAX_SUPPLY - totalMintedToUsers;
-            if (userLedger.ouroBalance !== displayBalance) {
-                userLedger.ouroBalance = displayBalance;
-                await userLedger.save();
-            }
-        }
-
+        // جلب العقود الذكية إن وجدت من قاعدة البيانات
         const contracts = await mongoose.model('DeveloperKey').find({ isContract: true }).catch(() => []) || [];
         
+        // ضخ حزمة البيانات المعقمة للواجهة لتنبثق بالعدد التعديني الصافي الفعلي
         res.json({ 
             success: true, 
-            ouroBalance: displayBalance, 
+            ouroBalance: actualMintedBalance, // 🪙 المربعات فالموقع تقرأ وتعرض الآن عدد ال-3,000,000 المرفوعة من جهازك بالملي
             contracts: [
                 {
                     id: "contract_ouro_genesis_2026",
-                    contractName: "OURO Coin Master Contract (Lazy Minting Core)",
+                    contractName: "OURO Coin Master Contract (Live Mining Core)",
                     symbol: "OURO",
                     contractAddress: "0x7627OUROamek11619917627h38j4l5G84P8354000000000000000000000000000000000000" 
                 }
             ] 
         });
-    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+    } catch (err) { 
+        console.error("خطأ جلب الرصيد من ملف الصك الجديد:", err);
+        res.status(500).json({ success: false, error: err.message }); 
+    }
 });
 
 // ==========================================================================
-// 💸 [قفل الأمان المالي المطلق] محرك التداول والخصم الرياضي المعكوس المحمي كلياً
+// 💸 [إعادة ضبط مسار التحويل كلياً] نقل ملكية العملات بملف الصك وقانون الضريبة 7%
 // ==========================================================================
 app.post('/api/wallet/transfer', async (req, res) => {
     try {
-        const { sender, receiver, amount } = req.body;
+        const { sender, receiver, amount } = req.body; // receiver يمثل إما الـ ID الفريد أو اسم الحساب
         const transferAmount = parseInt(amount);
 
         if (isNaN(transferAmount) || transferAmount <= 0) {
             return res.status(400).json({ success: false, message: "⚠️ كمية الحوالة غير صالحة برمجياً" });
         }
 
-        // 🔍 1. البحث والمطابقة الذكية للمستقبل عبر الـ ID أو اسم الحساب
+        // 1️⃣ المطابقة الذكية والسريعة للمستقبل عبر الـ ID الفريد _id أو الـ username
         const mongoose = require('mongoose');
         let query = { username: receiver.trim() };
         if (mongoose.Types.ObjectId.isValid(receiver.trim())) query = { _id: receiver.trim() };
@@ -1480,73 +1467,58 @@ app.post('/api/wallet/transfer', async (req, res) => {
         if (!receiverUser) return res.status(404).json({ success: false, message: "⚠️ الـ ID أو الحساب المستهدف غير موجود كلياً بالمنصة!" });
         if (sender === receiverUser.username) return res.status(400).json({ success: false, message: "⚠️ لا يمكنك التحويل لنفس محفظتك!" });
 
-        // 🧠 2. حساب الأرصدة الرياضية المعكوسة (العملات الخارجة للمستخدمين كلياً)
-        const allUserTokensSum = await OuroUserLedgerModel.aggregate([
-            { $match: { username: { $ne: 'Admin_Mostafa' } } },
-            { $group: { _id: null, total: { $sum: "$ouroBalance" } } }
-        ]);
-        const totalMintedToUsers = (allUserTokensSum.length > 0) ? allUserTokensSum[0].total : 0;
-        const adminComputedBalance = OURO_MAX_SUPPLY - totalMintedToUsers;
-
-        // 💾 3. جلب وتأمين زرع مستندات القراءة فقط للمرسل والمستقبل فالسحاب لمنع الـ null crash
-        let senderLedger = await OuroUserLedgerModel.findOne({ username: sender });
-        if (!senderLedger) {
-            const initBal = (sender === 'Admin_Mostafa') ? adminComputedBalance : 0;
-            senderLedger = new OuroUserLedgerModel({ username: sender, ouroBalance: initBal });
-            await senderLedger.save();
-        }
-
-        let receiverLedger = await OuroUserLedgerModel.findOne({ username: receiverUser.username });
-        if (!receiverLedger) {
-            receiverLedger = new OuroUserLedgerModel({ username: receiverUser.username, ouroBalance: 0 });
-            await receiverLedger.save();
-        }
-
-        // فحص كفاية الأرصدة للمحافظ العادية
-        let senderBal = (sender === 'Admin_Mostafa') ? adminComputedBalance : senderLedger.ouroBalance;
+        // 2️⃣ [محرك فحص الرموز الحقيقي] قنص العملات المتسلسلة المملوكة للمرسل حالياً داخل ملف الصك الجديد
+        const senderTokens = await OuroTokenModel.find({ owner: sender }).limit(transferAmount + Math.ceil(transferAmount * 0.07));
+        
+        // احتساب ضريبة الشبكة القانونية (7%) بأعداد العملات الصارمة
         const taxAmount = Math.ceil(transferAmount * 0.07);
-        const totalCost = transferAmount + taxAmount;
+        const totalRequiredCost = transferAmount + taxAmount;
 
-        if (senderBal < totalCost && sender !== 'Admin_Mostafa') {
-            return res.status(400).json({ success: false, message: `❌ رصيدك بالملف السحابي غير كافٍ! الحوالة تتطلب ${transferAmount} عملة + ${taxAmount} عملة ضريبة الشبكة.` });
+        // فحص كفاية العملات الفعلية في ملف الصك (الأدمن مستثنى من الضريبة لحساب الخزينة)
+        if (senderTokens.length < totalRequiredCost && sender !== 'Admin_Mostafa') {
+            return res.status(400).json({ success: false, message: `❌ رصيدك الفعلي بملف الصك غير كافٍ! الحوالة تتطلب ${transferAmount} عملة + ${taxAmount} عملة ضريبة الشبكة.` });
+        }
+        
+        if (senderTokens.length < transferAmount && sender === 'Admin_Mostafa') {
+            return res.status(400).json({ success: false, message: `❌ رصيدك الفعلي بملف الصك لا يكفي لإتمام عملية شحن المستخدمين!` });
         }
 
-        // ⚡ 4. تنفيذ عمليات الخصم والصك الكسول داخل الجداول المستقلة سحابياً بنقاء 100%
-        if (sender === 'Admin_Mostafa') {
-            senderLedger.ouroBalance = adminComputedBalance - transferAmount;
-            await senderLedger.save();
-        } else {
-            senderLedger.ouroBalance = senderBal - totalCost;
-            await senderLedger.save();
+        // 3️⃣ [تنفيذ النقل الفيزيائي للأرقام التسلسلية سحابياً بـ MongoDB Atlas]
+        const tokensToReceiver = senderTokens.slice(0, transferAmount);
+        const tokensToAdminTax = senderTokens.slice(transferAmount, totalRequiredCost);
+
+        // أ) نقل ملكية العملات المحولة وتوطينها باسم الحساب المستقبل فوراً في السحاب
+        const receiverTokenIds = tokensToReceiver.map(t => t.tokenId);
+        await OuroTokenModel.updateMany({ tokenId: { $in: receiverTokenIds } }, { $set: { owner: receiverUser.username } });
+
+        // ب) تطبيق القانون الضريبي (7%): نقل ملكية عملات الضريبة قسرياً لحساب الأدمن الملكي 'Admin_Mostafa'
+        if (sender !== 'Admin_Mostafa' && taxAmount > 0) {
+            const taxTokenIds = tokensToAdminTax.map(t => t.tokenId);
+            await OuroTokenModel.updateMany({ tokenId: { $in: taxTokenIds } }, { $set: { owner: 'Admin_Mostafa' } });
         }
 
-        receiverLedger.ouroBalance = (receiverLedger.ouroBalance || 0) + transferAmount;
-        await receiverLedger.save();
+        // 4️⃣ إعادة حساب الأرصدة الحية التزامنية من ملف الصك لبثها صامتاً
+        const finalSenderCount = await OuroTokenModel.countDocuments({ owner: sender });
+        const finalReceiverCount = await OuroTokenModel.countDocuments({ owner: receiverUser.username });
 
-        // صب وتدوير ضريبة الـ 7% تلقائياً في حساب خزينة الأدمن Mostafa المستقلة
-        let adminLedger = await OuroUserLedgerModel.findOne({ username: 'Admin_Mostafa' });
-        if (adminLedger && sender !== 'Admin_Mostafa') {
-            adminLedger.ouroBalance = (adminLedger.ouroBalance || 0) + taxAmount;
-            await adminLedger.save();
-        }
-
-        // 📡 5. المزامنة والإنعاش الصامت الآمن عبر قنوات السوكت الخارجية دون حشو مكرر
+        // 📡 5️⃣ المزامنة والإنعاش الصامت الآمن عبر قنوات السوكت الخارجية دون حشو مكرر
         try {
             const socketIo = global.io || (req.app ? req.app.get('socketio') : null);
             if (socketIo && typeof socketIo.emit === 'function') {
-                socketIo.emit('wallet_balance_updated', { username: sender, newBalance: senderLedger.ouroBalance });
-                socketIo.emit('wallet_balance_updated', { username: receiverUser.username, newBalance: receiverLedger.ouroBalance });
+                socketIo.emit('wallet_balance_updated', { username: sender, newBalance: finalSenderCount });
+                socketIo.emit('wallet_balance_updated', { username: receiverUser.username, newBalance: finalReceiverCount });
             }
         } catch (e) { console.log("تنبيه مزامنة صامت"); }
 
-        console.log(`🎉 [Ouro Core Unified Transfer Success]`);
-        return res.json({ success: true, newSenderBalance: senderLedger.ouroBalance });
+        console.log(`🎉 [Ouro Core Sovereign Transfer Success] تم نقل العملات وإعادة توطينها بملف الصك الجديد.`);
+        return res.json({ success: true, newSenderBalance: finalSenderCount });
 
     } catch (err) { 
-        console.error("خطأ التداول الرياضي المعكوس الجذري:", err);
-        return res.status(500).json({ success: false, message: "🚨 خطأ داخلي بالخادم أثناء تمرير الأصول الحية بقفل البلوكشين." }); 
+        console.error("خطأ التداول بمسار ملف الصك الحقيقي:", err);
+        return res.status(500).json({ success: false, message: "🚨 خطأ داخلي بالخادم أثناء نقل ملكية العملات بملف الصك الجديد." }); 
     }
 });
+
 
 // 4️⃣ [مسار الأدمن لزرع العقود الذكية للعملات الخارجية]
 app.post('/api/wallet/admin/add-contract', async (req, res) => {
