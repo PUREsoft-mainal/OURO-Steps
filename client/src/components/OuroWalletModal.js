@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-no-comment-textnodes */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from 'react-native'; // أو 'axios' العادي حسب بيئتك المستقرة بالفرونت إند
 
 const OuroWalletModal = ({ user, API_BASE, onClose, ouroBalance, setOuroBalance }) => {
   const [walletData, setWalletData] = useState({ ouroBalance: 0, publicAddress: "غير متصل", ethBalance: 0 });
@@ -65,7 +65,7 @@ const OuroWalletModal = ({ user, API_BASE, onClose, ouroBalance, setOuroBalance 
       setLoading(true);
       const res = await axios.post(`${API_BASE}/api/wallet/transfer`, {
         sender: user?.username,
-        receiver: transferData.receiver.trim(), // مطابقة صارمة 
+        receiver: transferData.receiver.trim(), 
         amount: amt
       });
 
@@ -98,7 +98,12 @@ const OuroWalletModal = ({ user, API_BASE, onClose, ouroBalance, setOuroBalance 
             <div className="facebook-post-card gold-border" style={{ padding: '15px', background: 'linear-gradient(135deg, #111 0%, #000 100%)', textAlign: 'center' }}>
               <span style={{ fontSize: '30px' }}>🪙</span>
               <h5 style={{ color: 'var(--text-muted)', margin: '5px 0' }}>رصيدك بالملف السحابي الموثق</h5>
-              <h2 style={{ color: 'var(--gold-primary)', margin: 0 }}>{user?.username === 'Admin_Mostafa' ? '21,000,000' : walletData.ouroBalance} <small style={{ fontSize: '12px' }}>OURO</small></h2>
+              
+              {/* 🔒 [التطهير البصري الشامل] عرض الرقم الحقيقي لملف الصك الجديد (الـ 5,000,000) وإلغاء الرقم الوهمي كلياً */}
+              <h2 style={{ color: 'var(--gold-primary)', margin: 0 }}>
+                {Number(walletData.ouroBalance).toLocaleString()} <small style={{ fontSize: '12px', color: '#fff' }}>OURO</small>
+              </h2>
+              
               <small style={{ color: '#27ae60', fontSize: '10px' }}>🔒 ملف مقفل للقراءة فقط - محصن سيبرانياً</small>
             </div>
 
