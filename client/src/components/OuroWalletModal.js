@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-no-comment-textnodes */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
-import axios from 'react-native'; // أو 'axios' العادي حسب بيئتك المستقرة بالفرونت إند
+import axios from 'axios';
 
 const OuroWalletModal = ({ user, API_BASE, onClose, ouroBalance, setOuroBalance }) => {
   const [walletData, setWalletData] = useState({ ouroBalance: 0, publicAddress: "غير متصل", ethBalance: 0 });
