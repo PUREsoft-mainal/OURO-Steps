@@ -1414,23 +1414,22 @@ const isValidOuroTokenSerial = (tokenId) => {
 };
 
 // ==========================================================================
-// 🪙 1️⃣ [إعادة ضبط مسار الجلب] قراءة الرصيد الفعلي الموثق مباشرة من ملف الصك الجديد
+// 🪙 [تطهير مسار الجلب كلياً] قراءة الرصيد الفعلي الحقيقي من ملف الصك دون أرقام وهمية
 // ==========================================================================
 app.post('/api/wallet/get-info', async (req, res) => {
     try {
         const { username } = req.body;
-        if (!username) return res.status(400).json({ success: false, message: "⚠️ اسم المستخدم مفقود رقمياً" });
+        if (!username) return res.status(400).json({ success: false, message: "⚠️ اسم المستخدم مفقود" });
 
-        // 🔍 [محرك قراءة ملف الصك الجديد] حساب عدد وثائق العملات الحقيقية الملوّدة والممسوكة باسم المستخدم بالأطلس
+        // 🔍 عدّ وثائق العملات الحقيقية الملوّدة والممسوكة باسم المستخدم بملف الصك الجديد (سواء للأدمن أو الأعضاء)
         const actualMintedBalance = await OuroTokenModel.countDocuments({ owner: username });
 
         // جلب العقود الذكية إن وجدت من قاعدة البيانات
         const contracts = await mongoose.model('DeveloperKey').find({ isContract: true }).catch(() => []) || [];
         
-        // ضخ حزمة البيانات المعقمة للواجهة لتنبثق بالعدد التعديني الصافي الفعلي
         res.json({ 
             success: true, 
-            ouroBalance: actualMintedBalance, // 🪙 المربعات فالموقع تقرأ وتعرض الآن عدد ال-3,000,000 المرفوعة من جهازك بالملي
+            ouroBalance: actualMintedBalance, // 🪙 قراءة وإرجاع الصافي الفعلي المخزن بالأطلس (الـ 5,000,000 تقريباً بحسابك)
             contracts: [
                 {
                     id: "contract_ouro_genesis_2026",
@@ -1441,7 +1440,7 @@ app.post('/api/wallet/get-info', async (req, res) => {
             ] 
         });
     } catch (err) { 
-        console.error("خطأ جلب الرصيد من ملف الصك الجديد:", err);
+        console.error("خطأ جلب الرصيد التعديني الحقيقي:", err);
         res.status(500).json({ success: false, error: err.message }); 
     }
 });
