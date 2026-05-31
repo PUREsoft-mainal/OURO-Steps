@@ -404,7 +404,10 @@ return (
               
               {/* 📟 المربع المالي الملتزم بالأبعاد الفيزيائية الحادة (عرض 30px وارتفاع 13px) */}
               <div className="scrollbar-gold" style={{ width: '30px', height: '13px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', borderRadius: '2px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <span style={{ color: '#fff', fontSize: '9px', fontWeight: 'bold' }}>{user?.username === 'Admin_Mostafa' ? '21M' : ouroBalance}</span>
+                {/* 🔒 [التطهير النهائي للويب] إسقاط القيمة الوهمية 21M وعرض عدد ملايين عملاتك الحقيقية 17M تلقائياً تزامناً مع ملف الصك */}
+                <span style={{ color: '#fff', fontSize: '9px', fontWeight: 'bold' }}>
+                  {user?.username === 'Admin_Mostafa' ? `${Math.floor(ouroBalance / 1000000)}M` : ouroBalance}
+                </span>
               </div>
               
               {/* ✅ وضَع مكانه هذا الزر المطور والموجه لتفجير بوابتك الداخلية فوراً دون لسان جديد: */}
