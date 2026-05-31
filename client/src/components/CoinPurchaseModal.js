@@ -79,11 +79,18 @@ const CoinPurchaseModal = ({ user, API_BASE, onClose, setOuroBalance }) => {
     <div className="discovery-overlay" onClick={onClose}>
       <div className="discovery-window gold-border" onClick={e => e.stopPropagation()} style={{ width: '92%', maxWidth: '580px', background: '#070707', padding: '20px' }}>
         
+        {/* ========================================================================== */}
+        {/* 👑 [تطهير وإزالة الأرقام الوهمية] ترويسة الحساب وقراءة الرصيد الفعلي من ملف الصك */}
+        {/* ========================================================================== */}
         <div className="discovery-tabs" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'right' }}>
             <span style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold' }}>👤 الحساب: <strong style={{ color: 'var(--gold-primary)' }}>{user?.username}</strong></span>
             <small style={{ color: '#27ae60', fontSize: '10px', fontFamily: 'monospace' }}>🆔 معرف الحساب الفريد: {user?._id || user?.id || "Ouro_User_ID"}</small>
-            <span style={{ color: '#fff', fontSize: '12px' }}>🪙 رصيدك بالملف السحابي: <strong style={{ color: 'var(--gold-primary)' }}>{user?.username === 'Admin_Mostafa' ? '21,000,000' : myOuroBalance} OURO</strong></span>
+            
+            {/* 🔒 [التصحيح المجهري الحقيقي] قراءة الصافي الفعلي لملف الصك التعديني المحدث تلقائياً */}
+            <span style={{ color: '#fff', fontSize: '12px' }}>
+              🪙 رصيدك بالملف السحابي: <strong style={{ color: 'var(--gold-primary)', textShadow: '0 0 6px rgba(212,175,55,0.3)' }}>{Number(myOuroBalance).toLocaleString()} OURO</strong>
+            </span>
           </div>
           <button className="close-discovery" onClick={onClose}>✖</button>
         </div>
