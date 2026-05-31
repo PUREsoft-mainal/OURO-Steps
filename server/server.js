@@ -38,24 +38,74 @@ const MarketSchema = new mongoose.Schema({
 const MarketModel = mongoose.model('Market', MarketSchema);
 
 // ==========================================================================
-// 🏛️ [موديل السنتر والاجتماعات] هيكل حفظ قاعات البث، الفيديوهات وساعات المشاهدة
+// 🏛️ [تحديث السيرفر المركزي] إدارة اشتراكات السنتر والموافقة الفورية للأدمن
 // ==========================================================================
-const OuroCenterSchema = new mongoose.Schema({
-    roomId: { type: String, required: true, unique: true },
-    host: { type: String, required: true }, // المعلم أو منشئ السنتر
-    allVideos: [
-        {
-            title: { type: String, required: true },
-            watchHours: { type: String, default: "0.0" }, // ساعات المشاهدة التراكمية كاليوتيوب
-            date: { type: String }
-        }
-    ],
-    allImages: [{ url: { type: String }, title: { type: String } }],
-    allPdfs: [{ url: { type: String }, title: { type: String }, size: { type: String } }],
+
+// أ) إضافة جدول الإشعارات والطلبات المعلقة للأدمن Mostafa والمحاضرين فالسحاب
+const OuroCenterRequestSchema = new mongoose.Schema({
+    requestId: { type: String, required: true, unique: true },
+    type: { type: String, required: true }, // 'teacher_access' (طلب تدريس) أو 'student_join' (طلب انضمام طالب)
+    applicant: { type: String, required: true }, // اسم مقدم الطلب
+    targetHost: { type: String }, // اسم المعلم المستهدف (في حالة انضمام الطالب)
+    status: { type: String, default: 'pending' }, // pending, approved
+    expiresAt: { type: Date }, // تاريخ انتهاء الصلاحية الـ 30 يوماً
     createdAt: { type: Date, default: Date.now }
 });
+const OuroCenterRequestModel = mongoose.model('OuroCenterRequest', OuroCenterRequestSchema);
 
-const OuroCenterModel = mongoose.model('OuroCenter', OuroCenterSchema);
+// ب) مستمعات الأحداث الحية لبث طلبات الاشتراك والانضمام صامتاً فالسحاب
+if (global.io) {
+    global.io.on('connection', (socket) => {
+        
+        // 1. استقبال طلب المستخدم لفتح سنتر خاص به وإخطار الأدمن Mostafa فوراً
+        socket.on('submit_teacher_subscribe_request', async (data) => {
+            try {
+                const reqId = 'req_' + Date.now();
+                const newReq = new OuroCenterRequestModel({
+                    requestId: reqId,
+                    type: 'teacher_access',
+                    applicant: data.username
+                });
+                await newReq.save();
+                // بث الإشعار الفوري لشاشة الأدمن Mostafa ليتوهج زر (موافق) أمامه
+                global.io.emit('admin_receive_teacher_request', { requestId: reqId, applicant: data.username });
+            } catch (e) { console.log(e); }
+        });
+
+        // 2. استقبال ضغطة زر (موافق) من الأدمن وتفعيل الصلاحية لـ 30 يوماً
+        socket.on('admin_approve_teacher_request', async (data) => {
+            try {
+                const reqDoc = await OuroCenterRequestModel.findOne({ requestId: data.requestId });
+                if (reqDoc) {
+                    reqDoc.status = 'approved';
+                    reqDoc.expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 🔒 تفعيل الصلاحية لمدة 30 يوماً بالملي
+                    await reqDoc.save();
+                    
+                    // تحديث رتبة وصلاحية المستخدم بجدول الحسابات الرئيسي لفتح السنتر له قسرياً
+                    await UserModel.updateOne({ username: reqDoc.applicant }, { $set: { canHostCenter: true, centerExpiry: reqDoc.expiresAt } });
+                    
+                    global.io.emit('teacher_request_granted', { username: reqDoc.applicant, expiresAt: reqDoc.expiresAt });
+                }
+            } catch (e) { console.log(e); }
+        });
+
+        // 3. استقبال ضغطة زر (انضمام) من الطالب وإرسال إشعار فوري للمحاضر وصاحب السنتر
+        socket.on('student_submit_join_request', async (data) => {
+            try {
+                const reqId = 'req_' + Date.now();
+                const newReq = new OuroCenterRequestModel({
+                    requestId: reqId,
+                    type: 'student_join',
+                    applicant: data.username,
+                    targetHost: data.host
+                });
+                await newReq.save();
+                // بث نبضة حية للمحاضر ليظهر أمامه زر القبول ودخول البث الحي والمذكرات
+                global.io.emit('host_receive_student_request', { requestId: reqId, student: data.username, host: data.host });
+            } catch (e) { console.log(e); }
+        });
+    });
+}
 
 // 🔑 [صياغة قفل بوابات المطورين] هيكل حفظ وإصدار مفاتيح الـ API سحابياً بـ MongoDB Atlas للأبد
 // 👑 [تحديث جدول مطوري الـ API] حقن صلاحيات المحفظة والسنتر ومؤشر التجميد المالي الشامل
