@@ -26,7 +26,8 @@ const ApiKeyModal = ({ user, API_BASE, onClose }) => {
       axios.post(`${API_BASE}/api/developer/keys-list`, { username: user.username })
         .then(res => {
           setKeysList(res.data.keys || []);
-          setLoading(false))
+          setLoading(false);
+        })
         .catch(() => setLoading(false));
     }
   }, [user?.username, API_BASE]);
@@ -37,7 +38,7 @@ const ApiKeyModal = ({ user, API_BASE, onClose }) => {
     setScopes(prev => ({ ...prev, [scopeKey]: !prev[scopeKey] }));
   };
 
-  // 🔑 3️⃣ دالة توليد واستخراج طلب المفتاح السحابي المحدثة بالتصاريح الإدارية دون دفع أو تعقيد مالي
+    // 🔑 3️⃣ دالة توليد واستخراج طلب المفتاح السحابي المحدثة بالتصاريح الإدارية دون دفع أو تعقيد مالي
   const handleGenerateKey = async (e) => {
     e.preventDefault();
     if (!keyName.trim()) return alert("⚠️ الرجاء كتابة اسم أو وصف للمفتاح (مثال: تطبيق الأندرويد)!");
@@ -94,6 +95,7 @@ const ApiKeyModal = ({ user, API_BASE, onClose }) => {
               required 
               style={{ width: '100%', padding: '8px', marginBottom: '15px', background: '#000', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px' }}
             />
+            
             <h5 style={{ color: 'var(--gold-primary)', margin: '0 0 10px 0' }}>🛡️ حدد الصلاحيات والخصائص المراد مشاركتها للمفتاح:</h5>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(0,0,0,0.4)', padding: '12px', borderRadius: '6px', border: '1px solid rgba(212,175,55,0.1)' }}>
               
@@ -117,8 +119,6 @@ const ApiKeyModal = ({ user, API_BASE, onClose }) => {
                 🛍️ مشاركة معرض سلع ومنشورات المتجر الملكي بالتصريح
               </label>
 
-              {/* 🔒 [تطهير] تم حذف وإلغاء خانة المحفظة wallet كلياً لعدم تداخل التروس والعملات [▲] */}
-
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fff', fontSize: '12px', cursor: 'pointer' }}>
                 <input type="checkbox" checked={scopes.center} disabled={scopes.all_features} onChange={() => handleScopeChange('center')} />
                 🏛️ مشاركة البث الحي المباشر لـ السنتر والاجتماعات بالتصريح الإداري
@@ -131,9 +131,9 @@ const ApiKeyModal = ({ user, API_BASE, onClose }) => {
 
             </div>
 
-            {/* 🔒 [تطهير بصري شامل] تم نسف حاوية المبالغ والأسعار شهرياً بالكامل لعزل الطابع المالي */}
+            {/* 🔒 [تطهير بصري] تم نسف حاوية المبالغ والأسعار لـ OURO شهرياً بالكامل لعزل الطابع المالي */}
             <div style={{ padding: '8px', background: 'rgba(39,174,96,0.05)', borderRadius: '4px', border: '1px solid rgba(39,174,96,0.2)', marginTop: '12px', color: '#27ae60', fontSize: '11px', textAlign: 'center', fontWeight: 'bold' }}>
-              🛡️ نظام بوابات المطورين محمي ومربوط بالتفويض والموافقة المباشرة من لوحة الإدارة 🔐
+              🛡️ نظام المطورين محمي ومربوط بالتفويض والموافقة المباشرة من لوحة الإدارة 🔐
             </div>
 
             <button type="submit" className="gold-btn" style={{ width: '100%', marginTop: '12px', fontWeight: 'bold' }}>توليد وإرسال طلب المفتاح السحابي</button>
