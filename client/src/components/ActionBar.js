@@ -9,7 +9,6 @@ const ActionBar = ({
   setShowMarket, 
   friendRequestsCount, 
   setShowApiKeyModal,
-  setShowWalletModal,
   setShowCenterModal,
   setShowFlashModal
 }) => {    
@@ -84,19 +83,6 @@ const ActionBar = ({
         }}
       >
          API
-      </button>
-
-      {/* 🪙 زر إطلاق واستدعاء المحفظة الرقمية الملكية الحية وعملة OURO Coin والـ Web3 */}
-      <button 
-        className="action-bar-btn gold-glow-btn" 
-        style={{ borderColor: '#d4af37' }} 
-        onClick={() => {
-          if (typeof setShowWalletModal === 'function') {
-            setShowWalletModal(true); 
-          }
-        }}
-      >
-        🪙 المحفظة 
       </button>
 
       {/* 🏛️ [الكمبلة التعليمية المكتسحة] زر إطلاق السنتر والاجتماعات والبث الحي والمذكرات */}
