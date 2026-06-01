@@ -18,6 +18,36 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
   const [liveComments, setLiveComments] = useState([]);
   const [currentLiveComment, setCurrentLiveComment] = useState("");
 
+    // 👑 [محرك العتاد الحي] دالة إطلاق البث المباشر واستدعاء المايك والكاميرا للجهاز فوراً
+  const handleStartLiveStream = async () => {
+    try {
+      // 🔒 1. الطلب السيبراني الفوري لأذونات الكاميرا والمايك العتادية من جهاز المستخدم
+      const localStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { width: 1280, height: 720, facingMode: "user" }, // جودة HD صافية للكاميرا الأمامية
+        audio: true // تفعيل الميكروفون بنقاء صوتي حاد
+      });
+
+      // 📺 2. ربط شريان البث الحي بالفيديو المعروض على الشاشة أمام الطلاب
+      const videoElement = document.getElementById('ouroLiveVideoPreview');
+      if (videoElement) {
+        videoElement.srcObject = localStream;
+        videoElement.play().catch(e => console.log("تشغيل البث"));
+      }
+
+      // 📡 3. إخطار السيرفر والسوكت المركزي لبدء البث وتفعيل الغرفة عند الجميع
+      setLiveStreamActive(true);
+      if (socket) {
+        socket.emit('start_live_broadcast', { host: user?.username, roomId: centerMeta.activeRoom });
+      }
+
+      alert("🔴 🎉 تم تشغيل الكاميرا والميكروفون بنجاح! أنت الآن في بث مباشر محمي ومؤمن بالكامل.");
+    } catch (err) {
+      console.error("خطأ الوصول للعتاد:", err);
+      alert("⚠️ عذراً، فشل فتح الكاميرا أو المايك! تأكد من منح المتصفح أو البرنامج أذونات الوصول للعتاد (Permissions).");
+    }
+  };
+
+
   const isAdmin = user?.username === 'Admin_Mostafa' || user?.role === 'Admin';
 
   // 🛡️ [محرك المنع السيبراني لالتقاط وتسجيل الشاشة كلياً داخل مزايا السنتر]
@@ -136,12 +166,38 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
           {activeSubTab === 'live' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div style={{ width: '100%', height: '220px', background: '#000', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.2)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                {/* ========================================================================== */}
+                {/* 🎥 [تحديث عتاد العرض الحي] التحام شاشة البث بكاميرا جهاز المستخدم والمايك طيراناً */}
+                {/* ========================================================================== */}
                 {liveStreamActive ? (
                   <>
-                    <div style={{ position: 'absolute', top: '10px', right: '10px', background: '#c0392b', color: '#fff', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }}>LIVE مِباشر</div>
-                    <span style={{ fontSize: '40px' }}>📺</span>
-                    <p style={{ color: '#27ae60', fontSize: '12px', fontWeight: 'bold' }}>📡 قاعة البث نشطة ومحمية سيبرانياً بالكامل ضد تسجيل الشاشة...</p>
-                    {centerMeta.hasAccess && <button className="gold-btn-small" style={{ background: '#c0392b', color: '#fff', marginTop: '10px', border: 'none', cursor: 'pointer' }} onClick={() => setLiveStreamActive(false)}>إنهـاء البث ❌</button>}
+                    <div style={{ position: 'absolute', top: '10px', right: '10px', background: '#c0392b', color: '#fff', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', zIndex: 10 }}>LIVE مِباشر</div>
+                    
+                    {/* 🎥 شاشة عرض فيديو الكاميرا الحية المباشرة الملتحمة عتادياً بجهاز المحاضر */}
+                    <video 
+                      id="ouroLiveVideoPreview" 
+                      autoPlay 
+                      playsInline 
+                      muted // صامت للمحاضر نفسه منعاً لارتداد وصدى الصوت، ويعمل حياً ومسموعاً عند الطلاب
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', background: '#000' }} 
+                    />
+                    
+                    {centerMeta.hasAccess && (
+                      <button 
+                        className="gold-btn-small" 
+                        style={{ position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', background: '#c0392b', color: '#fff', border: 'none', cursor: 'pointer', zIndex: 10 }} 
+                        onClick={() => {
+                          // إيقاف دفق الكاميرا والمايك فيزيائياً عند إنهاء المحاضرة لحفظ الخصوصية
+                          const videoElement = document.getElementById('ouroLiveVideoPreview');
+                          if (videoElement && videoElement.srcObject) {
+                            videoElement.srcObject.getTracks().forEach(track => track.stop());
+                          }
+                          setLiveStreamActive(false);
+                        }}
+                      >
+                        إنهـاء البث ❌
+                      </button>
+                    )}
                   </>
                 ) : (
                   <>
@@ -149,8 +205,43 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
                     <p style={{ color: 'var(--text-muted)', fontSize: '11px', padding: '0 20px', textAlign: 'center' }}>
                       {centerMeta.hasAccess ? "🔓 تمتلك تصريحاً نشطاً لإدارة السنتر لـ 30 يوماً! اضغط بالأسفل لبدء البث فوراً." : "🔒 لفتح السنتر وبدء البث، يجب إرسال طلب اشتراك للأدمن Mostafa لتفعيل حسابك لـ 30 يوماً."}
                     </p>
+                    
+                    {/* 🚀 زر تشغيل العتاد الذكي يظهر فقط للمحاضر المصرح له لإطلاق الكاميرا والمايك فوراً */}
+                    {centerMeta.hasAccess && (
+                      <button 
+                        className="gold-btn-small" 
+                        style={{ marginTop: '10px', fontWeight: 'bold', background: 'var(--gold-primary)', color: '#000', border: 'none' }} 
+                        onClick={async () => {
+                          try {
+                            // 🔒 الطلب الفوري لأذونات الكاميرا والمايك العتادية للجهاز
+                            const localStream = await navigator.mediaDevices.getUserMedia({ 
+                              video: { width: 1280, height: 720, facingMode: "user" }, 
+                              audio: true 
+                            });
+                            
+                            setLiveStreamActive(true);
+                            
+                            // ربط شريان البث بالـ فيديو tag في السيرفر بعد تفعيله بميكرو ثانية
+                            setTimeout(() => {
+                              const videoElement = document.getElementById('ouroLiveVideoPreview');
+                              if (videoElement) videoElement.srcObject = localStream;
+                            }, 50);
+
+                            if (socket) {
+                              socket.emit('start_live_broadcast', { host: user?.username });
+                            }
+                            alert("🔴 🎉 تم تفعيل الميكروفون والكاميرا بنجاح! البث نشط ومحمي ضد تسجيل الشاشة.");
+                          } catch (err) {
+                            alert("⚠️ عذراً، فشل فتح الكاميرا أو المايك! تأكد من منح المتصفح أو البرنامج أذونات الوصول للعتاد (Permissions).");
+                          }
+                        }}
+                      >
+                        🚀 إطلاق الكاميرا والمايك وبدء المحاضرة
+                      </button>
+                    )}
                   </>
                 )}
+
               </div>
 
               {/* 🤝 [أزرار التفاعل الجذري: اشتراك وانضمام المطورين بالملي] */}
