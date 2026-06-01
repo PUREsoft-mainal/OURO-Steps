@@ -3,32 +3,23 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+
 const ApiKeyModal = ({ user, API_BASE, onClose }) => {
   const [keysList, setKeysList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [keyName, setKeyName] = useState("");
   
-  // 🔒 مصفوفة الخصائص والصلاحيات المتاحة للمطورين في منصة OURO Steps المحدثة بالملي
+  // 🔒 [تطهير مصفوفة الخصائص] إبادة المحفظة وعملات الـ OURO واعتماد جدار الصلاحيات الإدارية المعلقة
   const [scopes, setScopes] = useState({
-    all_features: false,   // استخدام API بجميع مزايا المنصة كلياً (75 OURO)
-    prayer_times: true,   // مواقيت الصلاة (مجانية للأبد)
-    virtual_flash: false,  // الفلاشة (50 OURO)
-    market: false,         // المتجر (20 OURO) 
-    wallet: false,         // المحفظة (10 OURO) 👑 مضاف
-    center: false,         // السنتر والاجتماعات (20 OURO) 👑 مضاف
-    ads: true             // الإعلانات (مجانية للأبد)
+    all_features: false,   // استخدام API بجميع مزايا المنصة كلياً (بطلب وتصريح الإدارة)
+    prayer_times: true,    // مواقيت الصلاة (متاح ومجاني)
+    virtual_flash: false,  // الفلاشة الإلكترونية الموقوتة
+    market: false,         // المتجر الإداري 
+    center: false,         // السنتر والاجتماعات التعليمية 👑 مضاف بالتصريح
+    ads: true              // الإعلانات التفاعلية (متاح ومجاني)
   });
 
-  // 💹 دالة حاسبة الأسعار اللحظية المجموعة والمطابقة للتعريفة الاقتصادية المطلوبة بالملي
-  const calculateLiveCost = () => {
-    if (scopes.all_features) return 75;
-    let cost = 0;
-    if (scopes.virtual_flash) cost += 50;
-    if (scopes.market) cost += 20;
-    if (scopes.wallet) cost += 10;
-    if (scopes.center) cost += 20;
-    return cost;
-  };
+  // 🔓 [تطهير سيبراني وتجاري تام]: تم مسح وإلغاء حقل wallet ودالة حاسبة الأسعار calculateLiveCost كلياً من هنا لمنع التضارب البصري.
 
   // 1️⃣ جلب قائمة المفاتيح المستخرجة المخزنة للمستخدم الحالي سحابياً
   useEffect(() => {
@@ -41,12 +32,6 @@ const ApiKeyModal = ({ user, API_BASE, onClose }) => {
         .catch(() => setLoading(false));
     }
   }, [user?.username, API_BASE]);
-
-    // 2️⃣ خاصية تبديل علامات الصح (Checkbox) للخصائص المرادة بنقاء
-  const handleScopeChange = (scopeKey) => {
-    if (scopeKey === 'prayer_times' || scopeKey === 'ads') return; // مجانية ثابتة لراحة المستخدم
-    setScopes(prev => ({ ...prev, [scopeKey]: !prev[scopeKey] }));
-  };
 
   // 🔑 3️⃣ دالة توليد واستخراج المفتاح السحابي المحدثة بالخصم المسبق والتطابق التام
   const handleGenerateKey = async (e) => {
