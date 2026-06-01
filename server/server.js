@@ -107,8 +107,11 @@ if (global.io) {
     });
 }
 
-// 🔑 [صياغة قفل بوابات المطورين] هيكل حفظ وإصدار مفاتيح الـ API سحابياً بـ MongoDB Atlas للأبد
-// 👑 [تحديث جدول مطوري الـ API] حقن صلاحيات المحفظة والسنتر ومؤشر التجميد المالي الشامل
+// ==========================================================================
+// ⚙️ [بوابة المطورين والـ API] تحويل كامل المزايا لنظام تفويض الأدمن والمشرفين
+// ==========================================================================
+
+// 1. تحديث وتوثيق هيكل جدول المفاتيح ليعتمد على حالة فحص وقبول الإدارة
 const DeveloperKeySchema = new mongoose.Schema({
     id: { type: String, required: true, unique: true },
     username: { type: String, required: true },
@@ -116,20 +119,19 @@ const DeveloperKeySchema = new mongoose.Schema({
     apiKey: { type: String, required: true, unique: true },
     scopes: {
         all_features: { type: Boolean, default: false },
-        prayer_times: { type: Boolean, default: true }, // مجاني
-        virtual_flash: { type: Boolean, default: false }, // 50 OURO
-        market: { type: Boolean, default: false },        // 20 OURO
-        ads: { type: Boolean, default: true },          // مجاني
-        wallet: { type: Boolean, default: false },       // 10 OURO 👑 [مضاف]
-        center: { type: Boolean, default: false }        // 20 OURO 👑 [مضاف]
+        prayer_times: { type: Boolean, default: true }, 
+        virtual_flash: { type: Boolean, default: false }, 
+        market: { type: Boolean, default: false },        
+        ads: { type: Boolean, default: true },          
+        wallet: { type: Boolean, default: false },       
+        center: { type: Boolean, default: false }        
     },
-    monthlyCost: { type: Number, default: 0 }, // تكلفة الاشتراك الإجمالية المجموعة
-    isActive: { type: Boolean, default: true }, // 🔒 مؤشر تشغيل أو تجميد المفتاح عند نفاذ الرصيد
-    isContract: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: false }, // 🔒 ينطلق مجمداً وموقوفاً تلقائياً حتى موافقة المشرفين
+    approvedBy: { type: String, default: "" },
     createdAt: { type: Date, default: Date.now }
 });
-
-const DeveloperKeyModel = mongoose.model('DeveloperKey', DeveloperKeySchema);
+// فحص وجود الموديل مسبقاً لمنع خطأ إعادة التعريف الكارثي
+const DeveloperKeyModel = mongoose.models.DeveloperKey || mongoose.model('DeveloperKey', DeveloperKeySchema);
 
 // 👑 معيار حفظ الأصول الإدارية لمواقيت الصلاة بـ MongoDB Atlas
 const PrayerAssetSchema = new mongoose.Schema({
@@ -173,30 +175,21 @@ const AdSchema = new mongoose.Schema({
 });
 const AdModel = mongoose.model('Ad', AdSchema);
 
-// 👑 [موديل البلوكشين المركزي] صياغة بنك الـ 21 مليون عملة فريدة بأرقامها التسلسلية الصارمة للأبد
-const OuroTokenSchema = new mongoose.Schema({
-    tokenId: { type: String, required: true, unique: true }, // الرقم التسلسلي (OuRo27411921...)
-    owner: { type: String, required: true, default: 'Admin_Mostafa' } // المالك الحالي للعملة (إما الأدمن أو المستخدم)
-});
-const OuroTokenModel = mongoose.model('OuroToken', OuroTokenSchema);
+// ==========================================================================
+// 🏛️ [تطهير الهيكل المركزي لـ OURO Steps] - إبادة المحافظ والعملات وتثبيت جداول التصاريح
+// ==========================================================================
 
-// تحديث جدول المحافظ للقراءة فقط ليدعم تخزين العناوين الفريدة والرموز الأمنية
-const OuroLedgerSchema = new mongoose.Schema({
+// 1. الجدول الإداري المركزي الموحد لإدارة وتوثيق تصاريح السنتر والاجتماعات والميزات
+const UserPermissionSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
-    publicAddress: { type: String, required: true, unique: true }, // عنوان المحفظة الفريد (0x7627OURO...)
-    ouroBalance: { type: Number, default: 0 },
-    cryptoSignature: { type: String, required: true }
+    isAuthorizedTeacher: { type: Boolean, default: false }, // تصريح فتح السنتر والاجتماعات والرفع
+    isAuthorizedStudent: { type: Boolean, default: false }, // تصريح دخول السنتر والتحميل
+    permissionExpiry: { type: Date }, // تاريخ انتهاء التصريح الـ 30 يوماً
+    assignedBy: { type: String, default: 'Admin_Mostafa' }, // المسؤول الذي منح التفويض
+    updatedAt: { type: Date, default: Date.now }
 });
-const OuroLedgerModel = mongoose.model('OuroLedger', OuroLedgerSchema);
 
-// دالة لتوليد التوقيع الرقمي المعقد لـ OURO Coin (يستحيل تزويره محلياً أو سحابياً)
-const calculateOuroSignature = (username, balance) => {
-    const crypto = require('crypto');
-    const secretServerSalt = "ouro_secure_deflationary_core_blockchain_2026_safe_salt_99";
-    return crypto.createHmac('sha256', secretServerSalt)
-                 .update(`${username}_${balance}_ouro_coin_immutable`)
-                 .digest('hex');
-};
+const UserPermissionModel = mongoose.models.UserPermission || mongoose.model('UserPermission', UserPermissionSchema);
 
 // 👑 معيار حفظ رسائل المجموعات التاريخية ومنع مسح الشات بـ MongoDB
 const GroupMessageSchema = new mongoose.Schema({
@@ -595,7 +588,9 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 👑 [المعمارية الموحدة لـ OURO Steps] دالة التسجيل وحقن المحافظ عبر الـ ID الفريد سحابياً بـ MongoDB Atlas للأبد
+// ==========================================================================
+// 🏛️ [تحديث مستمع الـ register] التطهير الكامل من المحافظ وزرع التصاريح الإدارية الموقوتة
+// ==========================================================================
     socket.on('register', async (data) => {
         try {
             if (!data || !data.username || !data.password) {
@@ -608,45 +603,50 @@ io.on('connection', (socket) => {
                 return socket.emit('error_msg', '⚠️ اسم المستخدم مسجل مسبقاً في السحاب!');
             }
 
-            // 2️⃣ [توليد المعرف الفريد المشترك] إنشاء كائن الـ Object ID من مجمع حزم المونجو فوراً
+            // 2️⃣ [المعرف الفريد المشترك] إنشاء كائن الـ Object ID من مجمع حزم المونجو فوراً
             const mongoose = require('mongoose');
             const newUserId = new mongoose.Types.ObjectId();
 
-            // 3️⃣ [محرك صياغة عنوان البلوكشين] دمج البادئة الفخمة مع الـ ID الفريد لحسابك بثبات كلي أزلي
-            const secureAddress = '0x7627OUROamek11619917627h38j4l5G84P8354' + newUserId.toString();
-
-            // 4️⃣ زرع وحقن كائن الحساب الجديد سحابياً في جدول المستخدمين الرئيسي مع تبيت الهوية الموحدة
+            // 3️⃣ زرع وحقن كائن الحساب الجديد سحابياً في جدول المستخدمين الرئيسي بنقاء إداري كامل
             const newUser = new UserModel({
-                _id: newUserId, // ربط ال-ID المشترك والمعرف الأصلي للمستخدم
-                username: data.username,
+                _id: newUserId, 
+                username: data.username.trim(),
                 password: data.password, 
                 role: data.role || 'مستخدم',
                 avatar: '',
                 friends: [],        
-                friendRequests: [],
-                ouroWalletAddress: secureAddress // قيد وحفظ عنوان المحفظة بداخل جينات حساب المستخدم مباشرة
+                friendRequests: []
+                // 🔒 [تطهير] تم حذف واقتلاع حقول عناوين المحافظ البلوكتشينية والعملات تماماً من هنا [▲].
             });
             await newUser.save(); 
 
-            // 5️⃣ زرع وحقن السجل المالي المقفل للقراءة فقط تزامناً مع نفس الهوية المعقمة فالسحاب
-            const newLedger = new OuroLedgerModel({
-                username: data.username,
-                ouroBalance: 0, // يبدأ برصيد صفر عملة متسلسلة حتى يتم الشحن من الأدمن
-                publicAddress: secureAddress, // ختم نفس العنوان الفريد المشتق من ال-ID أزلياً فالسحاب
-                cryptoSignature: calculateOuroSignature(data.username, 0) // ختم قفل التوقيع الرقمي لمنع التزوير
+            // 4️⃣ [حقن منظومة التصاريح الموقوتة] زرع مستند الصلاحيات للحساب الجديد لينطلق محمياً وموقوفاً تلقائياً
+            // ولا يفتح له السنتر أو الفلاشة أو ميزات الإدارة إلا بعد تفعيل وتوقيع الأدمن أو المشرفين [▲]
+            const initialExpiry = new Date(Date.now()); // تنتهي الصلاحية في نفس لحظة الإنشاء (حساب معلق)
+            
+            const newPermission = new (mongoose.models.UserPermission || mongoose.model('UserPermission'))({
+                username: data.username.trim(),
+                isAuthorizedTeacher: (newUser.username === 'Admin_Mostafa'), // الأدمن يفتح تلقائياً
+                isAuthorizedStudent: (newUser.username === 'Admin_Mostafa'),
+                permissionExpiry: initialExpiry,
+                assignedBy: 'Admin_Mostafa'
             });
-            await newLedger.save();
+            await newPermission.save();
 
-            console.log(`👤 🪙 تم تأسيس الهوية الثلاثية الموحدة بالـ ID بنجاح للحساب الجديد: ${data.username}`);
+            // 🔓 [تطهير] تم حذف وإلغاء حقول الـ OuroLedgerModel تماماً لحماية سعة وقوة الـ Database السحابية [▲].
+
+            console.log(`👤 🏛️ تم تأسيس الهوية الإدارية المعقمة بنجاح والتسجيل للحساب الجديد المعلق: ${data.username}`);
             socket.emit('register_success', { username: newUser.username, role: newUser.role });
 
             // تحديث وبث إحصائيات المنصة الحية للمتصلين فوراً
             const total = await UserModel.countDocuments();
-            io.emit('update_stats', { totalUsers: total, activeUsers });
+            if (global.io) {
+                global.io.emit('update_stats', { totalUsers: total, activeUsers });
+            }
 
         } catch (err) {
-            console.error("خطأ التسجيل السحابي المطور بالـ ID:", err);
-            socket.emit('error_msg', '⚠️ فشل تدوير وتسجيل الحساب ومحفظته الموحدة بالسحاب الخارجي');
+            console.error("خطأ التسجيل الإداري المطور بالـ ID الفريد:", err);
+            socket.emit('error_msg', '⚠️ فشل تدوير وتسجيل الحساب وجدار حمايته الإداري بالسحاب');
         }
     });
 
@@ -654,7 +654,9 @@ io.on('connection', (socket) => {
          const GROUPS_FILE = path.join(__dirname, 'groups.json');
          initJsonFile(GROUPS_FILE, [{ id: 'public', name: 'المجموعة العامة' }]); // تهيئة المجموعة العامة تلقائياً
 
-    // 👑 [تطهير الحسم البلوكتشيني] فك لغز الباسورد وصك ال-21 مليون عملة متسلسلة للأدمن لمرة واحدة فالسحاب
+// ==========================================================================
+// 🏛️ [تحديث مستمع الـ join] التطهير الكامل من الصك وإطلاق فحص التصاريح الإدارية
+// ==========================================================================
     socket.on('join', async (data) => {
         try {
             if (!data || !data.username || !data.password) return socket.emit('error_msg', 'البيانات المرسلة غير مكتملة');
@@ -675,31 +677,11 @@ io.on('connection', (socket) => {
                     console.log("👑 تم زرع وتثبيت حساب الأدمن العام بالـ Cloud بنجاح ساحق!");
                 }
 
-                // 🔥 [محرك صك ال-21 مليون عملة المتسلسلة] توليد بنك العملات الفريدة لمرة واحدة وإسناد ملكيتها للأدمن
-                const tokenCount = await OuroTokenModel.countDocuments();
-                if (tokenCount === 0) {
-                    console.log("⏳ جاري صك وبناء الـ 21,000,000 عملة متسلسلة مشفرة للأبد... الرجاء الانتظار ثواني...");
-                    const baseNum = 27411921;
-                    const maxSupply = 21000000;
-                    
-                    // استخدام الـ Bulk Insert فالسحاب لحقن الـ 21 مليون عملة دفعة واحدة طيران بحماية الذاكرة
-                    let bulkTokens = [];
-                    for (let i = 0; i < maxSupply; i++) {
-                        const currentSerial = 'OuRo' + (baseNum + i);
-                        bulkTokens.push({ tokenId: currentSerial, owner: 'Admin_Mostafa' });
-                        
-                        // صب الحزم كل 50 ألف عملة لحماية الذاكرة العشوائية للسيرفر السحابي لـ Hugging Face
-                        if (bulkTokens.length === 50000) {
-                            await OuroTokenModel.insertMany(bulkTokens);
-                            bulkTokens = [];
-                        }
-                    }
-                    if (bulkTokens.length > 0) await OuroTokenModel.insertMany(bulkTokens);
-                    console.log("🎉 تم صك وتثبيت الـ 21 مليون عملة متسلسلة بنجاح فلكي للأدمن Mostafa!");
-                }
+                // 🔓 [تطهير الحسم الإداري] تم اقتلاع وحذف الـ 21 مليون عملة الوهمية والثقيلة نهائياً من هنا لفتح السعة 
+                // وتأمين المنصة قانونياً وسيبرانياً 100% داخل مصر [▲].
             }
 
-            // ب) [الحل السيبراني المعتمد] المطابقة الذكية لفك الباسورد المشفر والخام معاً دون تضارب
+            // ب) المطابقة الذكية لفك الباسورد المشفر والخام معاً دون تضارب
             let user = await UserModel.findOne({ username: data.username });
 
             let isMatch = false;
@@ -710,9 +692,7 @@ io.on('connection', (socket) => {
                     try {
                         const bcrypt = require('bcryptjs');
                         isMatch = await bcrypt.compare(data.password, user.password);
-                    } catch (e) {
-                        isMatch = false;
-                    }
+                    } catch (e) { isMatch = false; }
                 }
             }
 
@@ -722,22 +702,40 @@ io.on('connection', (socket) => {
                 if (!user.friends) user.friends = [];
                 if (!user.friendRequests) user.friendRequests = [];
 
+                // 🔒 [حقن وتأمين فحص التصاريح الإدارية] جلب حالة تفعيل السنتر والاجتماعات للمستخدم حياً
+                const userPermission = await UserPermissionModel.findOne({ username: user.username });
+                
+                // دمج حالة التصريح الحالية داخل كائن الـ user لتتغذى منها شاشات الفرونت إند فوراً
+                const updatedUserObj = {
+                    ...user.toObject(),
+                    isAuthorizedTeacher: userPermission ? userPermission.isAuthorizedTeacher : (user.username === 'Admin_Mostafa'),
+                    isAuthorizedStudent: userPermission ? userPermission.isAuthorizedStudent : (user.username === 'Admin_Mostafa'),
+                    permissionExpiry: userPermission ? userPermission.permissionExpiry : null
+                };
+
                 const ads = await AdModel.find({}); 
                 const messages = await GroupMessageModel.find({ roomId: 'public' }).sort({ _id: 1 }).limit(50);
                 const chatHistory = messages;
 
                 const localGroups = [{ id: 'public', name: 'المجموعة العامة', creator: 'System' }];
                 const total = await UserModel.countDocuments();
-                
                 const usersList = await UserModel.find({}, { password: 0 }).sort({ username: 1 });
 
-                socket.emit('init_data', { ads, chatHistory, user, groups: localGroups, usersList, stats: { totalUsers: total, activeUsers } });
+                // بث البيانات المعقمة والمطهرة كلياً من رصيد العملات لفتح بوابات الأندرويد والويب بنقاء
+                socket.emit('init_data', { 
+                    ads, 
+                    chatHistory, 
+                    user: updatedUserObj, // 👑 الحساب مأمن بالتصاريح الإدارية المباشرة للأدمن بدلاً من المحفظة
+                    groups: localGroups, 
+                    usersList, 
+                    stats: { totalUsers: total, activeUsers } 
+                });
                 socket.emit('init_users_data', usersList);
             } else {
                 socket.emit('error_msg', '⚠️ خطأ في اسم المستخدم أو كلمة المرور!');
             }
         } catch (err) {
-            console.error("خطأ تسجيل الدخول السحابي الفوري:", err);
+            console.error("خطأ تسجيل الدخول السحابي الفوري المطور:", err);
             socket.emit('error_msg', 'فشل الاتصال بقاعدة البيانات السحابية الحية');
         }
     });
@@ -1293,76 +1291,73 @@ const generateSecureApiKey = () => {
     return 'ouro_live_' + crypto.randomBytes(24).toString('hex');
 };
 
-// 1️⃣ [مسار توليد المفتاح] استخراج وحفظ مفتاح الـ API ومطابقة الخصائص المحددة فالسحاب
-// ==========================================================================
-// ⚙️ [محرك الـ API المركزي المطور] حاسبة الأسعار، الخصم المالي المسبق، والتجميد الآلي
-// ==========================================================================
+// 2. [مسار تقديم طلب استخراج مفتاح API] - ينشأ معلقاً ويخطر المشرفين فوراً
 app.post('/api/developer/create-key', async (req, res) => {
     try {
         const { username, keyLabel, scopes } = req.body;
+        if (!username || !keyLabel) return res.status(400).json({ success: false, message: "⚠️ البيانات غير مكتملة برمجياً" });
 
-        // 1. حساب قيمة الخصم التراكمية بناءً على تعريفة الأسعار المعتمدة بالملي
-        let totalMonthlyCost = 0;
-        if (scopes.all_features) {
-            totalMonthlyCost = 75; // المزايا كلياً بـ 75 عملة شهرياً
-        } else {
-            if (scopes.virtual_flash) totalMonthlyCost += 50;
-            if (scopes.market) totalMonthlyCost += 20;
-            if (scopes.wallet) totalMonthlyCost += 10;
-            if (scopes.center) totalMonthlyCost += 20;
-            // مواقيت الصلاة وشريط الإعلانات مجانية تماماً (0 عملة)
-        }
-
-        // 2. جلب الملف المالي المستقل للمطور من السحاب للخصم الفوري المسبق
-        let userLedger = await OuroUserLedgerModel.findOne({ username });
-        if (!userLedger) {
-            userLedger = new OuroUserLedgerModel({ username, ouroBalance: 0 });
-            await userLedger.save();
-        }
-
-        // فحص كفاية رصيد المطور قبل السماح باستخراج المفتاح
-        if (userLedger.ouroBalance < totalMonthlyCost && username !== 'Admin_Mostafa') {
-            return res.status(400).json({ 
-                success: false, 
-                message: `❌ رصيدك الحالي (${userLedger.ouroBalance} OURO) غير كافٍ لتغطية قيمة اشتراك المفتاح المطلوبة البالغة ${totalMonthlyCost} OURO شهرياً! الرجاء شحن محفظتك أولاً.` 
-            });
-        }
-
-        // 3. الخصم الفيزيائي الفوري لقيمة الاشتراك شهرياً وضخها لخزينة الأدمن Mostafa
-        if (username !== 'Admin_Mostafa' && totalMonthlyCost > 0) {
-            userLedger.ouroBalance -= totalMonthlyCost;
-            await userLedger.save();
-
-            let adminLedger = await OuroUserLedgerModel.findOne({ username: 'Admin_Mostafa' });
-            if (adminLedger) {
-                adminLedger.ouroBalance += totalMonthlyCost;
-                await adminLedger.save();
-            }
-        }
-
-        // 4. توليد شفرة مفتاح الـ API المشفرة والفريدة
+        // توليد شفرة مفتاح الـ API الفريدة والمشفرة
         const crypto = require('crypto');
         const generatedApiKey = 'ouro_api_' + crypto.randomBytes(16).toString('hex');
 
-        const newApiKeyDoc = new (mongoose.model('DeveloperKey'))({
+        const newApiKeyDoc = new DeveloperKeyModel({
             id: 'key_' + Date.now().toString(),
             username,
             keyLabel,
             apiKey: generatedApiKey,
             scopes,
-            monthlyCost: totalMonthlyCost,
-            isActive: true // ينطلق نشطاً بنجاح
+            isActive: false // 🔒 معلق بانتظار موافقة الأدمن أو المشرفين
         });
         await newApiKeyDoc.save();
 
-        // بث نبضة السوكت لإنعاش الرصيد فالسقف تلقائياً فور الخصم المسبق
+        // 📡 بث نبضة حية فورية لإخطار الأدمن والمشرفين المعينين بوجود طلب مفتاح API جديد معلق
         if (global.io) {
-            global.io.emit('wallet_balance_updated', { username, newBalance: userLedger.ouroBalance });
+            global.io.emit('admin_receive_api_key_request', { 
+                keyId: newApiKeyDoc.id, 
+                applicant: username, 
+                label: keyLabel,
+                scopes: scopes
+            });
         }
 
-        res.json({ success: true, key: newApiKeyDoc, newBalance: userLedger.ouroBalance });
+        res.json({ success: true, key: newApiKeyDoc, message: "🚀 تم إنشاء طلب المفتاح بنجاح! بانتظار موافقة وتوقيع الأدمن أو المشرفين لتفعيله." });
     } catch (err) {
-        res.status(500).json({ success: false, message: "فشل استخراج مفتاح الـ API السحابي." });
+        console.error("خطأ إنشاء طلب الـ API:", err);
+        res.status(500).json({ success: false, message: "فشل استخراج طلب مفتاح الـ API السحابي." });
+    }
+});
+
+// 3. [مسار تفعيل وقبول المفتاح] - متاح وحصري لحساب الأدمن والمسؤولين الذين يعينهم مشرفين
+app.post('/api/developer/approve-key', async (req, res) => {
+    try {
+        const { adminUsername, keyId } = req.body;
+
+        // 🛡️ جدار التحقق الصارم: جلب بيانات المستخدم لفحص رتبته الإدارية المعتمدة
+        const adminUserDoc = await UserModel.findOne({ username: adminUsername });
+        const isAuthorizedStaff = adminUsername === 'Admin_Mostafa' || (adminUserDoc && (adminUserDoc.role === 'Admin' || adminUserDoc.role === 'Moderator' || adminUserDoc.role === 'Supervisor'));
+
+        if (!isAuthorizedStaff) {
+            return res.status(403).json({ success: false, message: "🚨 حظر سيبراني: لا تمتلك الصلاحية الإدارية أو رتبة مشرف للموافقة على هذه العملية!" });
+        }
+
+        // قفل وتفعيل المفتاح المعلق في قاعدة البيانات
+        const updatedKey = await DeveloperKeyModel.findOneAndUpdate(
+            { id: keyId },
+            { $set: { isActive: true, approvedBy: adminUsername } },
+            { new: true }
+        );
+
+        if (!updatedKey) return res.status(404).json({ success: false, message: "⚠️ لم يتم العثور على طلب المفتاح المستهدف!" });
+
+        // بث إشعار حي لإعلام المطور المتقدم بأن مفتاحه تم إطلاقه والموافقة عليه حياً
+        if (global.io) {
+            global.io.emit('developer_key_activated', { username: updatedKey.username, keyId: updatedKey.id });
+        }
+
+        res.json({ success: true, message: `✔️ تم الموافقة على المفتاح وتفعيله بنجاح بواسطة المسؤول: ${adminUsername}` });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "فشل تمرير التفويض الإداري للمفتاح." });
     }
 });
 
@@ -1388,208 +1383,30 @@ app.post('/api/developer/delete-key', async (req, res) => {
     }
 });
 
-// 2️⃣ [مسار ربط MetaMask الحركي] قيد عنوان الاستقبال الخارجي بالحساب السحابي للأبد
-app.post('/api/wallet/link-metamask', async (req, res) => {
-    try {
-        const { username, ethAddress } = req.body;
-        await UserModel.updateOne({ username }, { $set: { metaMaskAddress: ethAddress } });
-        res.json({ success: true });
-    } catch (err) { res.status(500).json({ success: false }); }
-});
-
 // ==========================================================================
-// 🪙 [محرك البلوكشين الرياضي المعكوس لـ OURO Steps] الصك الكسول - Lazy Minting
+// 🏛️ [تعديل بوابة السنتر والاجتماعات] التوطين الكامل لنظام التصاريح الإدارية المباشرة
 // ==========================================================================
 
-// البادئة والنطاق الصارم للأرقام التسلسلية الحقيقية لعملتنا للأبد
-const OURO_BASE_SERIAL = 27411921;
-const OURO_MAX_SUPPLY = 21000000;
-const OURO_MAX_SERIAL = OURO_BASE_SERIAL + OURO_MAX_SUPPLY - 1; // ينتهي عند OuRo48411920 أو 21000000 عملة بالملي
-
-// دالة التحقق البرمي من صحة البناء الهيكلي للأرقام التسلسلية دون الاستعلام من قاعدة البيانات
-const isValidOuroTokenSerial = (tokenId) => {
-    if (!tokenId || !tokenId.startsWith('OuRo')) return false;
-    const serialNum = parseInt(tokenId.replace('OuRo', ''));
-    return (!isNaN(serialNum) && serialNum >= OURO_BASE_SERIAL && serialNum <= OURO_MAX_SERIAL);
-};
-
-// ==========================================================================
-// 🪙 1️⃣ [محرك القراءة التدريجية المجدولة - ملكية الجدول المطلقة للأدمن]
-// ==========================================================================
-app.post('/api/wallet/get-info', async (req, res) => {
+// 1. [مسار التحقق الإداري وبدء البث] يعبر المحاضر فوراً إذا كان حسابه مصرحاً ومفعلاً من الأدمن Mostafa
+app.post('/api/center/rent-room', async (req, res) => {
     try {
         const { username } = req.body;
         if (!username) return res.status(400).json({ success: false, message: "⚠️ اسم المستخدم مفقود رقمياً" });
 
-        let actualMintedBalance = 0;
-
-        // 🔒 إسناد وتثبيت ملكية الجدول المالي بالكامل لحساب الأدمن الملكي
-        if (username === 'Admin_Mostafa') {
-            // 🧠 [تطبيق فكرة القراءة التدريجية والذكية] استخدام عداد الفهرسة الخفيف (Hinted Index)
-            // لإجبار السحاب على جلب الإجمالي التعديني المليوني طيراناً دون कलेक्शन سبرين ثقيل
-            actualMintedBalance = await OuroTokenModel.countDocuments({ owner: 'Admin_Mostafa' }).hint({ owner: 1 });
-            
-            // صمام أمان بنكي: لو حظر معالج السحاب القراءة المؤقتة، يسحب السيرفر العداد التقديري فوراً لكسر الليميت
-            if (actualMintedBalance <= 2500000) {
-                actualMintedBalance = await OuroTokenModel.estimatedDocumentCount();
-            }
-        } else {
-            // حساب أعداد العملات الفعلية الممسوكة للأعضاء والطلاب من وثائق ملكيتهم بملف الصك
-            actualMintedBalance = await OuroTokenModel.countDocuments({ owner: username });
-        }
-
-        // جلب العقود الذكية الخارجية إن وجدت من قاعدة البيانات
-        const contracts = await mongoose.model('DeveloperKey').find({ isContract: true }).catch(() => []) || [];
+        // 🛡️ فحص جدار التصاريح السحابي الموحد بدلاً من جداول المحفظة والعملات الملغاة
+        const permissionDoc = await mongoose.model('UserPermission').findOne({ username: username.trim() });
         
-        res.json({ 
-            success: true, 
-            ouroBalance: actualMintedBalance, // 🪙 المتصفح وجميع الشاشات والمحفظة يقرؤون الآن الملايين الـ 20 كاملة بنقاء 100%
-            contracts: [
-                {
-                    id: "contract_ouro_genesis_2026",
-                    contractName: "OURO Coin Master Contract (Sovereign Mining Core)",
-                    symbol: "OURO",
-                    contractAddress: "0x7627OUROamek11619917627h38j4l5G84P8354000000000000000000000000000000000000" 
-                }
-            ] 
-        });
-    } catch (err) { 
-        console.error("خطأ جلب الرصيد بميكانيكية ملف الصك:", err);
-        res.status(500).json({ success: false, error: err.message }); 
-    }
-});
-
-// ==========================================================================
-// 💸 [إعادة ضبط مسار التحويل كلياً] نقل ملكية العملات بملف الصك وقانون الضريبة 7%
-// ==========================================================================
-app.post('/api/wallet/transfer', async (req, res) => {
-    try {
-        const { sender, receiver, amount } = req.body; // receiver يمثل إما الـ ID الفريد أو اسم الحساب
-        const transferAmount = parseInt(amount);
-
-        if (isNaN(transferAmount) || transferAmount <= 0) {
-            return res.status(400).json({ success: false, message: "⚠️ كمية الحوالة غير صالحة برمجياً" });
-        }
-
-        // 1️⃣ المطابقة الذكية والسريعة للمستقبل عبر الـ ID الفريد _id أو الـ username
-        const mongoose = require('mongoose');
-        let query = { username: receiver.trim() };
-        if (mongoose.Types.ObjectId.isValid(receiver.trim())) query = { _id: receiver.trim() };
-        let receiverUser = await UserModel.findOne(query);
-
-        if (!receiverUser) return res.status(404).json({ success: false, message: "⚠️ الـ ID أو الحساب المستهدف غير موجود كلياً بالمنصة!" });
-        if (sender === receiverUser.username) return res.status(400).json({ success: false, message: "⚠️ لا يمكنك التحويل لنفس محفظتك!" });
-
-        // 2️⃣ [محرك فحص الرموز الحقيقي] قنص العملات المتسلسلة المملوكة للمرسل حالياً داخل ملف الصك الجديد
-        const senderTokens = await OuroTokenModel.find({ owner: sender }).limit(transferAmount + Math.ceil(transferAmount * 0.07));
-        
-        // احتساب ضريبة الشبكة القانونية (7%) بأعداد العملات الصارمة
-        const taxAmount = Math.ceil(transferAmount * 0.07);
-        const totalRequiredCost = transferAmount + taxAmount;
-
-        // فحص كفاية العملات الفعلية في ملف الصك (الأدمن مستثنى من الضريبة لحساب الخزينة)
-        if (senderTokens.length < totalRequiredCost && sender !== 'Admin_Mostafa') {
-            return res.status(400).json({ success: false, message: `❌ رصيدك الفعلي بملف الصك غير كافٍ! الحوالة تتطلب ${transferAmount} عملة + ${taxAmount} عملة ضريبة الشبكة.` });
-        }
-        
-        if (senderTokens.length < transferAmount && sender === 'Admin_Mostafa') {
-            return res.status(400).json({ success: false, message: `❌ رصيدك الفعلي بملف الصك لا يكفي لإتمام عملية شحن المستخدمين!` });
-        }
-
-        // 3️⃣ [تنفيذ النقل الفيزيائي للأرقام التسلسلية سحابياً بـ MongoDB Atlas]
-        const tokensToReceiver = senderTokens.slice(0, transferAmount);
-        const tokensToAdminTax = senderTokens.slice(transferAmount, totalRequiredCost);
-
-        // أ) نقل ملكية العملات المحولة وتوطينها باسم الحساب المستقبل فوراً في السحاب
-        const receiverTokenIds = tokensToReceiver.map(t => t.tokenId);
-        await OuroTokenModel.updateMany({ tokenId: { $in: receiverTokenIds } }, { $set: { owner: receiverUser.username } });
-
-        // ب) تطبيق القانون الضريبي (7%): نقل ملكية عملات الضريبة قسرياً لحساب الأدمن الملكي 'Admin_Mostafa'
-        if (sender !== 'Admin_Mostafa' && taxAmount > 0) {
-            const taxTokenIds = tokensToAdminTax.map(t => t.tokenId);
-            await OuroTokenModel.updateMany({ tokenId: { $in: taxTokenIds } }, { $set: { owner: 'Admin_Mostafa' } });
-        }
-
-        // 4️⃣ إعادة حساب الأرصدة الحية التزامنية من ملف الصك لبثها صامتاً
-        const finalSenderCount = await OuroTokenModel.countDocuments({ owner: sender });
-        const finalReceiverCount = await OuroTokenModel.countDocuments({ owner: receiverUser.username });
-
-        // 📡 5️⃣ المزامنة والإنعاش الصامت الآمن عبر قنوات السوكت الخارجية دون حشو مكرر
-        try {
-            const socketIo = global.io || (req.app ? req.app.get('socketio') : null);
-            if (socketIo && typeof socketIo.emit === 'function') {
-                socketIo.emit('wallet_balance_updated', { username: sender, newBalance: finalSenderCount });
-                socketIo.emit('wallet_balance_updated', { username: receiverUser.username, newBalance: finalReceiverCount });
-            }
-        } catch (e) { console.log("تنبيه مزامنة صامت"); }
-
-        console.log(`🎉 [Ouro Core Sovereign Transfer Success] تم نقل العملات وإعادة توطينها بملف الصك الجديد.`);
-        return res.json({ success: true, newSenderBalance: finalSenderCount });
-
-    } catch (err) { 
-        console.error("خطأ التداول بمسار ملف الصك الحقيقي:", err);
-        return res.status(500).json({ success: false, message: "🚨 خطأ داخلي بالخادم أثناء نقل ملكية العملات بملف الصك الجديد." }); 
-    }
-});
-
-
-// 4️⃣ [مسار الأدمن لزرع العقود الذكية للعملات الخارجية]
-app.post('/api/wallet/admin/add-contract', async (req, res) => {
-    try {
-        const { username, contractName, contractAddress, symbol } = req.body;
-        if (username !== 'Admin_Mostafa') return res.status(403).json({ success: false, message: "غير مصرح لك" });
-
-        const newContract = new (mongoose.model('DeveloperKey'))({
-            id: 'contract_' + Date.now().toString(),
-            username: username,
-            keyLabel: contractName,
-            apiKey: contractAddress, // حفظ العنوان كعقد ذكي متصل
-            scopes: { all_features: false, prayer_times: false, virtual_flash: false, market: false, ads: false },
-            isContract: true, // شارة تمييز العقد سحابياً
-            contractName, contractAddress, symbol
-        });
-
-        await newContract.save();
-        res.json({ success: true, contract: newContract });
-    } catch (err) { res.status(500).json({ success: false }); }
-});
-
-// ==========================================================================
-// 🏛️ [بوابة السنتر والاجتماعات] مسارات الدفع والاستدعاء اللحظي للمحاضرات
-// ==========================================================================
-
-// 1. [مسار استئجار القاعة وبدء البث] خصم 50 عملة من المعلم وضخها تلقائياً لخزينة الأدمن Mostafa
-app.post('/api/center/rent-room', async (req, res) => {
-    try {
-        const { username, cost } = req.body;
-        const rentCost = parseInt(cost) || 50;
-
-        // جلب وقراءة حساب المعلم وحساب الأدمن من الملف المالي المستقل
-        let teacherLedger = await OuroUserLedgerModel.findOne({ username });
-        let adminLedger = await OuroUserLedgerModel.findOne({ username: 'Admin_Mostafa' });
-
-        if (!teacherLedger) {
-            teacherLedger = new OuroUserLedgerModel({ username, ouroBalance: 0 });
-            await teacherLedger.save();
-        }
-
-        // فحص كفاية رصيد المعلم (إلا لو كان الأدمن نفسه فيعبر مجاناً)
-        if (teacherLedger.ouroBalance < rentCost && username !== 'Admin_Mostafa') {
-            return res.status(400).json({ success: false, message: `❌ رصيدك الحالي من عملات OURO غير كافٍ لاستئجار السنتر! تكلفة البث ${rentCost} عملة.` });
-        }
-
-        // تنفيذ الخصم الفعلي من المعلم وتحويل القيمة مباشرة لخزينة الأدمن الملكية
+        // جدار الحماية: منع منشئ البث من إطلاق القاعة لو لم يمتلك تصريحاً نشطاً (الأدمن يعبر تلقائياً للأبد)
         if (username !== 'Admin_Mostafa') {
-            teacherLedger.ouroBalance -= rentCost;
-            await teacherLedger.save();
-            
-            if (adminLedger) {
-                adminLedger.ouroBalance += rentCost;
-                await adminLedger.save();
+            if (!permissionDoc || !permissionDoc.isAuthorizedTeacher || new Date() > permissionDoc.permissionExpiry) {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: "🔒 عذراً، قاعة البث مغلقة! حسابك غير مصرح له بإنشاء اجتماعات أو انتهت صلاحية الـ 30 يوماً. برجاء مراجعة الأدمن Mostafa لتجديد التصريح يدوياً." 
+                });
             }
         }
 
-        // توليد غرفة بث فريدة مشفرة فالسحاب للسنتر التعليمي
+        // توليد غرفة بث فريدة ومحمية سيبرانياً في السحاب للسنتر التعليمي المعتمد
         const generatedRoomId = 'room_' + Date.now().toString();
         const newCenterRoom = new OuroCenterModel({
             roomId: generatedRoomId,
@@ -1601,25 +1418,20 @@ app.post('/api/center/rent-room', async (req, res) => {
         });
         await newCenterRoom.save();
 
-        // بث نبضة السوكت الحية لتحديث الرصيد فالسقف تلقائياً فور الخصم
-        if (global.io) {
-            global.io.emit('wallet_balance_updated', { username, newBalance: teacherLedger.ouroBalance });
-        }
-
+        console.log(`🏛️ [Sovereign Center Access Grant] تم إطلاق غرفه بث تفاعلية نشطة للمحاضر المصرح له: ${username}`);
         res.json({ success: true, roomId: generatedRoomId });
     } catch (err) {
-        console.error("خطأ استئجار السنتر:", err);
-        res.status(500).json({ success: false, message: "فشل الاتصال بقفل السنتر السحابي." });
+        console.error("خطأ تشغيل قاعة السنتر الإداري:", err);
+        res.status(500).json({ success: false, message: "فشل الاتصال بقفل التصاريح المركزي للسنتر." });
     }
 });
 
-// 2. [مستمع قنوات السوكت للسنتر] المزامنة الحية وضخ حزم البيانات والوسائط الأربعة
+// 2. [مستمع قنوات السوكت للسنتر] المزامنة الحية وضخ حزم الألسنة الأربعة للمصرح لهم فقط
 if (global.io) {
     global.io.on('connection', (socket) => {
-        // قنوات جلب بيانات السنتر للأعضاء والطلاب فور نقر الزر
         socket.on('get_center_status', async (data) => {
             try {
-                // جلب أحدث قاعة بث مسجلة فالسحاب
+                // جلب أحدث محاضرة وقاعة بث مسجلة سحابياً لبث محتوياتها
                 const latestCenter = await OuroCenterModel.findOne({}).sort({ createdAt: -1 });
                 if (latestCenter) {
                     socket.emit('center_data_package', {
@@ -1630,7 +1442,7 @@ if (global.io) {
                 } else {
                     socket.emit('center_data_package', { videos: [], images: [], pdfs: [] });
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("خطأ مزامنة السنتر السحابي:", e); }
         });
     });
 }
