@@ -16,8 +16,6 @@ import AdSliderBottom from './components/AdSliderBottom';
 import DiscoveryStore from './components/DiscoveryStore';
 import Market from './components/Market'; // استدعاء ملف السوق المستقل الجديد
 import ApiKeyModal from './components/ApiKeyModal';
-import OuroWalletModal from './components/OuroWalletModal';
-import CoinPurchaseModal from './components/CoinPurchaseModal'; // 👑 حقن بوابة التداول الداخلي لـ OURO
 import OuroCenterModal from './components/OuroCenterModal';
 import './App.css';
 
@@ -58,10 +56,6 @@ function App() {
   // 👑 [تمت الزراعة والتحصين] متغيرات الـ State المخصصة لتغذية وبناء معرض بضائع السوق السحابية
   const [marketPosts, setMarketPosts] = useState([]);
   const [newPost, setNewPost] = useState({ description: "", price: "", files: null });
-    // 👑 [الصندوق الأول] حقول الـ States المالية المخصصة للمحفظة الرقمية والدمج التبادلي للعملة
-  const [showWalletModal, setShowWalletModal] = useState(false);
-  const [ouroBalance, setOuroBalance] = useState(0); // رصيد المستخدم الحالي
-  const [showCoinPurchaseModal, setShowCoinPurchaseModal] = useState(false);
   const [showCenterModal, setShowCenterModal] = useState(false);
   const [showFlashModal, setShowFlashModal] = useState(false);
   // 👑 [دالة الحذف السحابية المحدثة] إطلاق نبضة الإبادة السيبرانية لكارت المنتج وتطهيره من MongoDB Atlas
@@ -195,12 +189,10 @@ function App() {
       socket.on('message', (m) => setChat(prev => [...prev, m]));
       
 // ==========================================================================
-// 🔊 3. مستمع المزامنة التاريخية وتطهير سجل قاعدة البيانات من الكائنات التالفة لمنع خطأ #31
+// 🔊 3. مستمع MOCK المزامنة التاريخية وتأمين بيانات الدخول والتصاريح الإدارية
 // ==========================================================================
       socket.on('init_data', (data) => { 
         if (data.user) {
-          // 🔒 [التطهير النهائي والحاسم] إلغاء الـ 21 مليون الوهمية وجعل السوكت يشحن الرصيد التعديني الفعلي لملف الصك الجديد
-          setOuroBalance(data.user.ouroBalance || 0); 
           
           setAds(data.ads || []); 
           
@@ -210,7 +202,7 @@ function App() {
           }));
           
           setChat(sanitizedHistory); 
-          setUser(data.user);
+          setUser(data.user); // استقبال كائن الحساب المحقون بالتصاريح الإدارية الحية من السيرفر
           if (data.groups) setGroups(data.groups); 
           if (data.stats) { 
               setTotalUsers(data.stats.totalUsers); 
@@ -395,44 +387,19 @@ return (
     <div className="app-container" style={{ backgroundImage: "url('/assets/background.png')", backgroundSize: 'cover' }}>
       <div className="app-overlay">
         
-        {/* 👑 [نظام السقف الإلكتروني الملكي الموحد] مربع العملة بالأبعاد الدقيقة وزر الشراء (+) دون أي تكرار للوجو بالأسفل */}
+        {/* 👑 [نظام الهيدر الإداري الملكي الموحد] تصفية كاملة من رواسب العملات والحفاظ على نقاء الأبعاد والعدادات الحية */}
         <Header 
           activeUsers={activeUsers} 
           totalUsers={totalUsers} 
           user={user} 
-          ouroBalance={ouroBalance} 
-          onBuyCoin={() => setShowCoinPurchaseModal(true)} // 👑 [تم الحسم] زر الـ (+) يفتح الآن بوابة التداول فوراً على الشاشة
           renderCoinBadge={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(0,0,0,0.5)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--gold-primary)' }}>
-              <span style={{ color: 'var(--gold-primary)', fontSize: '11px', fontWeight: 'bold' }}>🪙 OURO:</span>
-              
-              {/* 📟 المربع المالي الملتزم بالأبعاد الفيزيائية الحادة (عرض 30px وارتفاع 13px) */}
-              <div className="scrollbar-gold" style={{ width: '30px', height: '13px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', borderRadius: '2px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                {/* 🔒 [التطهير النهائي للويب] إسقاط القيمة الوهمية 21M وعرض عدد ملايين عملاتك الحقيقية 17M تلقائياً تزامناً مع ملف الصك */}
-                <span style={{ color: '#fff', fontSize: '9px', fontWeight: 'bold' }}>
-                  {user?.username === 'Admin_Mostafa' ? `${Math.floor(ouroBalance / 1000000)}M` : ouroBalance}
-                </span>
-              </div>
-              
-              {/* ✅ وضَع مكانه هذا الزر المطور والموجه لتفجير بوابتك الداخلية فوراً دون لسان جديد: */}
-              <button 
-                type="button" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowCoinPurchaseModal(true); // 👑 [تم الحسم الجذري] إجبار النقر على تفجير بوابة التداول الداخلي فوراً على نفس الشاشة
-                }}
-                style={{ background: 'var(--gold-primary)', color: '#000', border: 'none', width: '14px', height: '14px', borderRadius: '50%', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-                title="اضغط هنا لفتح بوابة التداول والتحويل الداخلي لعملة OURO"
-              >
-                +
-              </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(0,0,0,0.4)', padding: '3px 10px', borderRadius: '4px', border: '1px solid #27ae60' }}>
+              <span style={{ color: '#27ae60', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                🔐 نظام التصاريح الإدارية نشط 🏛️
+              </span>
             </div>
           }
         />
-        
-        {/* 🧱 [تم سحق وإبادة وسم الفراغ والترحيب المكرر بنجاح 100% لمنع الازدواج البصري للوجو] */}
-
         
         {/* 2. الفراغ الملكي الفاصل المستقل لعرض جملة الترحيب واللوجو حرّاً بانتظام أزلي */}
         <div className="header-center">
@@ -459,7 +426,6 @@ return (
             })()
           }
           setShowApiKeyModal={setShowApiKeyModal} // 👈 قُم بحقن هذا السطر هنا لتتصل التروس ببعضها
-          setShowWalletModal={setShowWalletModal} // 👈 حقن دالة استدعاء المحفظة هنا
           setShowCenterModal={setShowCenterModal} 
           setShowFlashModal={setShowFlashModal} // 👈 تمرير دالة الفلاشة الجديدة هنا
         />
@@ -517,27 +483,6 @@ return (
             user={user}
             API_BASE={API_BASE}
             onClose={() => setShowApiKeyModal(false)}
-          />
-        )}
-
-        {/* 👑 [الصندوق الرابع] تفعيل وإطلاق مكوّن المحفظة الرقمية المستقل الجديد بكافة ميزاته وحركياته المالية والتحويل التبادلي وضريبة الـ 7% */}
-        {showWalletModal && (
-          <OuroWalletModal 
-            user={user}
-            API_BASE={API_BASE}
-            onClose={() => setShowWalletModal(false)}
-            ouroBalance={ouroBalance}
-            setOuroBalance={setOuroBalance}
-          />
-        )}
-
-        {/* 👑 [البصمة الختامية للويب] إطلاق بوابة التداول الداخلي لعملة المنصة بنقاء تزامني سحابي 100% */}
-        {showCoinPurchaseModal && (
-          <CoinPurchaseModal 
-            user={user}
-            API_BASE={API_BASE}
-            setOuroBalance={setOuroBalance}
-            onClose={() => setShowCoinPurchaseModal(false)}
           />
         )}
 
