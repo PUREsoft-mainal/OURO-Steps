@@ -58,6 +58,10 @@ function App() {
   const [newPost, setNewPost] = useState({ description: "", price: "", files: null });
   const [showCenterModal, setShowCenterModal] = useState(false);
   const [showFlashModal, setShowFlashModal] = useState(false);
+    // 🏛️ [States لوحة الإدارة] استقبال وتخزين طلبات السنتر ومفاتيح الـ API المعلقة حياً
+  const [showAdminPanelModal, setShowAdminPanelModal] = useState(false);
+  const [pendingCenterRequests, setPendingCenterRequests] = useState([]);
+  const [pendingApiRequests, setPendingApiRequests] = useState([]);
   // 👑 [دالة الحذف السحابية المحدثة] إطلاق نبضة الإبادة السيبرانية لكارت المنتج وتطهيره من MongoDB Atlas
   const handleDeletePost = async (postId) => {
     if (!window.confirm("🗑️ هل أنت متأكد من حذف هذه السلعة وإلغاء منشورها نهائياً من السحاب؟")) return;
@@ -187,6 +191,23 @@ function App() {
 
       // 🔊 2. مستمع استقبال رسائل المحادثات العامة والنظام التاريخية
       socket.on('message', (m) => setChat(prev => [...prev, m]));
+
+            // 📡 مستمع التقاط طلبات اشتراك السنتر (البث الحي) حياً على شاشة الأدمن Mostafa
+      socket.on('admin_receive_teacher_request', (req) => {
+        setPendingCenterRequests(prev => {
+          if (prev.some(p => p.requestId === req.requestId)) return prev;
+          return [...prev, req];
+        });
+      });
+
+      // 📡 مستمع التقاط طلبات مفاتيح الـ API بالمزايا المختارة حياً على شاشة الأدمن
+      socket.on('admin_receive_api_key_request', (req) => {
+        setPendingApiRequests(prev => {
+          if (prev.some(p => p.keyId === req.keyId)) return prev;
+          return [...prev, req];
+        });
+      });
+
       
 // ==========================================================================
 // 🔊 3. مستمع MOCK المزامنة التاريخية وتأمين بيانات الدخول والتصاريح الإدارية
@@ -641,6 +662,93 @@ return (
           {/* 👑 تمرير الـ user ليفهم المكون السفلي أنك الأدمن فيظهر لك زر الحذف في الأسفل */}
           <AdSliderBottom ads={ads} user={user} />
         </div>
+
+        {/* ========================================================================== */}
+        {/* 👑 [لوحة التحكم والطلبات المركزية للأدمن] - عرض وقبول اشتراكات السنتر ومفاتيح الـ API */}
+        {/* ========================================================================== */}
+        {showAdminPanelModal && (
+          <div className="discovery-overlay" onClick={() => setShowAdminPanelModal(false)}>
+            <div className="discovery-window gold-border" onClick={e => e.stopPropagation()} style={{ width: '95%', maxWidth: '750px', background: '#070707', padding: '20px' }}>
+              
+              <div className="discovery-tabs" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h3 style={{ color: 'var(--gold-primary)', margin: 0, fontSize: '15px' }}>👑 غرفة إدارة وتفويض طلبات المنصة السيادية (Admin Control)</h3>
+                <button className="close-discovery" onClick={() => setShowAdminPanelModal(false)}>✖</button>
+              </div>
+
+              <div className="discovery-body scrollbar-gold" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
+                
+                {/* 🔴 القسم الأول: طلبات الاشتراك الشهري للبث الحي والسنتر (30 يوماً) */}
+                <h4 style={{ color: '#fff', borderBottom: '1px solid rgba(212,175,55,0.2)', paddingBottom: '6px', fontSize: '12px', textAlign: 'right' }}>🏛️ طلبات فتح البث الحي والسنتر المعلقة:</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '25px' }}>
+                  {pendingCenterRequests.map(r => (
+                    <div key={r.requestId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#000', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-glass)' }}>
+                      <span style={{ color: '#fff', fontSize: '11px', textAlign: 'right' }}>👤 يطالب المحاضر/المستخدم <strong style={{color:'var(--gold-primary)'}}>{r.applicant}</strong> بتفعيل صلاحية السنتر والاجتماعات لـ 30 يوماً.</span>
+                      <button 
+                        className="gold-btn-small" 
+                        style={{ background: '#27ae60', color: '#fff', border: 'none', padding: '4px 12px', cursor: 'pointer' }}
+                        onClick={() => {
+                          if (socket) {
+                            socket.emit('admin_approve_teacher_request', { requestId: r.requestId });
+                            setPendingCenterRequests(prev => prev.filter(p => p.requestId !== r.requestId));
+                            alert(`✔️ تم تفعيل وصيانة صلاحية السنتر للمحاضر ${r.applicant} بنجاح لـ 30 يوماً كاملة!`);
+                          }
+                        }}
+                      >
+                        موافق ✔️
+                      </button>
+                    </div>
+                  ))}
+                  {pendingCenterRequests.length === 0 && <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center' }}>لا توجد طلبات اشتراك سنتر معلقة حالياً...</p>}
+                </div>
+
+                {/* ⚙️ القسم الثاني: طلبات استخراج مفاتيح الـ API مع عرض المزايا المحددة */}
+                <h4 style={{ color: '#fff', borderBottom: '1px solid rgba(212,175,55,0.2)', paddingBottom: '6px', fontSize: '12px', textAlign: 'right' }}>🔑 طلبات استخراج وتفعيل مفاتيح الـ API الخارجية:</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {pendingApiRequests.map(k => (
+                    <div key={k.keyId} style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: '#000', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-glass)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#fff', fontSize: '11px' }}>🛠️ المطور: <strong style={{color:'var(--gold-primary)'}}>{k.applicant}</strong> | وصف المفتاح: ({k.label})</span>
+                        <button 
+                          className="gold-btn-small" 
+                          style={{ background: '#27ae60', color: '#fff', border: 'none', padding: '4px 12px', cursor: 'pointer' }}
+                          onClick={async () => {
+                            try {
+                              const res = await axios.post(`${API_BASE}/api/developer/approve-key`, { adminUsername: user?.username, keyId: k.keyId });
+                              if (res.data.success) {
+                                setPendingApiRequests(prev => prev.filter(p => p.keyId !== k.keyId));
+                                alert(res.data.message || "🔑 تم تفويض وتفعيل مفتاح الـ API بنجاح!");
+                              }
+                            } catch (e) { alert("❌ فشل تفعيل المفتاح."); }
+                          }}
+                        >
+                          موافق ✔️
+                        </button>
+                      </div>
+                      
+                      {/* عرض المزايا والمواصفات التي اختارها المطور بدقة مجهرية */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '6px', borderRadius: '4px' }}>
+                        <small style={{ color: 'var(--text-muted)', fontSize: '10px' }}>المزايا المطلوبة للمفتاح:</small>
+                        {k.scopes && Object.keys(k.scopes).filter(s => k.scopes[s] && s !== 'wallet').map(s => (
+                          <span key={s} style={{ background: 'rgba(212,175,55,0.1)', color: 'var(--gold-primary)', fontSize: '8px', padding: '2px 6px', borderRadius: '3px', border: '1px solid rgba(212,175,55,0.15)' }}>
+                            {s === 'all_features' && '🌟 كامل المنصة'}
+                            {s === 'prayer_times' && '🕋 الصلاة'}
+                            {s === 'virtual_flash' && '📟 الفلاشة'}
+                            {s === 'market' && '🛍️ المتجر'}
+                            {s === 'center' && '🏛️ السنتر'}
+                            {s === 'ads' && '📣 الإعلانات'}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  {pendingApiRequests.length === 0 && <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center' }}>لا توجد طلبات مفاتيح API معلقة حالياً...</p>}
+                </div>
+
+              </div>
+            </div>
+          </div>
+        )}
+
 
         {/* 👑 نافذة مواقيت الصلاة المنبثقة الشاملة (تظهر فور النقر على زر مواقيت الصلاة بشريط الأزرار) */}
         {showPrayerModal && (
