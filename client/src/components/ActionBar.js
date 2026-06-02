@@ -2,7 +2,8 @@ import React from 'react';
 import '../App.css';
 
 // 👑 [النسخة القياسية الكاملة لـ OURO Steps] استقبال معطيات النوافذ والتحويل السحابي والسنتر المكتسح والفلاشة
-const ActionBar = ({ 
+const ActionBar = ({
+  user, // 🔒 استقبال كائن المستخدم لفحص الرتبة الإدارية أمنياً وعزل الزر
   setShowDiscovery, 
   setDiscoveryTab, 
   setShowPrayerModal, 
@@ -109,6 +110,20 @@ const ActionBar = ({
         }}
       >
         📟الفلاشة
+      </button>
+
+      <button 
+        className="action-bar-btn gold-glow-btn neon-admin-btn" 
+        style={{ 
+          borderColor: 'var(--gold-primary)', 
+          background: 'linear-gradient(180deg, rgba(212,175,55,0.15) 0%, rgba(0,0,0,0.8) 100%)', 
+          fontWeight: 'bold',
+          color: 'var(--gold-primary)',
+          textShadow: '0 0 5px rgba(212,175,55,0.5)'
+        }} 
+        onClick={() => { if (typeof setShowAdminPanelModal === 'function') setShowAdminPanelModal(true); }}
+      >
+        👑 طلبات الإدارة
       </button>
 
     </div>
