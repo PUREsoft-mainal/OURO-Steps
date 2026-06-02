@@ -1561,7 +1561,7 @@ app.post('/api/admin/fetch-live-requests', async (req, res) => {
         const db = readCloudRequestsFile();
         res.json({ success: true, centerRequests: db.centerRequests, apiRequests: db.apiRequests });
     } catch (e) { res.status(500).json({ success: false }); }
-}
+});
 
 
 server.listen(PORT, "0.0.0.0", () => { 
