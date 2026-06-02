@@ -436,6 +436,7 @@ return (
 
         {/* 4. استدعاء شريط الأزرار المستقل والمطور ديناميكياً */}
         <ActionBar 
+          user={user} // 🔒 تمرير الحساب للفحص
           setShowDiscovery={setShowDiscovery} 
           setDiscoveryTab={setDiscoveryTab} 
           setShowPrayerModal={setShowPrayerModal}
@@ -447,7 +448,8 @@ return (
             })()
           }
           setShowApiKeyModal={setShowApiKeyModal} // 👈 قُم بحقن هذا السطر هنا لتتصل التروس ببعضها
-          setShowCenterModal={setShowCenterModal} 
+          setShowCenterModal={setShowCenterModal}
+          setShowAdminPanelModal={setShowAdminPanelModal} // 🚀 تمرير دالة التفجير الفوري للوحة الطلبات
           setShowFlashModal={setShowFlashModal} // 👈 تمرير دالة الفلاشة الجديدة هنا
         />
 
