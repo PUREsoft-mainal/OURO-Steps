@@ -11,7 +11,8 @@ const ActionBar = ({
   friendRequestsCount, 
   setShowApiKeyModal,
   setShowCenterModal,
-  setShowFlashModal
+  setShowFlashModal,
+  setShowAdminPanelModal // 🚀 تم التثبيت الشرعي هنا لمنع خطأ الـ undef
 }) => {    
   
   // 👑 دالة ذكية معقمة لتفتيت التنبيهات وإطلاق النوافذ الموجهة فوراً دون تضارب
