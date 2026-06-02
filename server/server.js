@@ -7,6 +7,33 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 
+// ==========================================================================
+// 🛡️ [مستودع ملفات الطلبات السحابي الموحد] - حفظ وتأمين اشتراكات السنتر والـ API
+// ==========================================================================
+const fs = require('fs');
+const path = require('path');
+const REQUESTS_FILE_PATH = path.join(__dirname, 'ouro_pending_requests.json');
+
+// دالة مركزية لضمان قراءة وحفظ الطلبات بملف نصي ثابت يمنع ضياع المعاملات
+const readCloudRequestsFile = () => {
+    try {
+        if (!fs.existsSync(REQUESTS_FILE_PATH)) {
+            fs.writeFileSync(REQUESTS_FILE_PATH, JSON.stringify({ centerRequests: [], apiRequests: [] }, null, 2));
+        }
+        const fileData = fs.readFileSync(REQUESTS_FILE_PATH, 'utf-8');
+        return JSON.parse(fileData);
+    } catch (e) {
+        return { centerRequests: [], apiRequests: [] };
+    }
+};
+
+const writeCloudRequestsFile = (data) => {
+    try {
+        fs.writeFileSync(REQUESTS_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
+    } catch (e) { console.error("خطأ كتابة ملف الطلبات:", e); }
+};
+
+
 const app = express();
 const server = http.createServer(app);
 
@@ -1435,48 +1462,75 @@ app.post('/api/center/upload-to-drive', async (req, res) => {
     }
 });
 
-// ==========================================================================
-// 🏛️ [تعديل بوابة السنتر والاجتماعات] التوطين الكامل لنظام التصاريح الإدارية المباشرة
-// ==========================================================================
-
 // 1. [مسار التحقق الإداري وبدء البث] يعبر المحاضر فوراً إذا كان حسابه مصرحاً ومفعلاً من الأدمن Mostafa
+// ==========================================================================
+// 🏛️ [تحديث مسار السنتر والاجتماعات] - العبور للمصرح لهم، والجدولة الآلية بالملف السحابي للمستجدين
+// ==========================================================================
 app.post('/api/center/rent-room', async (req, res) => {
     try {
         const { username } = req.body;
         if (!username) return res.status(400).json({ success: false, message: "⚠️ اسم المستخدم مفقود رقمياً" });
 
-        // 🛡️ فحص جدار التصاريح السحابي الموحد بدلاً من جداول المحفظة والعملات الملغاة
+        // 🛡️ فحص جدار التصاريح السحابي الموحد بالأطلس
         const permissionDoc = await mongoose.model('UserPermission').findOne({ username: username.trim() });
         
-        // جدار الحماية: منع منشئ البث من إطلاق القاعة لو لم يمتلك تصريحاً نشطاً (الأدمن يعبر تلقائياً للأبد)
-        if (username !== 'Admin_Mostafa') {
-            if (!permissionDoc || !permissionDoc.isAuthorizedTeacher || new Date() > permissionDoc.permissionExpiry) {
-                return res.status(403).json({ 
-                    success: false, 
-                    message: "🔒 عذراً، قاعة البث مغلقة! حسابك غير مصرح له بإنشاء اجتماعات أو انتهت صلاحية الـ 30 يوماً. برجاء مراجعة الأدمن Mostafa لتجديد التصريح يدوياً." 
-                });
-            }
+        let hasActiveAccess = username === 'Admin_Mostafa';
+        if (permissionDoc && permissionDoc.isAuthorizedTeacher && new Date() < permissionDoc.permissionExpiry) {
+            hasActiveAccess = true;
         }
 
-        // توليد غرفة بث فريدة ومحمية سيبرانياً في السحاب للسنتر التعليمي المعتمد
-        const generatedRoomId = 'room_' + Date.now().toString();
-        const newCenterRoom = new OuroCenterModel({
-            roomId: generatedRoomId,
-            host: username,
-            allVideos: [
-                { title: "💻 محاضرة كورس الويب الشامل - الجلسة الأولى", watchHours: "124.5", date: "2026/05/28" },
-                { title: "📱 كورس الأندرويد لـ Google Play - الدرس التأسيسي", watchHours: "89.2", date: "2026/05/29" }
-            ]
-        });
-        await newCenterRoom.save();
+        // 🧠 [التكتيك الذكي الخارق للعادة]: لو الحساب يمتلك تصريحاً ساري المفعول، يعبر طيراناً لتوليد القاعة
+        if (hasActiveAccess) {
+            const generatedRoomId = 'room_' + Date.now().toString();
+            const newCenterRoom = new OuroCenterModel({
+                roomId: generatedRoomId,
+                host: username.trim(),
+                allVideos: [
+                    { title: "💻 محاضرة كورس الويب الشامل - الجلسة الأولى", watchHours: "124.5", date: "2026/05/28" },
+                    { title: "📱 كورس الأندرويد لـ Google Play - الدرس التأسيسي", watchHours: "89.2", date: "2026/05/29" }
+                ]
+            });
+            await newCenterRoom.save();
 
-        console.log(`🏛️ [Sovereign Center Access Grant] تم إطلاق غرفه بث تفاعلية نشطة للمحاضر المصرح له: ${username}`);
-        res.json({ success: true, roomId: generatedRoomId });
+            console.log(`🏛️ [Sovereign Center Access Grant] عبور فوري لغرفة البث للمحاضر المصرح له: ${username}`);
+            return res.json({ success: true, roomId: generatedRoomId, isLiveNow: true });
+        }
+
+        // 📝 [الأرشفة التسلسلية التلقائية]: لو الحساب غير مصرح له، يتم صياغة طلبه وأرشفته فوراً بالملف السحابي
+        let db = readCloudRequestsFile(); // استدعاء دالة قراءة ملف الـ JSON السحابي الموثق بقفل الهارد
+        
+        const centerReqId = 'req_center_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+        const newReqObj = {
+            requestId: centerReqId,
+            type: 'teacher_access',
+            applicant: username.trim(),
+            createdAt: new Date()
+        };
+
+        // فحص منع التكرار لضمان عدم حشو طلبات متطابقة لنفس الحساب المعلق
+        if (!db.centerRequests.some(p => p.applicant === username.trim())) {
+            db.centerRequests.push(newReqObj);
+            writeCloudRequestsFile(db); // قفل وحفظ البيانات بالملف لمنع ضياع المعاملة
+        }
+
+        // بث نبضة السوكت اللحظية كقناة إشعار موازية للمتصلين
+        if (global.io) {
+            global.io.emit('admin_receive_teacher_request', newReqObj);
+        }
+
+        console.log(`📋 [Sovereign Request Ledger] تم جدولة وأرشفة طلب اشتراك السنتر للمستخدم: ${username}`);
+        return res.json({ 
+            success: true, 
+            isPendingApproval: true, 
+            message: "🚀 تم إرسال طلب اشتراك السنتر بنجاح وأرشفته بالسحاب! تم إخطار لوحة التحكم للإدارة؛ انتظر تفعيل الـ 30 يوماً من الأدمن Mostafa خلال ثوانٍ." 
+        });
+
     } catch (err) {
-        console.error("خطأ تشغيل قاعة السنتر الإداري:", err);
-        res.status(500).json({ success: false, message: "فشل الاتصال بقفل التصاريح المركزي للسنتر." });
+        console.error("خطأ تشغيل قاعة السنتر الإداري المطور:", err);
+        return res.status(500).json({ success: false, message: "فشل الاتصال بقفل التصاريح المركزي للسنتر." });
     }
 });
+
 
 // 2. [مستمع قنوات السوكت للسنتر] المزامنة الحية وضخ حزم الألسنة الأربعة للمصرح لهم فقط
 if (global.io) {
@@ -1497,6 +1551,18 @@ if (global.io) {
             } catch (e) { console.error("خطأ مزامنة السنتر السحابي:", e); }
         });
     });
+}
+
+// ⏱️ مسار سحب وقراءة ملف الطلبات السحابي حياً للأدمن والمشرفين كل 5 ثوانٍ تلقائياً
+app.post('/api/admin/fetch-live-requests', async (req, res) => {
+    try {
+        const { adminUsername } = req.body;
+        if (adminUsername !== 'Admin_Mostafa' && adminUsername !== 'Admin') {
+            return res.status(403).json({ success: false });
+        }
+        const db = readCloudRequestsFile();
+        res.json({ success: true, centerRequests: db.centerRequests, apiRequests: db.apiRequests });
+    } catch (e) { res.status(500).json({ success: false }); }
 }
 
 
