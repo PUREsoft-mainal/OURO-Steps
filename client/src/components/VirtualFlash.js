@@ -99,21 +99,19 @@ const VirtualFlash = ({ user, socket }) => {
 
 return (
     <div className="virtual-flash-box gold-border">
-      <h4>⚡ فلاشة النقل والمزامنة الذكية لـ {user?.username} (Virtual USB)</h4>
-      <p className="flash-notice-text">📟 يمكنك رفع برامجك، تطبيقاتك، أو هياكلك البرمجية (في مجلد مضغوط Zip) هنا لنقلها مباشرة لأي جهاز آخر. الملفات تُباد تلقائياً بعد 72 ساعة.</p>
+      <h4>⚡ فلاشة النقل والخزنة السحابية الدائمة لـ {user?.username} (Virtual USB)</h4>
+      <p className="flash-notice-text">📟 يمكنك رفع برامجك، تطبيقاتك، أو هياكلك البرمجية (في مجلد مضغوط Zip) هنا بنقاء كامل. الملفات آمنة ومستقرة دائماً على سحابتك دون حذف تلقائي.</p>
 
-      {/* 📟 [تم الحسم الفوري] إجبار المتصفح على إظهار المربع قسرياً بخصائص ظهور فيزيائية صارمة */}
+      {/* 📟 [مربع مفتاح Google Drive للامركزية الفلاشة الإلكترونية] */}
       {user && (
         <form 
           onSubmit={handleSaveFlashDriveKey} 
           style={{ 
-            display: 'flex !important', // فرض العرض المرن قسرياً
-            visibility: 'visible !important', // حظر أي حجب مخفي بالـ CSS
-            opacity: '1 !important',
+            display: 'flex', 
             background: 'rgba(230,126,34,0.05)', 
             padding: '14px', 
             borderRadius: '8px', 
-            border: '2px solid #e67e22', // حواف برتقالية واضحة لرؤيته فوراً
+            border: '2px solid #e67e22', 
             gap: '10px', 
             alignItems: 'center', 
             flexWrap: 'wrap', 
@@ -178,19 +176,18 @@ return (
 
       {/* جدول وسجلات الملفات المودعة بالفلاشة حالياً */}
       <div className="flash-files-list scrollbar-gold">
-        {myFiles.map(file => {
-          // حساب الساعات المتبقية للملف قبل التدمير التلقائي
-          const hoursLeft = Math.max(0, Math.ceil((file.expiryDate - Date.now()) / (1000 * 60 * 60)));
+        {myFiles.map((file, i) => {
           return (
-            <div key={file.id} className="flash-file-card">
+            <div key={file.id || i} className="flash-file-card">
               <div className="flash-file-info">
                 <span className="flash-file-name">📄 {file.originalName}</span>
-                <small className="flash-file-meta">المساحة: {file.size} | المتبقي: <strong style={{color:'var(--gold-primary)'}}>{hoursLeft} ساعة</strong> ⏳</small>
+                {/* 👑 [تحديث الحسم البصري] إبادة مؤشر الساعات المتبقية وضخ عبارة الثبات السحابي الدائم */}
+                <small className="flash-file-meta">المساحة: {file.size} | الحالة: <strong style={{color:'var(--gold-primary)'}}>🔒 تخزين دائم ومأمن</strong></small>
               </div>
               
               {/* زر التنزيل الفوري المباشر للجهاز الآخر */}
               <a 
-                href={`${API_BASE}/api/flash/download/${user.username}/${file.filename}`}
+                href={`${API_BASE}/api/flash/download/${user?.username}/${file.filename}`}
                 className="flash-download-btn-gold"
                 download={file.originalName}
               >
@@ -199,7 +196,7 @@ return (
             </div>
           );
         })}
-        {myFiles.length === 0 && <p className="empty-flash-text">📟 الفلاشة الافتراضية فارغة حالياً... لا توجد ملفات مودعة.</p>}
+        {myFiles.length === 0 && <p className="empty-flash-text">📟 الخزنة الافتراضية فارغة حالياً... لا توجد ملفات مودعة.</p>}
       </div>
     </div>
   );
