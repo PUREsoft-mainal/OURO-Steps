@@ -1,7 +1,8 @@
 /* eslint-disable react/jsx-no-comment-textnodes */
 /* eslint-disable no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
-import axios from 'react-axios'; // يتوافق مع حزمة معالجة الطلبات بالفرونت إند
+import axios from 'axios'; // 👑 تم التصحيح والتحصين هنا ليعتمد على الحزمة القياسية الصافية
 
 const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
   const [activeSubTab, setActiveSubTab] = useState('live'); 
