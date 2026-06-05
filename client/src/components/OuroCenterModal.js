@@ -105,13 +105,13 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
     return () => { if (socket) { socket.off('center_data_package'); socket.off('admin_receive_teacher_request'); socket.off('host_receive_student_request'); } };
   }, [socket, user, isAdmin]);
 
-  // دالة المحاضر لإرسال طلب فتح السنتر للأدمن
-  const submitSubscribeRequest = () => {
-    if (socket) {
-      socket.emit('submit_teacher_subscribe_request', { username: user?.username });
-      alert("🚀 تم إرسال طلب اشتراك السنتر بنجاح! تم إخطار الأدمن العام Mostafa للموافقة وفتح الصلاحية لـ 30 يوماً.");
-    }
-  };
+const submitSubscribeRequest = () => {
+  if (socket) {
+    // 🚀 توحيد المسمى ليلتقطه السيرفر وتبثه لوحة الإدارة فوراً
+    socket.emit('submit_teacher_subscribe_request', { username: user?.username });
+    alert("🚀 تم إرسال طلب اشتراك السنتر بنجاح! انتظر تفعيل الصلاحية من الأدمن Mostafa خلال ثوانٍ.");
+  }
+};
 
   // دالة الأدمن Mostafa للضغط على زر ((موافق)) وتفعيل الـ 30 يوماً فوراً فالسحاب
   const handleAdminApprove = (reqId) => {
