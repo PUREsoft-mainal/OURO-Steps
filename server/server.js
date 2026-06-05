@@ -78,60 +78,6 @@ const OuroCenterRequestSchema = new mongoose.Schema({
 });
 const OuroCenterRequestModel = mongoose.model('OuroCenterRequest', OuroCenterRequestSchema);
 
-// ب) مستمعات الأحداث الحية لبث طلبات الاشتراك والانضمام صامتاً فالسحاب
-if (global.io) {
-    global.io.on('connection', (socket) => {
-        
-        // 1. استقبال طلب المستخدم لفتح سنتر خاص به وإخطار الأدمن Mostafa فوراً
-        socket.on('submit_teacher_subscribe_request', async (data) => {
-            try {
-                const reqId = 'req_' + Date.now();
-                const newReq = new OuroCenterRequestModel({
-                    requestId: reqId,
-                    type: 'teacher_access',
-                    applicant: data.username
-                });
-                await newReq.save();
-                // بث الإشعار الفوري لشاشة الأدمن Mostafa ليتوهج زر (موافق) أمامه
-                global.io.emit('admin_receive_teacher_request', { requestId: reqId, applicant: data.username });
-            } catch (e) { console.log(e); }
-        });
-
-        // 2. استقبال ضغطة زر (موافق) من الأدمن وتفعيل الصلاحية لـ 30 يوماً
-        socket.on('admin_approve_teacher_request', async (data) => {
-            try {
-                const reqDoc = await OuroCenterRequestModel.findOne({ requestId: data.requestId });
-                if (reqDoc) {
-                    reqDoc.status = 'approved';
-                    reqDoc.expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 🔒 تفعيل الصلاحية لمدة 30 يوماً بالملي
-                    await reqDoc.save();
-                    
-                    // تحديث رتبة وصلاحية المستخدم بجدول الحسابات الرئيسي لفتح السنتر له قسرياً
-                    await UserModel.updateOne({ username: reqDoc.applicant }, { $set: { canHostCenter: true, centerExpiry: reqDoc.expiresAt } });
-                    
-                    global.io.emit('teacher_request_granted', { username: reqDoc.applicant, expiresAt: reqDoc.expiresAt });
-                }
-            } catch (e) { console.log(e); }
-        });
-
-        // 3. استقبال ضغطة زر (انضمام) من الطالب وإرسال إشعار فوري للمحاضر وصاحب السنتر
-        socket.on('student_submit_join_request', async (data) => {
-            try {
-                const reqId = 'req_' + Date.now();
-                const newReq = new OuroCenterRequestModel({
-                    requestId: reqId,
-                    type: 'student_join',
-                    applicant: data.username,
-                    targetHost: data.host
-                });
-                await newReq.save();
-                // بث نبضة حية للمحاضر ليظهر أمامه زر القبول ودخول البث الحي والمذكرات
-                global.io.emit('host_receive_student_request', { requestId: reqId, student: data.username, host: data.host });
-            } catch (e) { console.log(e); }
-        });
-    });
-}
-
 // ==========================================================================
 // ⚙️ [بوابة المطورين والـ API] تحويل كامل المزايا لنظام تفويض الأدمن والمشرفين
 // ==========================================================================
@@ -292,6 +238,11 @@ const io = new Server(server, {
     transports: ['polling', 'websocket'], // 👑 تأمين التبديل السحابي التلقائي الحامي من الحظر والـ CORS
     allowEIO3: true
 });
+
+// 👑 [الحل القاطع والأزلي] ربط وحقن السوكيت المحلى في الكائن العالمي لتوثيق البث فوراً
+global.io = io; 
+console.log("✅ تم دمج وتوصيل شريان السوكت بالخزانة العالمية؛ طلبات الإدارة ستتوهج الآن حياً!");
+
 const CONVERSATIONS_DIR = path.join(__dirname, 'conversations'); // مجلد مستقل لحفظ ملفات شات الأصدقاء
 const USERS_FILE = path.join(__dirname, 'users.json');
 const CHAT_FILE = path.join(__dirname, 'chat.json');
@@ -444,6 +395,90 @@ io.on('connection', (socket) => {
     // المزامنة الفورية للإحصائيات الحية بجلب إجمالي الأعضاء المسجلين من السحاب
     UserModel.countDocuments().then(total => {
         io.emit('update_stats', { totalUsers: total, activeUsers });
+    });
+
+    // ==========================================================================
+    // 🏛️ [تحديث مستمع السنتر والمزامنة الحية] - تم ضخه داخل البلوك الرئيسي الموحد
+    // ==========================================================================
+    socket.on('get_center_status', async (data) => {
+        try {
+            // جلب أحدث محاضرة وقاعة بث مسجلة سحابياً لبث محتوياتها للطلاب فوراً
+            const latestCenter = await OuroCenterModel.findOne({}).sort({ createdAt: -1 });
+            
+            if (latestCenter) {
+                socket.emit('center_data_package', {
+                    videos: latestCenter.allVideos || [],
+                    images: latestCenter.allImages || [],
+                    pdfs: latestCenter.allPdfs || []
+                });
+                console.log(`📡 [Center Media Sync] تم ضخ المذكرات والفيديوهات الحية للمستخدم بنجاح ساحق!`);
+            } else {
+                // خط دفاع يمنع تجميد واجهة الـ React لو قاعدة البيانات فارغة تماماً
+                socket.emit('center_data_package', { videos: [], images: [], pdfs: [] });
+            }
+        } catch (e) { 
+            console.error("خطأ مزامنة السنتر السحابي:", e); 
+            socket.emit('center_data_package', { videos: [], images: [], pdfs: [] });
+        }
+    });
+
+    // 🏛️ [المستمع 1]: استقبال طلب المستخدم لفتح سنتر خاص به وإخطار الأدمن Mostafa فوراً
+    socket.on('submit_teacher_subscribe_request', async (data) => {
+        try {
+            if (!data || !data.username) return;
+            const reqId = 'req_' + Date.now();
+            const newReq = new OuroCenterRequestModel({
+                requestId: reqId,
+                type: 'teacher_access',
+                applicant: data.username.trim()
+            });
+            await newReq.save();
+            
+            // 📡 البث الفوري الموحد والنشط لتتوهج شاشتك الملكية بالطلب فوراً
+            io.emit('admin_receive_teacher_request', { requestId: reqId, applicant: data.username.trim() });
+            console.log(`📥 [Live Center Request] تم بث طلب السنتر للمحاضر ${data.username.trim()} حياً للأدمن!`);
+        } catch (e) { console.error("خطأ استقبال طلب السنتر:", e); }
+    });
+
+    // 🏛️ [المستمع 2]: استقبال ضغطة زر (موافق) من الأدمن وتفعيل الصلاحية لـ 30 يوماً
+    socket.on('admin_approve_teacher_request', async (data) => {
+        try {
+            if (!data || !data.requestId) return;
+            const reqDoc = await OuroCenterRequestModel.findOne({ requestId: data.requestId });
+            if (reqDoc) {
+                reqDoc.status = 'approved';
+                reqDoc.expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 🔒 30 يوماً بالملي
+                await reqDoc.save();
+                
+                // تحديث رتبة وصلاحية المستخدم بجدول الحسابات الرئيسي السحابي
+                await UserModel.updateOne(
+                    { username: reqDoc.applicant }, 
+                    { $set: { canHostCenter: true, centerExpiry: reqDoc.expiresAt } }
+                );
+                
+                io.emit('teacher_request_granted', { username: reqDoc.applicant, expiresAt: reqDoc.expiresAt });
+                console.log(`✔️ [Sovereign Activation] تم تفويض وتمديد سنتر المحاضر: ${reqDoc.applicant}`);
+            }
+        } catch (e) { console.error("خطأ قبول طلب السنتر:", e); }
+    });
+
+    // 🏛️ [المستمع 3]: استقبال ضغطة زر (انضمام) من الطالب وإرسال إشعار فوري للمحاضر وصاحب السنتر
+    socket.on('student_submit_join_request', async (data) => {
+        try {
+            if (!data || !data.username || !data.host) return;
+            const reqId = 'req_' + Date.now();
+            const newReq = new OuroCenterRequestModel({
+                requestId: reqId,
+                type: 'student_join',
+                applicant: data.username.trim(),
+                targetHost: data.host.trim()
+            });
+            await newReq.save();
+            
+            // بث نبضة حية للمحاضر المستهدف ليظهر أمامه زر القبول فوراً
+            io.emit('host_receive_student_request', { requestId: reqId, student: data.username.trim(), host: data.host.trim() });
+            console.log(`🤝 [Student Connection Link] الطالب ${data.username.trim()} يطلب دخول بث المحاضر: ${data.host.trim()}`);
+        } catch (e) { console.error("خطأ طلب انضمام الطالب:", e); }
     });
 
     // 1️⃣ مستمع إنشاء مجموعة مخصصة جديدة وحفظها الدائم في السحاب الأزلي
@@ -1576,28 +1611,6 @@ app.post('/api/center/rent-room', async (req, res) => {
         return res.status(500).json({ success: false, message: "فشل الاتصال بقفل التصاريح المركزي للسنتر." });
     }
 });
-
-
-// 2. [مستمع قنوات السوكت للسنتر] المزامنة الحية وضخ حزم الألسنة الأربعة للمصرح لهم فقط
-if (global.io) {
-    global.io.on('connection', (socket) => {
-        socket.on('get_center_status', async (data) => {
-            try {
-                // جلب أحدث محاضرة وقاعة بث مسجلة سحابياً لبث محتوياتها
-                const latestCenter = await OuroCenterModel.findOne({}).sort({ createdAt: -1 });
-                if (latestCenter) {
-                    socket.emit('center_data_package', {
-                        videos: latestCenter.allVideos,
-                        images: latestCenter.allImages,
-                        pdfs: latestCenter.allPdfs
-                    });
-                } else {
-                    socket.emit('center_data_package', { videos: [], images: [], pdfs: [] });
-                }
-            } catch (e) { console.error("خطأ مزامنة السنتر السحابي:", e); }
-        });
-    });
-}
 
 // ⏱️ مسار سحب وقراءة ملف الطلبات السحابي حياً للأدمن والمشرفين كل 5 ثوانٍ تلقائياً
 app.post('/api/admin/fetch-live-requests', async (req, res) => {
