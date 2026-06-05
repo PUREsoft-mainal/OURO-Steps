@@ -1670,7 +1670,6 @@ app.post('/api/developer/delete-key', async (req, res) => {
 // 📄 [شريان الرفع السحابي لـ Google Drive] - رفع الفيديوهات والوسائط مجاناً وبأعلى أمان
 // ==========================================================================
 const axios = require('axios');
-const { google } = require('googleapis');
 const stream = require('stream');
 
 // 🛡️ تهيئة صلاحيات جوجل درايف باستخدام حساب الخدمة الآمن
