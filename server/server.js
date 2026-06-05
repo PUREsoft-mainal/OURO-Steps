@@ -1412,53 +1412,82 @@ app.post('/api/developer/delete-key', async (req, res) => {
 // 📄 [شريان الرفع السحابي لـ Google Drive] - رفع الفيديوهات والوسائط مجاناً وبأعلى أمان
 // ==========================================================================
 const axios = require('axios');
+const { google } = require('googleapis');
+const stream = require('stream');
+
+// 🛡️ تهيئة صلاحيات جوجل درايف باستخدام حساب الخدمة الآمن
+const auth = new google.auth.GoogleAuth({
+    keyFile: './google-credentials.json', // مسار ملف بيانات الاعتماد السري لجوجل
+    scopes: ['https://googleapis.com'],
+});
+const drive = google.drive({ version: 'v3', auth });
 
 app.post('/api/center/upload-to-drive', async (req, res) => {
     try {
-        const { username, fileName, fileDataUrl, fileType } = req.body; // fileDataUrl يمثل الملف بـ Base64 من جهاز المستخدم
+        const { username, fileName, fileDataUrl, fileType } = req.body;
 
-        // 🛡️ استدعاء المفتاح السري بأمان فلكي من بيئة الخادم دون كتابته صراحة بالكود
-        const GOOGLE_KEY = process.env.GOOGLE_DRIVE_API_KEY; 
-        if (!GOOGLE_KEY) return res.status(500).json({ success: false, message: "⚠️ عتاد مفتاح جوجل غير مهيأ بالسيرفر" });
+        if (!fileDataUrl || !fileName) {
+            return res.status(400).json({ success: false, message: "⚠️ البيانات المرسلة غير مكتملة" });
+        }
 
-        console.log(`📡 جاري قذف وتمرير مستند (${fileName}) لحساب الجيميل السحابي للمستخدم: ${username}`);
+        console.log(`📡 جاري معالجة وتمرير مستند (${fileName}) للمستخدم: ${username}`);
 
-        // 🧠 [ميكانيكية الرفع غير المباشر] تحويل الحزمة وقذفها إلى Google Drive Rest API
-        // الميزة هنا: الملف يطير لجوجل مباشرة دون استهلاك 1 ميجابايت من هارد المونجو أو السيرفر الخاص بنا!
-        const googleDriveResponse = await axios.post(
-            `https://googleapis.com{GOOGLE_KEY}`,
-            Buffer.from(fileDataUrl.split(",")[1], 'base64'),
-            {
-                headers: {
-                    'Content-Type': fileType,
-                    'Accept': 'application/json'
-                }
-            }
-        ).catch((err) => { throw new Error(err.message); });
+        // 🧠 تحويل حزمة الـ Base64 إلى Buffer ثم إلى Readable Stream للرفع عالي الكفاءة
+        const base64Data = fileDataUrl.split(",")[1];
+        const buffer = Buffer.from(base64Data, 'base64');
+        const bufferStream = new stream.PassThrough();
+        bufferStream.end(buffer);
+
+        // 🚀 رفع الملف مباشرة إلى Google Drive Rest API باستخدام المكتبة الرسمية
+        const googleDriveResponse = await drive.files.create({
+            requestBody: {
+                name: fileName,
+                mimeType: fileType,
+            },
+            media: {
+                mimeType: fileType,
+                body: bufferStream,
+            },
+            fields: 'id, webViewLink', // طلب استرجاع المعرف والرابط المباشر
+        });
 
         const googleFileId = googleDriveResponse.data.id;
-        const finalCloudViewUrl = `https://googleusercontent.com{googleFileId}`;
+        
+        // 🔗 رابط المعاينة السحابي الرسمي للملف
+        const finalCloudViewUrl = googleDriveResponse.data.webViewLink; 
 
-        // حفظ "رابط المستند النظيف فقط" بجدول السنتر التعليمي داخل المونجو (المساحة المستهلكة = صفر ميجا)
+        // 🛠️ بناء كائن التحديث لـ MongoDB بشكل ديناميكي لتجنب الـ undefined
+        const updateQuery = {};
+        if (fileType.startsWith('video/')) {
+            updateQuery.$push = { allVideos: { title: fileName, url: finalCloudViewUrl, date: "2026" } };
+        } else if (fileType.startsWith('image/')) {
+            updateQuery.$push = { allImages: { title: fileName, url: finalCloudViewUrl } };
+        } else if (fileType === 'application/pdf') {
+            updateQuery.$push = { allPdfs: { title: fileName, url: finalCloudViewUrl, size: "سحابي" } };
+        } else {
+            return res.status(400).json({ success: false, message: "⚠️ نوع الملف غير مدعوم للتصنيف" });
+        }
+
+        // حفظ الرابط النظيف بجدول السنتر التعليمي داخل المونجو
         const updatedCenter = await OuroCenterModel.findOneAndUpdate(
-            {},
-            { 
-                $push: { 
-                    allVideos: fileType.startsWith('video/') ? { title: fileName, url: finalCloudViewUrl, date: "2026" } : undefined,
-                    allImages: fileType.startsWith('image/') ? { title: fileName, url: finalCloudViewUrl } : undefined,
-                    allPdfs: fileType === 'application/pdf' ? { title: fileName, url: finalCloudViewUrl, size: "سحابي" } : undefined
-                } 
-            },
-            { upsert: true, new: true }
+            {}, // ضع هنا شرط البحث المناسب بدلاً من مصفوفة فارغة لتفادي تعديل عشوائي
+            updateQuery,
+            { new: true }
         );
 
-        res.json({ success: true, message: "🎉 تم رفع وحفظ الوسائط بنجاح كامل على ذاكرة جوجل درايف السحابية المأمنة!", fileUrl: finalCloudViewUrl });
-    } catch (err) {
-        console.error("خطأ رفع هارد جوجل درايف:", err);
-        // صمام أمان محلي: لو واجه مفتاح الـ API العام قيوداً، نمرر الملف محلياً للمتصفح فوراً لضمان عدم توقف البث أمام الطلاب
-        res.json({ success: true, message: "✔️ تم التمرير وحفظ الملف محلياً بمتصفح المستخدم بنجاح" });
+        return res.status(200).json({
+            success: true,
+            message: "🎉 تم رفع الملف وحفظ الرابط بنجاح",
+            fileId: googleFileId,
+            url: finalCloudViewUrl
+        });
+
+    } catch (error) {
+        console.error("❌ خطأ أثناء الرفع:", error);
+        return res.status(500).json({ success: false, message: error.message });
     }
 });
+
 
 // 1. [مسار التحقق الإداري وبدء البث] يعبر المحاضر فوراً إذا كان حسابه مصرحاً ومفعلاً من الأدمن Mostafa
 // ==========================================================================
