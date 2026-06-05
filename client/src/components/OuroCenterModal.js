@@ -241,7 +241,7 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               
               {/* 👑 [شريان حقن وقفل مفتاح Google Drive API KEY اللامركزي للمحاضرين] */}
-              {isUserVerifiedInGlobalFile && (
+              {(centerMeta.hasAccess || isAdmin || isUserVerifiedInGlobalFile) && (
                 <form onSubmit={handleSaveDriveKey} style={{ background: 'rgba(212,175,55,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.15)', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '11px', color: 'var(--gold-primary)', fontWeight: 'bold', whiteSpace: 'nowrap' }}>🔑 Google Drive API KEY:</span>
                   <input 
