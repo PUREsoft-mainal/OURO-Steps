@@ -1685,6 +1685,37 @@ app.post('/api/center/upload-to-drive', async (req, res) => {
     }
 });
 
+// 📑 1. مسار حفظ أو تعديل مفتاح Google Drive API KEY الخاص بالمدرس في قاعدة البيانات
+app.post('/api/center/save-drive-key', async (req, res) => {
+    try {
+        const { username, driveApiKey } = req.body;
+        if (!username || !driveApiKey) {
+            return res.status(400).json({ success: false, message: "⚠️ البيانات المرسلة غير مكتملة" });
+        }
+
+        // تحديث وحقن مفتاح الداريف بداخل مستند المستخدم بـ MongoDB Atlas
+        await UserModel.updateOne(
+            { username: username.trim() },
+            { $set: { googleDriveApiKey: driveApiKey.trim() } }
+        );
+
+        console.log(`🔑 [Drive Key Link] تم ربط وحفظ مفتاح جوجل درايف للمدرس: ${username}`);
+        res.json({ success: true, message: "🎉 تم حفظ وتوثيق مفتاح الـ API لحساب Google Drive الخاص بك بنجاح باهر!" });
+    } catch (e) {
+        res.status(500).json({ success: false, message: "فشل حفظ مفتاح الداريف" });
+    }
+});
+
+// 📑 2. مسار جلب مفتاح الداريف الحالي للمستخدم لتغذية الفرونت إند
+app.post('/api/center/get-drive-key', async (req, res) => {
+    try {
+        const { username } = req.body;
+        const user = await UserModel.findOne({ username: username.trim() });
+        res.json({ success: true, driveApiKey: user && user.googleDriveApiKey ? user.googleDriveApiKey : "" });
+    } catch (e) {
+        res.json({ success: false, driveApiKey: "" });
+    }
+});
 
 // ==========================================================================
 // 🏛️ [تحديث مسار السنتر والاجتماعات] - العبور للمصرح لهم، والجدولة الآلية بالملف السحابي للمستجدين
