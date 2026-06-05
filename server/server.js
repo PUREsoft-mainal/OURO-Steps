@@ -1418,7 +1418,7 @@ const stream = require('stream');
 // 🛡️ تهيئة صلاحيات جوجل درايف باستخدام حساب الخدمة الآمن
 const auth = new google.auth.GoogleAuth({
     keyFile: './google-credentials.json', // مسار ملف بيانات الاعتماد السري لجوجل
-    scopes: ['https://googleapis.com'],
+    scopes: ['https://www.googleapis.com/auth/drive.file'],
 });
 const drive = google.drive({ version: 'v3', auth });
 
