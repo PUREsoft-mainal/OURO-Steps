@@ -236,9 +236,28 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
 
         <div className="discovery-body scrollbar-gold" style={{ maxHeight: '55vh', overflowY: 'auto', padding: '5px' }}>
           
-          {/* 🔴 1. لوحة الـ LIVE والبث التفاعلي المربوطة كلياً بالتحقق من الـ ID في الملف العام */}
+          {/* 🔴 1. لوحة الـ LIVE والبث التفاعلي وجدار الحماية ضد التجسس وتصوير الشاشة */}
           {activeSubTab === 'live' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              
+              {/* 👑 [شريان حقن وقفل مفتاح Google Drive API KEY اللامركزي للمحاضرين] */}
+              {isUserVerifiedInGlobalFile && (
+                <form onSubmit={handleSaveDriveKey} style={{ background: 'rgba(212,175,55,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.15)', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--gold-primary)', fontWeight: 'bold', whiteSpace: 'nowrap' }}>🔑 Google Drive API KEY:</span>
+                  <input 
+                    type="password" // حماية الخصوصية ومنع الكشف أثناء البث المباشر
+                    placeholder={isSavedKey ? "••••••••••••••••••••••••••••••••" : "الصق هنا مفتاح الـ API KEY الخاص بحساب Google Drive الخاص بك..."}
+                    value={isSavedKey ? "" : driveApiKey}
+                    onChange={(e) => { setIsSavedKey(false); setDriveApiKey(e.target.value); }}
+                    disabled={isSavedKey && driveApiKey}
+                    style={{ flex: 1, minWidth: '200px', padding: '6px 10px', background: '#000', color: '#27ae60', border: '1px solid var(--border-glass)', borderRadius: '4px', fontSize: '11px', fontFamily: 'monospace' }}
+                  />
+                  <button type="submit" className="gold-btn-small" style={{ background: isSavedKey ? '#27ae60' : 'var(--gold-primary)', color: '#000', fontWeight: 'bold', border: 'none', padding: '6px 15px', fontSize: '11px', cursor: 'pointer' }}>
+                    {isSavedKey ? "🔒 تم القبول والتفعيل" : "💾 ربط وحفظ المفتاح"}
+                  </button>
+                </form>
+              )}
+
               <div style={{ width: '100%', height: '220px', background: '#000', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.2)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                 
                 {liveStreamActive ? (
@@ -282,7 +301,7 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
                     {isUserVerifiedInGlobalFile && (
                       <button 
                         className="gold-btn-small" 
-                        style={{ marginTop: '10px', fontWeight: 'bold', background: '#27ae60', color: '#fff', border: 'none', padding: '8px 18px', boxShadow: '0 0 10px rgba(39,174,96,0.4)' }} 
+                        style={{ marginTop: '10px', fontWeight: 'bold', background: '#27ae60', color: '#fff', border: 'none', padding: '8px 18px', boxShadow: '0 0 10px rgba(39,174,96,0.4)', cursor: 'pointer' }} 
                         onClick={handleStartLiveStream} 
                       >
                         بدء البث 🚀
@@ -304,6 +323,7 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
               </div>
             </div>
           )}
+
 
           {/* 📹 2. لوحة الفيديوهات المسجلة بـ ساعات المشاهدة */}
           {activeSubTab === 'videos' && (
