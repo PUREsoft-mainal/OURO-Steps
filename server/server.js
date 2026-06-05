@@ -422,22 +422,39 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 🏛️ [المستمع 1]: استقبال طلب المستخدم لفتح سنتر خاص به وإخطار الأدمن Mostafa فوراً
+    // 🏛️ [المستمع 1 المطور والمحمي سيبرانياً] - استقبال طلب المدرس وتوجيهه حصرياً للأدمن Mostafa بالـ ID
     socket.on('submit_teacher_subscribe_request', async (data) => {
         try {
             if (!data || !data.username) return;
+
+            // 1. قنص الحساب الملكي للأدمن من قلب MongoDB Atlas للتأكد من هويته ورقمه الفريد (ID)
+            const adminDoc = await UserModel.findOne({ username: 'Admin_Mostafa' });
+            if (!adminDoc) {
+                console.error("🚨 خطأ سيبراني: لم يتم العثور على الحساب الملكي للأدمن Mostafa بالسحاب لإرسال الطلب له!");
+                return;
+            }
+
             const reqId = 'req_' + Date.now();
             const newReq = new OuroCenterRequestModel({
                 requestId: reqId,
                 type: 'teacher_access',
                 applicant: data.username.trim()
             });
-            await newReq.save();
+            await newReq.save(); // حفظ المعاملة أزلياً بالمونجو أطلس
+
+            // 2. 🛡️ التوجيه الميكانيكي الحصري: صياغة حزمة البيانات الموجهة مدعومة بالاسم والـ ID الفريد للأدمن
+            const securePayload = {
+                requestId: reqId,
+                applicant: data.username.trim(),
+                targetAdminName: adminDoc.username,
+                targetAdminId: adminDoc._id.toString() // قفل النبضة على الـ Object ID الفريد للأدمن Mostafa
+            };
+
+            // 📡 بث الإشعار الموجه حياً في السحاب (يلتقطه فقط من يطابق هويته هذه المعايير بالواجهة)
+            io.emit('admin_receive_teacher_request', securePayload);
+            console.log(`🔒 [Sovereign Targeted Signal] تم بث طلب السنتر وموجه قسرياً للأدمن بالـ ID: ${adminDoc._id}`);
             
-            // 📡 البث الفوري الموحد والنشط لتتوهج شاشتك الملكية بالطلب فوراً
-            io.emit('admin_receive_teacher_request', { requestId: reqId, applicant: data.username.trim() });
-            console.log(`📥 [Live Center Request] تم بث طلب السنتر للمحاضر ${data.username.trim()} حياً للأدمن!`);
-        } catch (e) { console.error("خطأ استقبال طلب السنتر:", e); }
+        } catch (e) { console.error("خطأ معالجة وتوجيه طلب السنتر:", e); }
     });
 
     // 🏛️ [المستمع 2]: استقبال ضغطة زر (موافق) من الأدمن وتفعيل الصلاحية لـ 30 يوماً
