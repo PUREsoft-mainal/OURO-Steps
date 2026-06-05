@@ -398,36 +398,15 @@ io.on('connection', (socket) => {
     });
 
     // ==========================================================================
-    // 🏛️ [تحديث مستمع السنتر والمزامنة الحية] - تم ضخه داخل البلوك الرئيسي الموحد
+    // 🏛️ [تحديث مستمعي السنتر والـ API المطورين] - احقنهم أسفل بلوك join_group_room مباشرة:
     // ==========================================================================
-    socket.on('get_center_status', async (data) => {
-        try {
-            // جلب أحدث محاضرة وقاعة بث مسجلة سحابياً لبث محتوياتها للطلاب فوراً
-            const latestCenter = await OuroCenterModel.findOne({}).sort({ createdAt: -1 });
-            
-            if (latestCenter) {
-                socket.emit('center_data_package', {
-                    videos: latestCenter.allVideos || [],
-                    images: latestCenter.allImages || [],
-                    pdfs: latestCenter.allPdfs || []
-                });
-                console.log(`📡 [Center Media Sync] تم ضخ المذكرات والفيديوهات الحية للمستخدم بنجاح ساحق!`);
-            } else {
-                // خط دفاع يمنع تجميد واجهة الـ React لو قاعدة البيانات فارغة تماماً
-                socket.emit('center_data_package', { videos: [], images: [], pdfs: [] });
-            }
-        } catch (e) { 
-            console.error("خطأ مزامنة السنتر السحابي:", e); 
-            socket.emit('center_data_package', { videos: [], images: [], pdfs: [] });
-        }
-    });
 
-    // 🏛️ [المستمع 1 المطور والمحمي سيبرانياً] - استقبال طلب المدرس وتوجيهه حصرياً للأدمن Mostafa بالـ ID
+    // 1️⃣ [المستمع 1 المحمي سيبرانياً]: استقبال طلب المدرس وتوجيهه حصرياً للأدمن Mostafa بالـ ID
     socket.on('submit_teacher_subscribe_request', async (data) => {
         try {
             if (!data || !data.username) return;
 
-            // 1. قنص الحساب الملكي للأدمن من قلب MongoDB Atlas للتأكد من هويته ورقمه الفريد (ID)
+            // قنص الحساب الملكي للأدمن من قلب MongoDB Atlas للتأكد من هويته ورقمه الفريد (ID)
             const adminDoc = await UserModel.findOne({ username: 'Admin_Mostafa' });
             if (!adminDoc) {
                 console.error("🚨 خطأ سيبراني: لم يتم العثور على الحساب الملكي للأدمن Mostafa بالسحاب لإرسال الطلب له!");
@@ -435,26 +414,119 @@ io.on('connection', (socket) => {
             }
 
             const reqId = 'req_' + Date.now();
-            const newReq = new OuroCenterRequestModel({
-                requestId: reqId,
+            const centerReqId = 'req_center_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            
+            // 📝 الجدولة الآلية بالملف السحابي للمستجدين كطلب معلق
+            let db = readCloudRequestsFile(); 
+            const newReqObj = {
+                requestId: centerReqId,
                 type: 'teacher_access',
-                applicant: data.username.trim()
-            });
-            await newReq.save(); // حفظ المعاملة أزلياً بالمونجو أطلس
-
-            // 2. 🛡️ التوجيه الميكانيكي الحصري: صياغة حزمة البيانات الموجهة مدعومة بالاسم والـ ID الفريد للأدمن
-            const securePayload = {
-                requestId: reqId,
                 applicant: data.username.trim(),
-                targetAdminName: adminDoc.username,
-                targetAdminId: adminDoc._id.toString() // قفل النبضة على الـ Object ID الفريد للأدمن Mostafa
+                createdAt: new Date()
             };
 
-            // 📡 بث الإشعار الموجه حياً في السحاب (يلتقطه فقط من يطابق هويته هذه المعايير بالواجهة)
+            if (!db.centerRequests.some(p => p.applicant === data.username.trim())) {
+                db.centerRequests.push(newReqObj);
+                writeCloudRequestsFile(db); 
+            }
+
+            // 🛡️ التوجيه الميكانيكي الحصري: صياغة حزمة البيانات الموجهة مقفولة على الـ Object ID الفريد للأدمن
+            const securePayload = {
+                requestId: centerReqId,
+                applicant: data.username.trim(),
+                targetAdminName: adminDoc.username,
+                targetAdminId: adminDoc._id.toString() // قفل النبضة بالكامل على معرف الأدمن Mostafa
+            };
+
+            // بث الإشعار الموجه حياً في السحاب (يلتقطه فقط متصفح الأدمن Mostafa بالواجهة)
             io.emit('admin_receive_teacher_request', securePayload);
             console.log(`🔒 [Sovereign Targeted Signal] تم بث طلب السنتر وموجه قسرياً للأدمن بالـ ID: ${adminDoc._id}`);
             
         } catch (e) { console.error("خطأ معالجة وتوجيه طلب السنتر:", e); }
+    });
+
+    // 2️⃣ [المستمع 2]: استقبال ضغطة زر (موافق) من الأدمن وتفعيل صلاحية الـ 30 يوماً فالسحاب
+    socket.on('admin_approve_teacher_request', async (data) => {
+        try {
+            if (!data || !data.requestId) return;
+            const reqDoc = await OuroCenterRequestModel.findOne({ requestId: data.requestId });
+            
+            // التطهير الإضافي: إذا لم يجد السجل بالمونجو يبحث عنه بملف الـ JSON الموثق
+            let applicantName = reqDoc ? reqDoc.applicant : "";
+            
+            if (!reqDoc) {
+                let db = readCloudRequestsFile();
+                const jsonReq = db.centerRequests.find(r => r.requestId === data.requestId);
+                if (jsonReq) {
+                    applicantName = jsonReq.applicant;
+                    // مسح الطلب من المعلقات بالملف فور معالجته
+                    db.centerRequests = db.centerRequests.filter(r => r.requestId !== data.requestId);
+                    writeCloudRequestsFile(db);
+                }
+            }
+
+            if (applicantName) {
+                const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 🔒 تفعيل 30 يوماً كاملة بالملي
+                
+                // تحديث رتبة وصلاحية المستخدم بجدول التصاريح والحسابات سحابياً بالأطلس للأبد
+                await UserModel.updateOne({ username: applicantName }, { $set: { canHostCenter: true, centerExpiry: expiryDate } });
+                await mongoose.model('UserPermission').updateOne(
+                    { username: applicantName },
+                    { $set: { isAuthorizedTeacher: true, permissionExpiry: expiryDate, assignedBy: 'Admin_Mostafa' } },
+                    { upsert: true }
+                );
+                
+                if (reqDoc) {
+                    reqDoc.status = 'approved';
+                    reqDoc.expiresAt = expiryDate;
+                    await reqDoc.save();
+                }
+
+                io.emit('teacher_request_granted', { username: applicantName, expiresAt: expiryDate });
+                console.log(`✔️ [Sovereign Activation] تم تفويض وتفعيل سنتر المحاضر: ${applicantName}`);
+            }
+        } catch (e) { console.error("خطأ قبول طلب السنتر:", e); }
+    });
+
+    // 3️⃣ [المستمع 3]: استقبال طلب المطور لاستخراج مفتاح API وتوجيهه للأدمن بالـ ID لمنع التزييف
+    socket.on('submit_developer_key_request', async (data) => {
+        try {
+            if (!data || !data.username || !data.keyLabel) return;
+
+            const adminDoc = await UserModel.findOne({ username: 'Admin_Mostafa' });
+            if (!adminDoc) return;
+
+            const secureApiKeyPayload = {
+                keyId: data.keyId || 'key_' + Date.now(),
+                applicant: data.username.trim(),
+                label: data.keyLabel.trim(),
+                scopes: data.scopes,
+                targetAdminId: adminDoc._id.toString() // قفل نبضة المطورين على الـ Object ID للأدمن
+            };
+
+            io.emit('admin_receive_api_key_request', secureApiKeyPayload);
+            console.log(`🔑 [Sovereign Key Signal] تم تمرير طلب مفتاح الـ API وموجه للأدمن بالـ ID: ${adminDoc._id}`);
+        } catch (e) { console.error("خطأ معالجة طلب مفتاح الـ API:", e); }
+    });
+
+    // 4️⃣ [المستمع 4]: المزامنة الحية وضخ حزم المذكرات والفيديوهات المسجلة للسنتر التعليمي
+    socket.on('get_center_status', async (data) => {
+        try {
+            const latestCenter = await OuroCenterModel.findOne({}).sort({ createdAt: -1 });
+            if (latestCenter) {
+                socket.emit('center_data_package', {
+                    videos: latestCenter.allVideos || [],
+                    images: latestCenter.allImages || [],
+                    pdfs: latestCenter.allPdfs || []
+                });
+                console.log(`📡 [Center Media Sync] تم ضخ حزم المذكرات والوسائط الحية للمستخدم بنجاح ساحق!`);
+            } else {
+                socket.emit('center_data_package', { videos: [], images: [], pdfs: [] });
+            }
+        } catch (e) { 
+            console.error("خطأ مزامنة السنتر السحابي:", e); 
+            socket.emit('center_data_package', { videos: [], images: [], pdfs: [] });
+        }
     });
 
     // 🏛️ [المستمع 2]: استقبال ضغطة زر (موافق) من الأدمن وتفعيل الصلاحية لـ 30 يوماً
