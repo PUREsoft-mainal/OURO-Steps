@@ -22,15 +22,14 @@ import './App.css';
 // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
 const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
-// تفعيل اتصال السوكت المشفر (WSS) ليعمل مع جدار الحماية السحابي
+// 👑 [تم الحسم والتطهير] تهيئة السوكت النقي والمتوافق مع جدار حماية خوادم Hugging Face
 const socket = io(API_BASE, { 
-  transports: ['websocket', 'polling'],
+  transports: ['websocket', 'polling'], // البدء الوجوبي بالـ websocket لاختراق البروكسي السحابي بنجاح
   secure: true,
-  path: '/socket.io', // التأكيد على مسار البروكسي السحابي
-  reconnectionAttempts: 10,
-  reconnectionDelay: 2000,
+  reconnectionAttempts: 15,
+  reconnectionDelay: 1000,
   rejectUnauthorized: false
-});
+}); // 👈 تم حذف واقتلاع سطر الـ path كلياً لفتح البوابات وربط شريان السيرفر بالمتصفحات حياً!
 
 
 function App() {
