@@ -102,21 +102,24 @@ const VirtualFlash = ({ user, socket }) => {
       <h4>⚡ فلاشة النقل والمزامنة الذكية لـ {user?.username} (Virtual USB)</h4>
       <p className="flash-notice-text">📟 يمكنك رفع برامجك، تطبيقاتك، أو هياكلك البرمجية (في مجلد مضغوط Zip) هنا لنقلها مباشرة لأي جهاز آخر. الملفات تُباد تلقائياً بعد 72 ساعة.</p>
 
-      {/* 📟 [شريان حقن وقفل مفتاح Google Drive للامركزية الفلاشة الإلكترونية] */}
-      <form onSubmit={handleSaveFlashDriveKey} style={{ background: 'rgba(230,126,34,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(230,126,34,0.15)', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '15px' }}>
-        <span style={{ fontSize: '11px', color: '#e67e22', fontWeight: 'bold', whiteSpace: 'nowrap' }}>📟 Flash Drive API KEY:</span>
-        <input 
-          type="password" // مشفر على هيئة نجوم لحماية خصوصية المستخدم ومنع كشفه أثناء تصفح المنصة
-          placeholder={isSavedFlashKey ? "••••••••••••••••••••••••••••••••" : "الصق مفتاح الـ API KEY لحساب Google Drive المخصص لملفات فلاشتك..."}
-          value={isSavedFlashKey ? "" : flashDriveApiKey}
-          onChange={(e) => { setIsSavedFlashKey(false); setFlashDriveApiKey(e.target.value); }}
-          disabled={isSavedFlashKey && flashDriveApiKey}
-          style={{ flex: 1, minWidth: '200px', padding: '6px 10px', background: '#000', color: '#e67e22', border: '1px solid var(--border-glass)', borderRadius: '4px', fontSize: '11px', fontFamily: 'monospace' }}
-        />
-        <button type="submit" className="gold-btn-small" style={{ background: isSavedFlashKey ? '#27ae60' : '#e67e22', color: '#fff', fontWeight: 'bold', border: 'none', padding: '6px 15px', fontSize: '11px', cursor: 'pointer' }}>
-          {isSavedFlashKey ? "🔒 تم القبول والتفعيل" : "💾 ربط وحفظ المفتاح"}
-        </button>
-      </form>
+      {/* 📟 [تم الحسم] جدار التحقق المرن لإظهار مربع إدخال مفتاح الـ Drive للفلاشة فوراً دون حظر أو اختفاء صامت */}
+      {(user || isAdmin) && (
+        <form onSubmit={handleSaveFlashDriveKey} style={{ background: 'rgba(230,126,34,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(230,126,34,0.15)', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '15px' }}>
+          <span style={{ fontSize: '11px', color: '#e67e22', fontWeight: 'bold', whiteSpace: 'nowrap' }}>📟 Flash Drive API KEY:</span>
+          <input 
+            type="password" // مشفر لحماية الخصوصية من كشفه أثناء البث أو مشاركة الشاشة
+            placeholder={isSavedFlashKey ? "••••••••••••••••••••••••••••••••" : "الصق مفتاح الـ API KEY لحساب Google Drive المخصص لملفات فلاشتك..."}
+            value={isSavedFlashKey ? "" : flashDriveApiKey}
+            onChange={(e) => { setIsSavedFlashKey(false); setDriveApiKey(e.target.value); }}
+            disabled={isSavedFlashKey && flashDriveApiKey}
+            style={{ flex: 1, minWidth: '200px', padding: '6px 10px', background: '#000', color: '#e67e22', border: '1px solid var(--border-glass)', borderRadius: '4px', fontSize: '11px', fontFamily: 'monospace' }}
+          />
+          <button type="submit" className="gold-btn-small" style={{ background: isSavedFlashKey ? '#27ae60' : '#e67e22', color: '#fff', fontWeight: 'bold', border: 'none', padding: '6px 15px', fontSize: '11px', cursor: 'pointer' }}>
+            {isSavedFlashKey ? "🔒 تم القبول والتفعيل" : "💾 ربط وحفظ المفتاح"}
+          </button>
+        </form>
+      )}
+
   
       {/* زر الرفع المذهب والمطور للفلاشة السحابية المحلية */}
       <div className="flash-upload-zone">
