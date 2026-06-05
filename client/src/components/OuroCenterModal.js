@@ -315,9 +315,9 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
             </div>
           )}
 
-        </div> {/* إغلاق discovery-body */}
-      </div> {/* إغلاق discovery-window */}
-    </div> {/* إغلاق discovery-overlay */}
+        </div> 
+      </div> 
+    </div> 
   );
 };
 
