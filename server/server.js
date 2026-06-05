@@ -1424,21 +1424,27 @@ const drive = google.drive({ version: 'v3', auth });
 
 app.post('/api/center/upload-to-drive', async (req, res) => {
     try {
-        const { username, fileName, fileDataUrl, fileType } = req.body;
+        const { username, fileName, fileDataUrl, fileType, centerId } = req.body; // 💡 أضفنا centerId لتحديد السنتر بدقة
 
-        if (!fileDataUrl || !fileName) {
+        if (!fileDataUrl || !fileName || !fileType) {
             return res.status(400).json({ success: false, message: "⚠️ البيانات المرسلة غير مكتملة" });
         }
 
         console.log(`📡 جاري معالجة وتمرير مستند (${fileName}) للمستخدم: ${username}`);
 
-        // 🧠 تحويل حزمة الـ Base64 إلى Buffer ثم إلى Readable Stream للرفع عالي الكفاءة
-        const base64Data = fileDataUrl.split(",")[1];
-        const buffer = Buffer.from(base64Data, 'base64');
+        // 🧠 تحويل حزمة الـ Base64 الآمن: التحقق من وجود ديباجة أو استخدام النص مباشرة
+        const actualBase64 = fileDataUrl.includes(",") ? fileDataUrl.split(",")[1] : fileDataUrl;
+        
+        // التحقق من أن النص ليس فارغاً بعد المعالجة لتفادي انهيار الخادم
+        if (!actualBase64) {
+            return res.status(400).json({ success: false, message: "⚠️ نص الـ Base64 للملف غير صالح أو فارغ" });
+        }
+
+        const buffer = Buffer.from(actualBase64, 'base64');
         const bufferStream = new stream.PassThrough();
         bufferStream.end(buffer);
 
-        // 🚀 رفع الملف مباشرة إلى Google Drive Rest API باستخدام المكتبة الرسمية
+        // 🚀 1. رفع الملف مباشرة إلى Google Drive Rest API باستخدام المكتبة الرسمية
         const googleDriveResponse = await drive.files.create({
             requestBody: {
                 name: fileName,
@@ -1452,8 +1458,17 @@ app.post('/api/center/upload-to-drive', async (req, res) => {
         });
 
         const googleFileId = googleDriveResponse.data.id;
+
+        // 🔓 2. فتح صلاحيات الملف ليصبح عاماً (مهم جداً حتى يتمكن الطلاب من فتح الرابط)
+        await drive.permissions.create({
+            fileId: googleFileId,
+            requestBody: {
+                role: 'reader', // صلاحية قراءة ومعاينة فقط
+                type: 'anyone', // متاح لأي شخص يمتلك الرابط
+            },
+        });
         
-        // 🔗 رابط المعاينة السحابي الرسمي للملف
+        // 🔗 رابط المعاينة السحابي الرسمي للملف بعد فتح الصلاحية
         const finalCloudViewUrl = googleDriveResponse.data.webViewLink; 
 
         // 🛠️ بناء كائن التحديث لـ MongoDB بشكل ديناميكي لتجنب الـ undefined
@@ -1468,16 +1483,18 @@ app.post('/api/center/upload-to-drive', async (req, res) => {
             return res.status(400).json({ success: false, message: "⚠️ نوع الملف غير مدعوم للتصنيف" });
         }
 
-        // حفظ الرابط النظيف بجدول السنتر التعليمي داخل المونجو
+        // 🎯 3. حفظ الرابط النظيف بجدول السنتر التعليمي داخل المونجو بشكل محدد
+        const searchFilter = centerId ? { _id: centerId } : {}; // ⚠️ يفضل دائماً التحديث بناءً على ID السنتر التعليمي
+        
         const updatedCenter = await OuroCenterModel.findOneAndUpdate(
-            {}, // ضع هنا شرط البحث المناسب بدلاً من مصفوفة فارغة لتفادي تعديل عشوائي
+            searchFilter, 
             updateQuery,
             { new: true }
         );
 
         return res.status(200).json({
             success: true,
-            message: "🎉 تم رفع الملف وحفظ الرابط بنجاح",
+            message: "🎉 تم رفع الملف، فتح صلاحياته السحابية، وحفظ الرابط بنجاح",
             fileId: googleFileId,
             url: finalCloudViewUrl
         });
