@@ -1441,7 +1441,7 @@ app.get('/api/flash/download/:username/:filename', async (req, res) => {
                 { responseType: 'stream' }
             );
 
-            res.setHeader('Content-Disposition', `attachment; filename=encodeURI(${fileRecord.originalName})`);
+            res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(fileRecord.originalName)}"`);
             driveRes.data.pipe(res); // ضخ وقذف الداتا التدفقية للمتصفح مباشرة
         } else {
             // إذا كان مخزناً محلياً (Fallback)
