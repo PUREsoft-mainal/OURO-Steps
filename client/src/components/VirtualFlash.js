@@ -97,20 +97,20 @@ const VirtualFlash = ({ user, socket }) => {
     }
   };
 
-  return (
+return (
     <div className="virtual-flash-box gold-border">
       <h4>⚡ فلاشة النقل والمزامنة الذكية لـ {user?.username} (Virtual USB)</h4>
       <p className="flash-notice-text">📟 يمكنك رفع برامجك، تطبيقاتك، أو هياكلك البرمجية (في مجلد مضغوط Zip) هنا لنقلها مباشرة لأي جهاز آخر. الملفات تُباد تلقائياً بعد 72 ساعة.</p>
 
       {/* 📟 [تم الحسم] جدار التحقق المرن لإظهار مربع إدخال مفتاح الـ Drive للفلاشة فوراً دون حظر أو اختفاء صامت */}
-      {(user || isAdmin) && (
+      {user && (
         <form onSubmit={handleSaveFlashDriveKey} style={{ background: 'rgba(230,126,34,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(230,126,34,0.15)', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '15px' }}>
           <span style={{ fontSize: '11px', color: '#e67e22', fontWeight: 'bold', whiteSpace: 'nowrap' }}>📟 Flash Drive API KEY:</span>
           <input 
             type="password" // مشفر لحماية الخصوصية من كشفه أثناء البث أو مشاركة الشاشة
             placeholder={isSavedFlashKey ? "••••••••••••••••••••••••••••••••" : "الصق مفتاح الـ API KEY لحساب Google Drive المخصص لملفات فلاشتك..."}
             value={isSavedFlashKey ? "" : flashDriveApiKey}
-            onChange={(e) => { setIsSavedFlashKey(false); setDriveApiKey(e.target.value); }}
+            onChange={(e) => { setIsSavedFlashKey(false); setFlashDriveApiKey(e.target.value); }} // 👑 تم تصحيح اسم دالة التحديث لتتطابق بالملي مع الـ useState العلوية
             disabled={isSavedFlashKey && flashDriveApiKey}
             style={{ flex: 1, minWidth: '200px', padding: '6px 10px', background: '#000', color: '#e67e22', border: '1px solid var(--border-glass)', borderRadius: '4px', fontSize: '11px', fontFamily: 'monospace' }}
           />
@@ -120,7 +120,6 @@ const VirtualFlash = ({ user, socket }) => {
         </form>
       )}
 
-  
       {/* زر الرفع المذهب والمطور للفلاشة السحابية المحلية */}
       <div className="flash-upload-zone">
         <input type="file" id="vFlashUp" hidden onChange={handleFlashUpload} />
