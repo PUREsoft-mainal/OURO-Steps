@@ -1387,17 +1387,19 @@ app.post('/api/flash/upload', upload.single('flashFile'), async (req, res) => {
         const seventyTwoHours = 72 * 60 * 60 * 1000;
         const expiryTimestamp = Date.now() + seventyTwoHours;
 
+        // 📟 تعديل سجل المعاملة ليصبح دائمًا ومفتوحًا دون مسح مؤتمت في السيرفر
         const flashDb = readJson(FLASH_DB_FILE);
         const newFileRecord = {
             id: 'file_' + Date.now().toString(),
             owner: username.trim(),
             originalName: req.file.originalname,
-            filename: req.file.filename, // يحمل إما معرف الجوجل درايف أو الاسم المحلي
+            filename: req.file.filename, 
             size: (req.file.size / (1024 * 1024)).toFixed(2) + ' MB',
             uploadTime: new Date().toLocaleDateString('ar-EG') + ' ' + new Date().toLocaleTimeString('ar-EG'),
-            expiryDate: expiryTimestamp,
-            isStoredOnGoogleDrive: !!userDriveKey // شارة تفيد نوع التخزين
+            expiryDate: null, // 🔓 تم حسم وإلغاء الطابع الموقوت وجعل الصلاحية أزلية مفتوحة
+            isStoredOnGoogleDrive: !!userDriveKey 
         };
+
 
         flashDb.unshift(newFileRecord);
         writeJson(FLASH_DB_FILE, flashDb);
