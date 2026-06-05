@@ -102,20 +102,60 @@ return (
       <h4>⚡ فلاشة النقل والمزامنة الذكية لـ {user?.username} (Virtual USB)</h4>
       <p className="flash-notice-text">📟 يمكنك رفع برامجك، تطبيقاتك، أو هياكلك البرمجية (في مجلد مضغوط Zip) هنا لنقلها مباشرة لأي جهاز آخر. الملفات تُباد تلقائياً بعد 72 ساعة.</p>
 
-      {/* 📟 [تم الحسم] جدار التحقق المرن لإظهار مربع إدخال مفتاح الـ Drive للفلاشة فوراً دون حظر أو اختفاء صامت */}
+      {/* 📟 [تم الحسم الفوري] إجبار المتصفح على إظهار المربع قسرياً بخصائص ظهور فيزيائية صارمة */}
       {user && (
-        <form onSubmit={handleSaveFlashDriveKey} style={{ background: 'rgba(230,126,34,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(230,126,34,0.15)', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '15px' }}>
-          <span style={{ fontSize: '11px', color: '#e67e22', fontWeight: 'bold', whiteSpace: 'nowrap' }}>📟 Flash Drive API KEY:</span>
+        <form 
+          onSubmit={handleSaveFlashDriveKey} 
+          style={{ 
+            display: 'flex !important', // فرض العرض المرن قسرياً
+            visibility: 'visible !important', // حظر أي حجب مخفي بالـ CSS
+            opacity: '1 !important',
+            background: 'rgba(230,126,34,0.05)', 
+            padding: '14px', 
+            borderRadius: '8px', 
+            border: '2px solid #e67e22', // حواف برتقالية واضحة لرؤيته فوراً
+            gap: '10px', 
+            alignItems: 'center', 
+            flexWrap: 'wrap', 
+            marginBottom: '20px',
+            width: '100%',
+            boxSizing: 'border-box'
+          }}
+        >
+          <span style={{ fontSize: '12px', color: '#e67e22', fontWeight: 'bold', whiteSpace: 'nowrap' }}>📟 Flash Drive API KEY:</span>
           <input 
-            type="password" // مشفر لحماية الخصوصية من كشفه أثناء البث أو مشاركة الشاشة
+            type="password" 
             placeholder={isSavedFlashKey ? "••••••••••••••••••••••••••••••••" : "الصق مفتاح الـ API KEY لحساب Google Drive المخصص لملفات فلاشتك..."}
             value={isSavedFlashKey ? "" : flashDriveApiKey}
-            onChange={(e) => { setIsSavedFlashKey(false); setFlashDriveApiKey(e.target.value); }} // 👑 تم تصحيح اسم دالة التحديث لتتطابق بالملي مع الـ useState العلوية
+            onChange={(e) => { setIsSavedFlashKey(false); setFlashDriveApiKey(e.target.value); }} 
             disabled={isSavedFlashKey && flashDriveApiKey}
-            style={{ flex: 1, minWidth: '200px', padding: '6px 10px', background: '#000', color: '#e67e22', border: '1px solid var(--border-glass)', borderRadius: '4px', fontSize: '11px', fontFamily: 'monospace' }}
+            style={{ 
+              flex: 1, 
+              minWidth: '200px', 
+              padding: '8px 12px', 
+              background: '#000', 
+              color: '#e67e22', 
+              border: '1px solid rgba(255,255,255,0.2)', 
+              borderRadius: '4px', 
+              fontSize: '12px', 
+              fontFamily: 'monospace' 
+            }}
           />
-          <button type="submit" className="gold-btn-small" style={{ background: isSavedFlashKey ? '#27ae60' : '#e67e22', color: '#fff', fontWeight: 'bold', border: 'none', padding: '6px 15px', fontSize: '11px', cursor: 'pointer' }}>
-            {isSavedFlashKey ? "🔒 تم القبول والتفعيل" : "💾 ربط وحفظ المفتاح"}
+          <button 
+            type="submit" 
+            className="gold-btn-small" 
+            style={{ 
+              background: isSavedFlashKey ? '#27ae60' : '#e67e22', 
+              color: '#fff', 
+              fontWeight: 'bold', 
+              border: 'none', 
+              padding: '8px 16px', 
+              borderRadius: '4px',
+              fontSize: '11px', 
+              cursor: 'pointer' 
+            }}
+          >
+            {isSavedFlashKey ? "🔒 تم التفعيل" : "💾 حفظ المفتاح"}
           </button>
         </form>
       )}
