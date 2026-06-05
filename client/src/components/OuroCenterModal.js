@@ -21,6 +21,43 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
 
   // 👑 [تم الحقن والتأمين بنجاح] متغير الـ State لحفظ وقراءة قائمة الملف العام للمشتركين
   const [activeSubscribers, setActiveSubscribers] = useState([]); 
+    // 🔑 [متغيرات جديدة] لإدارة وحفظ وقراءة مفتاح Google Drive API KEY للمدرس
+  const [driveApiKey, setDriveApiKey] = useState("");
+  const [isSavedKey, setIsSavedKey] = useState(false);
+
+  // خطاف الجلب التلقائي لمفتاح الداريف الخاص بالمستخدِم فور فتح السنتر
+  useEffect(() => {
+    if (user?.username) {
+      axios.post(`${API_BASE}/api/center/get-drive-key`, { username: user.username })
+        .then(res => {
+          if (res.data && res.data.driveApiKey) {
+            setDriveApiKey(res.data.driveApiKey);
+            setIsSavedKey(true);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user?.username]);
+
+  // دالة حفظ وإرسال مفتاح جوجل درايف السحابي بقفل قاعدة البيانات
+  const handleSaveDriveKey = async (e) => {
+    e.preventDefault();
+    if (!driveApiKey.trim()) return alert("⚠️ الرجاء كتابة أو لصق مفتاح الـ API الخاص بـ Google Drive أولاً!");
+
+    try {
+      const res = await axios.post(`${API_BASE}/api/center/save-drive-key`, {
+        username: user?.username,
+        driveApiKey: driveApiKey.trim()
+      });
+      if (res.data.success) {
+        setIsSavedKey(true);
+        alert(res.data.message);
+      }
+    } catch (err) {
+      alert("❌ فشل ربط المفتاح، تحقق من استقرار اتصال الشبكة.");
+    }
+  };
+
 
   const isAdmin = user?.username === 'Admin_Mostafa' || user?.role === 'Admin';
 
