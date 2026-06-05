@@ -787,7 +787,6 @@ io.on('connection', (socket) => {
             console.log(`👤 🏛️ تم تأسيس الهوية الإدارية المعقمة بنجاح والتسجيل للحساب الجديد المعلق: ${data.username}`);
             socket.emit('register_success', { username: newUser.username, role: newUser.role });
 
-            // تحديث وبث إحصائيات المنصة الحية للمتصلين فوراً
             const total = await UserModel.countDocuments();
             if (global.io) {
                 global.io.emit('update_stats', { totalUsers: total, activeUsers });
