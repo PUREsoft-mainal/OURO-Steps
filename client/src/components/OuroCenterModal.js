@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-no-comment-textnodes */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from 'react-axios'; // يتوافق مع حزمة معالجة الطلبات بالفرونت إند
 
 const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
   const [activeSubTab, setActiveSubTab] = useState('live'); 
@@ -18,23 +18,33 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
   const [liveComments, setLiveComments] = useState([]);
   const [currentLiveComment, setCurrentLiveComment] = useState("");
 
-    // 👑 [محرك العتاد الحي] دالة إطلاق البث المباشر واستدعاء المايك والكاميرا للجهاز فوراً
+  // 👑 [تم الحقن والتأمين بنجاح] متغير الـ State لحفظ وقراءة قائمة الملف العام للمشتركين
+  const [activeSubscribers, setActiveSubscribers] = useState([]); 
+
+  const isAdmin = user?.username === 'Admin_Mostafa' || user?.role === 'Admin';
+
+  // 🔒 جدار المراقبة الدائم والصارم للملف العام: فحص مطابقة اسم المستخدم والـ ID الفريد لحسابك الحالي
+  const isUserVerifiedInGlobalFile = activeSubscribers.some(s => 
+    s.username === user?.username && 
+    (s.userId === user?._id || s.userId === user?.user_id || s.userId === user?.uid)
+  );
+
+  // 👑 دالة إطلاق البث المباشر واستدعاء المايك والكاميرا للجهاز فوراً
   const handleStartLiveStream = async () => {
     try {
-      // 🔒 1. الطلب السيبراني الفوري لأذونات الكاميرا والمايك العتادية من جهاز المستخدم
+      // الطلب السيبراني الفوري لأذونات الكاميرا والمايك العتادية من جهاز المستخدم
       const localStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { width: 1280, height: 720, facingMode: "user" }, // جودة HD صافية للكاميرا الأمامية
-        audio: true // تفعيل الميكروفون بنقاء صوتي حاد
+        video: { width: 1280, height: 720, facingMode: "user" }, // جودة HD صافية
+        audio: true 
       });
 
-      // 📺 2. ربط شريان البث الحي بالفيديو المعروض على الشاشة أمام الطلاب
+      // ربط شريان البث الحي بالفيديو المعروض على الشاشة أمام الطلاب
       const videoElement = document.getElementById('ouroLiveVideoPreview');
       if (videoElement) {
         videoElement.srcObject = localStream;
         videoElement.play().catch(e => console.log("تشغيل البث"));
       }
 
-      // 📡 3. إخطار السيرفر والسوكت المركزي لبدء البث وتفعيل الغرفة عند الجميع
       setLiveStreamActive(true);
       if (socket) {
         socket.emit('start_live_broadcast', { host: user?.username, roomId: centerMeta.activeRoom });
@@ -43,12 +53,9 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
       alert("🔴 🎉 تم تشغيل الكاميرا والميكروفون بنجاح! أنت الآن في بث مباشر محمي ومؤمن بالكامل.");
     } catch (err) {
       console.error("خطأ الوصول للعتاد:", err);
-      alert("⚠️ عذراً، فشل فتح الكاميرا أو المايك! تأكد من منح المتصفح أو البرنامج أذونات الوصول للعتاد (Permissions).");
+      alert("⚠️ عذراً، فشل فتح الكاميرا أو المايك! تأكد من منح المتصفح أذونات الوصول للعتاد.");
     }
   };
-
-
-  const isAdmin = user?.username === 'Admin_Mostafa' || user?.role === 'Admin';
 
   // 🛡️ [محرك المنع السيبراني لالتقاط وتسجيل الشاشة كلياً داخل مزايا السنتر]
   useEffect(() => {
@@ -57,7 +64,7 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
     document.addEventListener('contextmenu', disableCopy);
     document.addEventListener('copy', disableCopy);
 
-    // ب) [كبسولة حظر تصوير الشاشة بصرياً] تشويش الرؤية وحجب الأصول فور الضغط على أزرار تصوير الشاشة (PrintScreen)
+    // ب) [كبسولة حظر تصوير الشاشة بصرياً] تشويش الرؤية وحجب الأصول فور الضغط على أزرار تصوير الشاشة
     const handleKeyDown = (e) => {
       if (e.key === 'PrintScreen' || e.keyCode === 44) {
         alert("🚨 تنبيه أمني: حظر سيبراني قاطع! يمنع منعاً باتاً التقاط أو تسجيل الشاشة داخل سنتر OURO Steps لحماية الملكية الفكرية!");
@@ -73,11 +80,12 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
     };
   }, []);
 
-    useEffect(() => {
+    // 🏛️ [تحديث محرك المراقبة الحية بالـ ID] - خطاف الالتحام الموحد والمطهر
+  useEffect(() => {
     if (socket) {
       socket.emit('get_center_status', { username: user?.username });
       
-      // استقبال حزمة البيانات والتحقق من صلاحية الحساب المفتوح
+      // 1. استقبال حزمة البيانات والتحقق من صلاحية الحساب المفتوح
       socket.on('center_data_package', (data) => {
         setRecordedVideos(data.allVideos || [
           { id: "vid_1", title: "💻 كورس الويب الشامل - الجلسة الأولى", watchHours: "124.5", date: "2026/05/28", likes: 12, dislikes: 0 },
@@ -86,10 +94,21 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
         setCenterImages(data.allImages || []);
         setCenterPdfs(data.allPdfs || []);
         
-        // إذا كان المستخدم يمتلك صلاحية الـ 30 يوماً سحابياً
         if (user?.canHostCenter) {
             setCenterMeta(prev => ({ ...prev, hasAccess: true, expiryDate: user.centerExpiry }));
         }
+      });
+
+      // 2. 🔐 [قناة استقبال وتحديث بيانات الملف العام للمشتركين النشطين بالـ ID]
+      socket.on('teacher_request_granted', (data) => {
+        if (data.activeSubscribers) {
+          setActiveSubscribers(data.activeSubscribers);
+        }
+      });
+
+      // المزامنة الدورية الصامتة التابعة لتطهير ومسح الحسابات المنتهية من السيرفر
+      socket.on('sync_active_subscribers', (list) => {
+        setActiveSubscribers(list || []);
       });
 
       // التقاط طلبات المدرسين حية على شاشة الأدمن Mostafa
@@ -101,17 +120,34 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
       socket.on('host_receive_student_request', (req) => {
         if (user?.username === req.host) setHostRequests(prev => [...prev, req]);
       });
-    }
-    return () => { if (socket) { socket.off('center_data_package'); socket.off('admin_receive_teacher_request'); socket.off('host_receive_student_request'); } };
-  }, [socket, user, isAdmin]);
 
-const submitSubscribeRequest = () => {
-  if (socket) {
-    // 🚀 توحيد المسمى ليلتقطه السيرفر وتبثه لوحة الإدارة فوراً
-    socket.emit('submit_teacher_subscribe_request', { username: user?.username });
-    alert("🚀 تم إرسال طلب اشتراك السنتر بنجاح! انتظر تفعيل الصلاحية من الأدمن Mostafa خلال ثوانٍ.");
-  }
-};
+      // 📡 جلب مبدئي وسريع للقائمة عبر الـ API لعدم انتظار أول نبضة سوكت عند فتح النافذة
+      axios.get(`${API_BASE}/api/admin/active-teachers`)
+        .then(res => {
+          if (res.data && Array.isArray(res.data)) setActiveSubscribers(res.data);
+        })
+        .catch(() => {});
+    }
+
+    // 🧹 التنظيف واقتلاع المستمعات لحماية ذاكرة جهاز العضو من التهنيج
+    return () => { 
+      if (socket) { 
+        socket.off('center_data_package'); 
+        socket.off('teacher_request_granted');
+        socket.off('sync_active_subscribers');
+        socket.off('admin_receive_teacher_request'); 
+        socket.off('host_receive_student_request'); 
+      } 
+    };
+  }, [socket, user, isAdmin, API_BASE]); // قفل مأمن
+
+  // دالة المحاضر لإرسال طلب فتح السنتر للأدمن
+  const submitSubscribeRequest = () => {
+    if (socket) {
+      socket.emit('submit_teacher_subscribe_request', { username: user?.username });
+      alert("🚀 تم إرسال طلب اشتراك السنتر بنجاح! تم إخطار الأدمن العام Mostafa للموافقة وفتح الصلاحية لـ 30 يوماً.");
+    }
+  };
 
   // دالة الأدمن Mostafa للضغط على زر ((موافق)) وتفعيل الـ 30 يوماً فوراً فالسحاب
   const handleAdminApprove = (reqId) => {
@@ -130,7 +166,7 @@ const submitSubscribeRequest = () => {
     }
   };
 
-  return (
+    return (
     <div className="discovery-overlay no-select-zone" onClick={onClose} style={{ userSelect: 'none' }}>
       <div className="discovery-window gold-border" onClick={e => e.stopPropagation()} style={{ width: '95%', maxWidth: '850px', background: '#090909' }}>
         
@@ -139,7 +175,7 @@ const submitSubscribeRequest = () => {
           <button className="close-discovery" onClick={onClose}>✖</button>
         </div>
 
-        {/* 🛠️ [لوحة الأدمن الملكية الخاصة بـ Mostafa] لعرض طلبات الاشتراكات المعلقة والضغط على زر ((موافق)) */}
+        {/* 🛠️ [لوحة الأدمن الملكية] لعرض طلبات الاشتراكات المعلقة */}
         {isAdmin && adminRequests.length > 0 && (
           <div style={{ background: 'rgba(212,175,55,0.05)', padding: '10px', borderRadius: '6px', border: '1px solid var(--gold-primary)', marginBottom: '15px' }}>
             <small style={{ color: 'var(--gold-primary)', display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>👑 إشعارات الأدمن: طلبات فتح السناتر المعلقة:</small>
@@ -152,7 +188,7 @@ const submitSubscribeRequest = () => {
           </div>
         )}
 
-        {/* الأزرار الأربعة العلوية المطلوبة بالملي */}
+        {/* الأزرار الأربعة العلوية الملتزمة ديناميكياً بـ activeSubTab الموحد */}
         <div style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.5)', padding: '6px', borderRadius: '6px', border: '1px solid var(--border-glass)', marginBottom: '20px' }}>
           <button className={`action-bar-btn ${activeSubTab === 'live' ? 'gold-glow-btn' : ''}`} style={{ flex: 1, fontSize: '11px', padding: '6px', color: '#fff', border: activeSubTab === 'live' ? '1px solid var(--gold-primary)' : '1px solid transparent' }} onClick={() => setActiveSubTab('live')}>🔴 Live البث المباشر</button>
           <button className={`action-bar-btn ${activeSubTab === 'videos' ? 'gold-glow-btn' : ''}`} style={{ flex: 1, fontSize: '11px', padding: '6px', color: '#fff', border: activeSubTab === 'videos' ? '1px solid var(--gold-primary)' : '1px solid transparent' }} onClick={() => setActiveSubTab('videos')}>📹 الفيديوهات المسجلة</button>
@@ -162,96 +198,68 @@ const submitSubscribeRequest = () => {
 
         <div className="discovery-body scrollbar-gold" style={{ maxHeight: '55vh', overflowY: 'auto', padding: '5px' }}>
           
-          {/* 🔴 1. لوحة الـ LIFE والبث التفاعلي وجدار الحماية ضد التجسس وتصوير الشاشة */}
+          {/* 🔴 1. لوحة الـ LIVE والبث التفاعلي المربوطة كلياً بالتحقق من الـ ID في الملف العام */}
           {activeSubTab === 'live' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div style={{ width: '100%', height: '220px', background: '#000', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.2)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                {/* ========================================================================== */}
-                {/* 🎥 [تحديث عتاد العرض الحي] التحام شاشة البث بكاميرا جهاز المستخدم والمايك طيراناً */}
-                {/* ========================================================================== */}
+                
                 {liveStreamActive ? (
                   <>
-                    <div style={{ position: 'absolute', top: '10px', right: '10px', background: '#c0392b', color: '#fff', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', zIndex: 10 }}>LIVE مِباشر</div>
+                    {/* 🟢 [تحديث الحسم] ظهور دائرة تومض باللون الأخضر النيوني النابض حياً بداخل السنتر */}
+                    <div style={{ position: 'absolute', top: '10px', right: '10px', background: '#000', border: '1px solid #27ae60', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', zIndex: 10, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span className="green-pulse-dot" style={{ display: 'inline-block', background: '#27ae60', width: '8px', height: '8px', borderRadius: '50%' }}>●</span>
+                      <span style={{ color: '#27ae60' }}>البث الحي مِصرح ونشط 🏛️</span>
+                    </div>
                     
-                    {/* 🎥 شاشة عرض فيديو الكاميرا الحية المباشرة الملتحمة عتادياً بجهاز المحاضر */}
                     <video 
                       id="ouroLiveVideoPreview" 
                       autoPlay 
                       playsInline 
-                      muted // صامت للمحاضر نفسه منعاً لارتداد وصدى الصوت، ويعمل حياً ومسموعاً عند الطلاب
+                      muted 
                       style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', background: '#000' }} 
                     />
                     
-                    {centerMeta.hasAccess && (
-                      <button 
-                        className="gold-btn-small" 
-                        style={{ position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', background: '#c0392b', color: '#fff', border: 'none', cursor: 'pointer', zIndex: 10 }} 
-                        onClick={() => {
-                          // إيقاف دفق الكاميرا والمايك فيزيائياً عند إنهاء المحاضرة لحفظ الخصوصية
-                          const videoElement = document.getElementById('ouroLiveVideoPreview');
-                          if (videoElement && videoElement.srcObject) {
-                            videoElement.srcObject.getTracks().forEach(track => track.stop());
-                          }
-                          setLiveStreamActive(false);
-                        }}
-                      >
-                        إنهـاء البث ❌
-                      </button>
-                    )}
+                    <button 
+                      className="gold-btn-small" 
+                      style={{ position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', background: '#c0392b', color: '#fff', border: 'none', cursor: 'pointer', zIndex: 10 }} 
+                      onClick={() => {
+                        const videoElement = document.getElementById('ouroLiveVideoPreview');
+                        if (videoElement && videoElement.srcObject) {
+                          videoElement.srcObject.getTracks().forEach(track => track.stop());
+                        }
+                        setLiveStreamActive(false);
+                      }}
+                    >
+                      إنهـاء البث ❌
+                    </button>
                   </>
                 ) : (
                   <>
                     <span style={{ fontSize: '40px' }}>🎥</span>
                     <p style={{ color: 'var(--text-muted)', fontSize: '11px', padding: '0 20px', textAlign: 'center' }}>
-                      {centerMeta.hasAccess ? "🔓 تمتلك تصريحاً نشطاً لإدارة السنتر لـ 30 يوماً! اضغط بالأسفل لبدء البث فوراً." : "🔒 لفتح السنتر وبدء البث، يجب إرسال طلب اشتراك للأدمن Mostafa لتفعيل حسابك لـ 30 يوماً."}
+                      {isUserVerifiedInGlobalFile ? "🔓 تم مطابقة هويتك والـ ID بالملف العام للمشتركين! يمكنك إطلاق الإشارة الآن." : "🔒 لفتح السنتر وبدء البث، يجب إرسال طلب اشتراك للأدمن لتوثيق اسمك والـ ID بالملف المشترك لـ 30 يوماً."}
                     </p>
                     
-                    {/* 🚀 زر تشغيل العتاد الذكي يظهر فقط للمحاضر المصرح له لإطلاق الكاميرا والمايك فوراً */}
-                    {centerMeta.hasAccess && (
+                    {/* 🚀 زر تشغيل البث الحي ينبثق تلقائياً فقط وحصرياً إذا طابق الفحص هويتك والـ ID بالملف العام المشترك */}
+                    {isUserVerifiedInGlobalFile && (
                       <button 
                         className="gold-btn-small" 
-                        style={{ marginTop: '10px', fontWeight: 'bold', background: 'var(--gold-primary)', color: '#000', border: 'none' }} 
-                        onClick={async () => {
-                          try {
-                            // 🔒 الطلب الفوري لأذونات الكاميرا والمايك العتادية للجهاز
-                            const localStream = await navigator.mediaDevices.getUserMedia({ 
-                              video: { width: 1280, height: 720, facingMode: "user" }, 
-                              audio: true 
-                            });
-                            
-                            setLiveStreamActive(true);
-                            
-                            // ربط شريان البث بالـ فيديو tag في السيرفر بعد تفعيله بميكرو ثانية
-                            setTimeout(() => {
-                              const videoElement = document.getElementById('ouroLiveVideoPreview');
-                              if (videoElement) videoElement.srcObject = localStream;
-                            }, 50);
-
-                            if (socket) {
-                              socket.emit('start_live_broadcast', { host: user?.username });
-                            }
-                            alert("🔴 🎉 تم تفعيل الميكروفون والكاميرا بنجاح! البث نشط ومحمي ضد تسجيل الشاشة.");
-                          } catch (err) {
-                            alert("⚠️ عذراً، فشل فتح الكاميرا أو المايك! تأكد من منح المتصفح أو البرنامج أذونات الوصول للعتاد (Permissions).");
-                          }
-                        }}
+                        style={{ marginTop: '10px', fontWeight: 'bold', background: '#27ae60', color: '#fff', border: 'none', padding: '8px 18px', boxShadow: '0 0 10px rgba(39,174,96,0.4)' }} 
+                        onClick={handleStartLiveStream} 
                       >
-                        🚀 إطلاق الكاميرا والمايك وبدء المحاضرة
+                        بدء البث 🚀
                       </button>
                     )}
                   </>
                 )}
-
               </div>
 
-              {/* 🤝 [أزرار التفاعل الجذري: اشتراك وانضمام المطورين بالملي] */}
               <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
-                {!centerMeta.hasAccess && (
+                {!isUserVerifiedInGlobalFile && (
                   <button className="gold-btn" style={{ flex: 1, background: '#e67e22', border: 'none', color: '#fff', cursor: 'pointer', padding: '10px', fontWeight: 'bold' }} onClick={submitSubscribeRequest}>
                     🌟 إرسال طلب اشتراك سنتر (30 يوماً للأدمن)
                   </button>
                 )}
-
                 <button className="gold-btn" style={{ flex: 1, background: '#2980b9', border: 'none', color: '#fff', cursor: 'pointer', padding: '10px', fontWeight: 'bold' }} onClick={() => submitStudentJoinRequest(centerMeta.activeRoom ? "المحاضر النشط" : "Admin_Mostafa")}>
                   🤝 اضغط هنا لطلب (( انضمام )) للبث المباشر والمذكرات
                 </button>
@@ -307,10 +315,10 @@ const submitSubscribeRequest = () => {
             </div>
           )}
 
-        </div>
-      </div>
-    </div>
+        </div> {/* إغلاق discovery-body */}
+      </div> {/* إغلاق discovery-window */}
+    </div> {/* إغلاق discovery-overlay */}
   );
 };
 
-export default OuroCenterModal;
+export default OuroCenterModal; // 👑 القفل القياسي والتصدير الشرعي للمكون بنقاء 100%
