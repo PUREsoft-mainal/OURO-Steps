@@ -1330,56 +1330,134 @@ app.post('/api/user/upload-avatar', upload.single('avatar'), (req, res) => {
     }
 });
 
-// أ) مسار رفع الملفات إلى الفلاشة الافتراضية الخاصة بالمستخدم
-app.post('/api/flash/upload', upload.single('flashFile'), (req, res) => {
+// ==========================================================================
+// 📟 [تحديث مسارات الفلاشة اللامركزية] - الارتباط التام بـ GOOGLE DRIVE API KEY
+// ==========================================================================
+const { google } = require('googleapis'); // استدعاء حزمة قفل بوابات جوجل
+
+// أ) مسار رفع الملفات الحقيقي والموجه مباشرة إلى حساب Google Drive الخاص بالمستخدم
+app.post('/api/flash/upload', upload.single('flashFile'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ success: false, message: "الرجاء اختيار ملف أو مجلد مضغوط" });
         const { username } = req.body;
         if (!username) return res.status(400).json({ success: false, message: "بيانات المستخدم مطلوبة" });
 
-        const userFlashDir = path.join(FLASH_DRIVE_DIR, username);
-        if (!fs.existsSync(userFlashDir)) fs.mkdirSync(userFlashDir, { recursive: true });
+        // 1. قنص والتحقق من وجود مفتاح الـ Google Drive API KEY الخاص بالمستخدم بـ MongoDB Atlas
+        const userDoc = await UserModel.findOne({ username: username.trim() });
+        const userDriveKey = userDoc ? userDoc.googleFlashDriveApiKey : null;
 
-        const oldPath = req.file.path;
-        const newPath = path.join(userFlashDir, req.file.filename);
-        fs.renameSync(oldPath, newPath);
+        if (!userDriveKey) {
+            // خط دفاع: لو المستخدم لم يربط مفتاحاً بعد، يحفظ ملفه محلياً مؤقتاً لحماية تجربته
+            const userFlashDir = path.join(FLASH_DRIVE_DIR, username.trim());
+            if (!fs.existsSync(userFlashDir)) fs.mkdirSync(userFlashDir, { recursive: true });
+            fs.renameSync(req.file.path, path.join(userFlashDir, req.file.filename));
+            console.log(`📟 [Local Fallback] تم حفظ ملف المستخدم ${username} محلياً لعدم ربط مفتاح Drive`);
+        } else {
+            // 🚀 [شريان الضخ السحابي اللامركزي]: تهيئة الاتصال وحقن الملف بحساب جوجل درايف الخاص بالعضو
+            const auth = new google.auth.GoogleAuth({
+                credentials: { api_key: userDriveKey } // تفويض الدخول بالمفتاح الشخصي للمستخدم
+            });
+            const drive = google.drive({ version: 'v3', auth });
 
+            const fileMetadata = {
+                name: req.file.originalname,
+                parents: [] // يمكنك تحديد معرف مجلد فرعي هنا إذا أردت
+            };
+            const media = {
+                mimeType: req.file.mimetype,
+                body: fs.createReadStream(req.file.path) // ضخ الملف كـ Stream خفيف مأمن للـ RAM
+            };
+
+            // قذف المستند السحابي لحساب المدرس/المطور مباشرة
+            const driveResponse = await drive.files.create({
+                resource: fileMetadata,
+                media: media,
+                fields: 'id'
+            });
+
+            // مسح الملف المؤقت من السيرفر فوراً لتوفير مساحة جهازك وهارد السحاب
+            if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+            
+            // استبدال اسم الملف الفيزيائي بمعرف جوجل درايف الفريد المولد [driveFileId]
+            req.file.filename = driveResponse.data.id; 
+            console.log(`🚀 [Cloud Cloud Drive Success] طيران المستند ${req.file.originalname} لحساب جوجل درايف العضو!`);
+        }
+
+        // 2. تدوين سجل المعاملة وحساب الـ 72 ساعة فلكياً
         const seventyTwoHours = 72 * 60 * 60 * 1000;
         const expiryTimestamp = Date.now() + seventyTwoHours;
 
         const flashDb = readJson(FLASH_DB_FILE);
         const newFileRecord = {
             id: 'file_' + Date.now().toString(),
-            owner: username,
+            owner: username.trim(),
             originalName: req.file.originalname,
-            filename: req.file.filename,
+            filename: req.file.filename, // يحمل إما معرف الجوجل درايف أو الاسم المحلي
             size: (req.file.size / (1024 * 1024)).toFixed(2) + ' MB',
             uploadTime: new Date().toLocaleDateString('ar-EG') + ' ' + new Date().toLocaleTimeString('ar-EG'),
-            expiryDate: expiryTimestamp
+            expiryDate: expiryTimestamp,
+            isStoredOnGoogleDrive: !!userDriveKey // شارة تفيد نوع التخزين
         };
 
         flashDb.unshift(newFileRecord);
         writeJson(FLASH_DB_FILE, flashDb);
 
-        io.emit('flash_db_updated', flashDb);
+        // بث السجلات المحدثة فوراً لإنعاش شاشات الـ VirtualFlash.js بالمتصفحات
+        if (typeof io !== 'undefined') io.emit('flash_db_updated', flashDb);
+        
         res.json({ success: true, file: newFileRecord });
     } catch (err) {
-        console.error("خطأ أثناء الرفع للفلاشة الافتراضية:", err);
-        res.status(500).json({ success: false, error: err.message });
+        console.error("خطأ أثناء الرفع السحابي للفلاشة اللامركزية:", err);
+        res.status(500).json({ success: false, error: "فشل معالجة الرفع السحابي لجوجل درايف، تأكد من صلاحية المفتاح." });
     }
 });
 
-// ب) مسار تحميل (تنزيل) الملف المباشر من الفلاشة لأي جهاز متصل بالشبكة المحلية
-app.get('/api/flash/download/:username/:filename', (req, res) => {
-    const { username, filename } = req.params;
-    const filePath = path.join(FLASH_DRIVE_DIR, username, filename);
-    
-    if (fs.existsSync(filePath)) {
-        res.download(filePath); 
-    } else {
-        res.status(404).send("⚠️ الملف غير موجود أو انتهت صلاحية الـ 72 ساعة وتمت إبادته!");
+// ب) مسار استيراد وتحميل المستند ديناميكياً من حساب المدرس أو السيرفر دون وميض
+app.get('/api/flash/download/:username/:filename', async (req, res) => {
+    try {
+        const { username, filename } = req.params;
+
+        // 1. فحص سجل الملف بقاعدة البيانات الفرعية لمعرفة موضع تخزينه
+        const flashDb = readJson(FLASH_DB_FILE);
+        const fileRecord = flashDb.find(f => f.filename === filename && f.owner === username);
+
+        if (!fileRecord) {
+            return res.status(404).send("⚠️ المستند ممسوح أو انتهت فترة الـ 72 ساعة وتمت إبادته تلقائياً!");
+        }
+
+        // 2. إذا كان الملف مخزناً على جوجل درايف المطور، نسحبه حياً عبر الـ API KEY الخاص به
+        if (fileRecord.isStoredOnGoogleDrive) {
+            const userDoc = await UserModel.findOne({ username: username });
+            const userDriveKey = userDoc ? userDoc.googleFlashDriveApiKey : null;
+
+            if (!userDriveKey) return res.status(400).send("⚠️ مفتاح ربط الجوجل درايف مفقود أو تم مسحه");
+
+            const auth = new google.auth.GoogleAuth({ credentials: { api_key: userDriveKey } });
+            const drive = google.drive({ version: 'v3', auth });
+
+            // استدعاء دفق التحميل المباشر والفيزيائي من خوادم جوجل لجهاز الطالب المتلقي فورا
+            const driveRes = await drive.files.get(
+                { fileId: filename, alt: 'media' },
+                { responseType: 'stream' }
+            );
+
+            res.setHeader('Content-Disposition', `attachment; filename=encodeURI(${fileRecord.originalName})`);
+            driveRes.data.pipe(res); // ضخ وقذف الداتا التدفقية للمتصفح مباشرة
+        } else {
+            // إذا كان مخزناً محلياً (Fallback)
+            const filePath = path.join(FLASH_DRIVE_DIR, username, filename);
+            if (fs.existsSync(filePath)) {
+                res.download(filePath, fileRecord.originalName); 
+            } else {
+                res.status(404).send("⚠️ الملف غير موجود بالخادم المحلي.");
+            }
+        }
+    } catch (err) {
+        console.error("خطأ أثناء تنزيل مستند الفلاشة السحابي:", err);
+        res.status(500).send("❌ فشل سحب المستند من جوجل درايف، تأكد من تصاريح الملف بـ Drive.");
     }
 });
+
 
 // ج) مسار جلب قائمة ملفات الفلاشة لمستخدِم معين لتغذية شاشته عند تسجيل الدخول
 app.get('/api/flash/files/:username', (req, res) => {
