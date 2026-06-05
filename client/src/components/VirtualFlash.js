@@ -8,6 +8,43 @@ const VirtualFlash = ({ user, socket }) => {
   
   const [myFiles, setMyFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
+    // 📟 [متغيرات جديدة] لإدارة وحفظ وقراءة مفتاح Google Drive API KEY الخاص بالفلاشة
+  const [flashDriveApiKey, setFlashDriveApiKey] = useState("");
+  const [isSavedFlashKey, setIsSavedFlashKey] = useState(false);
+
+  // خطاف الجلب التلقائي لمفتاح درايف الفلاشة الخاص بالمستخدِم فور فتح الصندوق
+  useEffect(() => {
+    if (user?.username) {
+      axios.post(`${API_BASE}/api/flash/get-drive-key`, { username: user.username })
+        .then(res => {
+          if (res.data && res.data.flashDriveApiKey) {
+            setFlashDriveApiKey(res.data.flashDriveApiKey);
+            setIsSavedFlashKey(true);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user?.username]);
+
+  // دالة حفظ وإرسال مفتاح جوجل درايف السحابي للفلاشة بقاعدة البيانات
+  const handleSaveFlashDriveKey = async (e) => {
+    e.preventDefault();
+    if (!flashDriveApiKey.trim()) return alert("⚠️ الرجاء كتابة أو لصق مفتاح الـ API الخاص بـ Google Drive أولاً!");
+
+    try {
+      const res = await axios.post(`${API_BASE}/api/flash/save-drive-key`, {
+        username: user?.username,
+        flashDriveApiKey: flashDriveApiKey.trim()
+      });
+      if (res.data.success) {
+        setIsSavedFlashKey(true);
+        alert(res.data.message);
+      }
+    } catch (err) {
+      alert("❌ فشل ربط مفتاح الفلاشة، تحقق من استقرار اتصال الشبكة.");
+    }
+  };
+
 
   useEffect(() => {
     const fetchFlashFiles = async () => {
@@ -64,7 +101,23 @@ const VirtualFlash = ({ user, socket }) => {
     <div className="virtual-flash-box gold-border">
       <h4>⚡ فلاشة النقل والمزامنة الذكية لـ {user?.username} (Virtual USB)</h4>
       <p className="flash-notice-text">📟 يمكنك رفع برامجك، تطبيقاتك، أو هياكلك البرمجية (في مجلد مضغوط Zip) هنا لنقلها مباشرة لأي جهاز آخر. الملفات تُباد تلقائياً بعد 72 ساعة.</p>
-      
+
+      {/* 📟 [شريان حقن وقفل مفتاح Google Drive للامركزية الفلاشة الإلكترونية] */}
+      <form onSubmit={handleSaveFlashDriveKey} style={{ background: 'rgba(230,126,34,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(230,126,34,0.15)', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '15px' }}>
+        <span style={{ fontSize: '11px', color: '#e67e22', fontWeight: 'bold', whiteSpace: 'nowrap' }}>📟 Flash Drive API KEY:</span>
+        <input 
+          type="password" // مشفر على هيئة نجوم لحماية خصوصية المستخدم ومنع كشفه أثناء تصفح المنصة
+          placeholder={isSavedFlashKey ? "••••••••••••••••••••••••••••••••" : "الصق مفتاح الـ API KEY لحساب Google Drive المخصص لملفات فلاشتك..."}
+          value={isSavedFlashKey ? "" : flashDriveApiKey}
+          onChange={(e) => { setIsSavedFlashKey(false); setFlashDriveApiKey(e.target.value); }}
+          disabled={isSavedFlashKey && flashDriveApiKey}
+          style={{ flex: 1, minWidth: '200px', padding: '6px 10px', background: '#000', color: '#e67e22', border: '1px solid var(--border-glass)', borderRadius: '4px', fontSize: '11px', fontFamily: 'monospace' }}
+        />
+        <button type="submit" className="gold-btn-small" style={{ background: isSavedFlashKey ? '#27ae60' : '#e67e22', color: '#fff', fontWeight: 'bold', border: 'none', padding: '6px 15px', fontSize: '11px', cursor: 'pointer' }}>
+          {isSavedFlashKey ? "🔒 تم القبول والتفعيل" : "💾 ربط وحفظ المفتاح"}
+        </button>
+      </form>
+  
       {/* زر الرفع المذهب والمطور للفلاشة السحابية المحلية */}
       <div className="flash-upload-zone">
         <input type="file" id="vFlashUp" hidden onChange={handleFlashUpload} />
