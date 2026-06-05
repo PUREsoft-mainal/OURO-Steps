@@ -1506,7 +1506,6 @@ app.post('/api/center/upload-to-drive', async (req, res) => {
 });
 
 
-// 1. [مسار التحقق الإداري وبدء البث] يعبر المحاضر فوراً إذا كان حسابه مصرحاً ومفعلاً من الأدمن Mostafa
 // ==========================================================================
 // 🏛️ [تحديث مسار السنتر والاجتماعات] - العبور للمصرح لهم، والجدولة الآلية بالملف السحابي للمستجدين
 // ==========================================================================
@@ -1523,7 +1522,7 @@ app.post('/api/center/rent-room', async (req, res) => {
             hasActiveAccess = true;
         }
 
-        // 🧠 [التكتيك الذكي الخارق للعادة]: لو الحساب يمتلك تصريحاً ساري المفعول، يعبر طيراناً لتوليد القاعة
+        // 🧠 لو الحساب يمتلك تصريحاً ساري المفعول، يعبر طيراناً لتوليد القاعة
         if (hasActiveAccess) {
             const generatedRoomId = 'room_' + Date.now().toString();
             const newCenterRoom = new OuroCenterModel({
@@ -1540,8 +1539,8 @@ app.post('/api/center/rent-room', async (req, res) => {
             return res.json({ success: true, roomId: generatedRoomId, isLiveNow: true });
         }
 
-        // 📝 [الأرشفة التسلسلية التلقائية]: لو الحساب غير مصرح له، يتم صياغة طلبه وأرشفته فوراً بالملف السحابي
-        let db = readCloudRequestsFile(); // استدعاء دالة قراءة ملف الـ JSON السحابي الموثق بقفل الهارد
+        // 📝 لو الحساب غير مصرح له، يتم صياغة طلبه وأرشفته فوراً بالملف السحابي
+        let db = readCloudRequestsFile(); 
         
         const centerReqId = 'req_center_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
         const newReqObj = {
@@ -1554,11 +1553,14 @@ app.post('/api/center/rent-room', async (req, res) => {
         // فحص منع التكرار لضمان عدم حشو طلبات متطابقة لنفس الحساب المعلق
         if (!db.centerRequests.some(p => p.applicant === username.trim())) {
             db.centerRequests.push(newReqObj);
-            writeCloudRequestsFile(db); // قفل وحفظ البيانات بالملف لمنع ضياع المعاملة
+            writeCloudRequestsFile(db); 
         }
 
-        // بث نبضة السوكت اللحظية كقناة إشعار موازية للمتصلين
-        if (global.io) {
+        // 🔥 [تم التصحيح والتحصين] البث الحي المباشر عبر كائن io الصافي والنشط بدلاً من global الميت
+        if (typeof io !== 'undefined') {
+            io.emit('admin_receive_teacher_request', newReqObj);
+            console.log(`📡 [Live Signal Sent] تم بث نبضة طلب السنتر للمستخدم ${username.trim()} حياً للوحة الإدارة!`);
+        } else if (global.io) {
             global.io.emit('admin_receive_teacher_request', newReqObj);
         }
 
