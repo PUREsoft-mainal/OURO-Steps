@@ -5,9 +5,6 @@ import '../App.css';
 const VirtualFlash = ({ user, socket }) => {
   // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
   const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
-
-  // 🔥 [تم التطهير والإصلاح] تم حذف كود حجز السوكت المكرر (const socket = io) نهائياً لمنع الكراش وحظر الـ CORS
-  // المكون سيعتمد الآن مباشرة وبسلاسة على الـ socket الممرر بالأعلى والمشفر من الـ App.js
   
   const [myFiles, setMyFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
