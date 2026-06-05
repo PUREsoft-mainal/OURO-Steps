@@ -192,12 +192,21 @@ function App() {
       // 🔊 2. مستمع استقبال رسائل المحادثات العامة والنظام التاريخية
       socket.on('message', (m) => setChat(prev => [...prev, m]));
 
-            // 📡 مستمع التقاط طلبات اشتراك السنتر (البث الحي) حياً على شاشة الأدمن Mostafa
+      // 📡 مستمع الالتقاط المطور: يفحص اسم حساب الأدمن ورقم تعريفه الشخصي الصارم (ID) قبل عرض الطلب
       socket.on('admin_receive_teacher_request', (req) => {
-        setPendingCenterRequests(prev => {
-          if (prev.some(p => p.requestId === req.requestId)) return prev;
-          return [...prev, req];
-        });
+        // 🔒 جدار التحقق الصارم: التحقق من الاسم والـ ID المشترك للحساب المفتوح حالياً بالمتصفح
+        const isCurrentMeTheTrueAdmin = user && 
+                                        user.username === 'Admin_Mostafa' && 
+                                        (user._id === req.targetAdminId || user.user_id === req.targetAdminId);
+
+        if (isCurrentMeTheTrueAdmin) {
+          setPendingCenterRequests(prev => {
+            // منع تكرار رسم بطاقة العضو في شاشتك الإدارية
+            if (prev.some(p => p.requestId === req.requestId)) return prev;
+            return [...prev, req];
+          });
+          console.log("👑 [Sovereign UI Catch] تم قنص وتثبيت طلب اشتراك موجه لهويتك الملكية حياً!");
+        }
       });
 
       // 📡 مستمع التقاط طلبات مفاتيح الـ API بالمزايا المختارة حياً على شاشة الأدمن
