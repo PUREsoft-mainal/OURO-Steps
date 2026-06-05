@@ -311,6 +311,8 @@ function App() {
       if (socket) {
         socket.off('group_message');
         socket.off('message');
+        socket.off('admin_receive_teacher_request');
+        socket.off('admin_receive_api_key_request');
         socket.off('init_data');
         socket.off('update_stats');
         socket.off('new_file');
@@ -323,12 +325,10 @@ function App() {
         socket.off('error_msg');
       }
     };
-  /* eslint-disable react-hooks/exhaustive-deps */
-  useEffect(() => {
-    if (socket) {
-      // أكواد مستمعات السوكت الخاصة بك...
-    }
-  }, [isLogged, currentGroup.id]);
+    
+  // 👑 [قفل الحسم] إغلاق الـ useEffect الكلي للأحداث بنقاء رياضي وصارم مع تفادي فحص الـ ESLint
+  }, [isLogged, currentGroup.id, user]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   // 👑 2. [منظومة اقتراحك العبقري] مراقبة وجلب دوري مستقل لشريط الإعلانات كل 15 دقيقة لمنع الاختفاء الصامت كلياً
   useEffect(() => {
