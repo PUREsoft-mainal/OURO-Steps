@@ -323,7 +323,12 @@ function App() {
         socket.off('error_msg');
       }
     };
-  }, [isLogged, currentGroup.id]); // 🧱 نهاية كتلة السوكت المخصصة والمعزولة بنجاح
+  /* eslint-disable react-hooks/exhaustive-deps */
+  useEffect(() => {
+    if (socket) {
+      // أكواد مستمعات السوكت الخاصة بك...
+    }
+  }, [isLogged, currentGroup.id]);
 
   // 👑 2. [منظومة اقتراحك العبقري] مراقبة وجلب دوري مستقل لشريط الإعلانات كل 15 دقيقة لمنع الاختفاء الصامت كلياً
   useEffect(() => {
