@@ -1198,113 +1198,208 @@ setInterval(() => {
     }
 }, 60 * 60 * 1000); // 60 دقيقة
 
-// تعديل مسار رفع بضائع السوق الملكي ليتلقى حتى 10 صور ويحسب مدة الـ 3 أشهر
 // ==========================================================================
-// 🛍️ 1. [مسار الرفع السحابي الحاسم] استقبال وحفظ بضائع السوق في MongoDB Atlas للأبد
+// 🛍️ 1. [مسار الرفع السحابي اللامركزي المطور] ربط وتوجيه بضائع السوق لدرايف الأدمن بالـ ID
 // ==========================================================================
 app.post('/api/upload-market', upload.array('marketImages', 10), async (req, res) => {
     try {
         const userUploader = req.body.username || req.body.uploader;
-        if (!userUploader) return res.status(400).json({ success: false, message: "بيانات المستخدم مفقودة" });
+        if (!userUploader) return res.status(400).json({ success: false, message: "⚠️ بيانات المستخدم مفقودة" });
       
         const files = req.files || [];
-        const imagesPaths = files.map(f => `/uploads/${f.filename}`);
+        let imagesPaths = [];
+
+        // 1. 🚀 [قنص مفتاح الأدمن السيادي والموحد]: جلب حساب الأدمن Mostafa لقراءة مفتاح جوجل درايف الخاص به
+        const adminDoc = await UserModel.findOne({ username: 'Admin_Mostafa' });
+        const adminDriveKey = adminDoc ? (adminDoc.googleFlashDriveApiKey || adminDoc.googleDriveApiKey) : null;
+
+        if (!adminDriveKey) {
+            // خط دفاع احتياطي: لو لم تقم بربط مفتاحك بعد بسيرفر Vercel، يحفظها محلياً مؤقتاً لحماية السوق
+            imagesPaths = files.map(f => `/uploads/${f.filename}`);
+            console.log("⚠️ تنبيه إداري: تم حفظ الصور محلياً مؤقتاً، يرجى ربط مفتاح Google Drive لحساب Admin_Mostafa!");
+        } else {
+            // 🔒 تهيئة دفق الاتصال وقذف الصور لحساب جوجل درايف الخاص بـ الأدمن Mostafa قسرياً
+            const { google } = require('googleapis');
+            const auth = new google.auth.GoogleAuth({ credentials: { api_key: adminDriveKey } });
+            const drive = google.drive({ version: 'v3', auth });
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileMetadata = { 
+                    name: `market_product_${Date.now()}_${i}.png`, 
+                    parents: [] // يمكنك وضع معرف مجلد مخصص هنا إذا رغبت بداخل حسابك
+                };
+                const media = { 
+                    mimeType: file.mimetype, 
+                    body: fs.createReadStream(file.path) // ضخ تدويري خفيف مأمن للـ RAM
+                };
+
+                const driveResponse = await drive.files.create({
+                    resource: fileMetadata,
+                    media: media,
+                    fields: 'id'
+                });
+
+                // إبادة ومسح الفضلات الفيزيائية من هارد السيرفر فوراً لتوفير المساحة المادية
+                if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+                
+                // حفظ معرف صور الجوجل درايف الفريد المنسوب لحساب الأدمن
+                imagesPaths.push(driveResponse.data.id);
+            }
+            console.log(`🛍️ [Sovereign Market Injection] تم صب وحفظ صور منتج العضو ${userUploader} داخل درايف الأدمن بنجاح!`);
+        }
 
         const threeMonthsInMs = 90 * 24 * 60 * 60 * 1000;
         const expiryTimestamp = Date.now() + threeMonthsInMs;
 
-        // 👑 صب حزمة البيانات ككائن سحابي نقي ومطهر تماماً من ملفات الـ JSON القديمة
+        // 👑 صب حزمة البيانات ككائن سحابي نقي مرتبط بمصفوفة صور درايف الأدمن
+        // تم تغيير اسم الموديل لـ MarketModel ليطابق تماماً الهيكل المعتمد بملفك
         const newPost = new MarketModel({
             id: 'post_' + Date.now().toString(),
-            uploader: userUploader,
+            uploader: userUploader.trim(),
             description: req.body.description || '',
             price: req.body.price || 'غير محدد',
-            images: imagesPaths,
+            images: imagesPaths, // تحتوي على ال-IDs التابعة لجوجل درايف الخاص بالأدمن Mostafa
             time: new Date().toLocaleDateString('ar-EG') + ' ' + new Date().toLocaleTimeString('ar-EG'),
             expiryDate: expiryTimestamp 
         });
 
         await newPost.save(); // تم الحفظ بأمان هندسي مطلق في خزائن الـ Cloud الخارجي للأبد
 
-        // جلب المعروضات سحابياً بالكامل وضخها لحظياً لجميع المشاهدين المتصلين
-        const allPosts = await MarketModel.find({}).sort({ _id: -1 });
-        io.emit('new_market_post', newPost);
-        
+        // بث السلعة الجديدة فوراً لجميع المشاهدين المتصلين بالمنصة لإنعاش شاشات المتجر
+        if (typeof io !== 'undefined') {
+            io.emit('new_market_post', newPost);
+        }
+
         res.json({ success: true, post: newPost });
     } catch (err) {
-        console.error("خطأ أثناء النشر في السوق الملكي السحابي:", err);
+        console.error("خطأ أثناء النشر في السوق الملكي السحابي المطور:", err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
 // ==========================================================================
-// 🗑️ 2. [مسار الحذف السحابي المأمن] إبادة منشور السلعة من قلب MongoDB Atlas
+// 🗑️ 2. [تحديث مسار الحذف السحابي اللامركزي] إبادة منشور السلعة وصورها من درايف الأدمن Mostafa
 // ==========================================================================
 app.delete('/api/market/delete/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const username = req.body.username || req.body.uploader;
+        // 🔒 [تصحيح التقاط الاسم] جلب اسم المستخدم سواء مرر في الـ query أو الـ body لتجنب مشاكل الحظر
+        const username = req.query.username || req.body.username || req.body.uploader;
 
-        // قراءة ومطابقة السلعة المستهدفة مباشرة من السحاب
+        if (!username) {
+            return res.status(400).json({ success: false, message: "⚠️ اسم المستخدم مطلوب لإتمام معالجة الحذف سيبرانياً" });
+        }
+
+        // قراءة ومطابقة السلعة المستهدفة مباشرة من السحاب بـ MongoDB Atlas
         const targetPost = await MarketModel.findOne({ id: id });
         if (!targetPost) return res.status(404).json({ success: false, message: "المنشور غير موجود سحابياً" });
 
-        const isAuthorized = username === targetPost.uploader || username === 'Admin_Mostafa';
+        // التحقق الأمني السيادي: الحذف يقتصر على صاحب السلعة الأصلي أو حساب الأدمن الملكي Mostafa
+        const isAuthorized = username.trim() === targetPost.uploader || username.trim() === 'Admin_Mostafa';
 
         if (isAuthorized) {
-            // حذف الملفات الفيزيائية من سيرفر الرفع لعدم ملء المساحة
+            // 1. 🚀 [إبادة ومسح صور المنتج تلقائياً من حساب Google Drive الخاص بالأدمن Mostafa]
             if (targetPost.images && targetPost.images.length > 0) {
-                targetPost.images.forEach(imgUrl => {
-                    const filename = path.basename(imgUrl);
-                    const filePath = path.join(UPLOADS_DIR, filename);
-                    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-                });
+                // قنص وجلب حساب الأدمن Mostafa لقراءة مفتاح جوجل درايف الخاص به لإتمام الإبادة
+                const adminDoc = await UserModel.findOne({ username: 'Admin_Mostafa' });
+                const adminDriveKey = adminDoc ? (adminDoc.googleFlashDriveApiKey || adminDoc.googleDriveApiKey) : null;
+
+                if (adminDriveKey) {
+                    try {
+                        const { google } = require('googleapis');
+                        const auth = new google.auth.GoogleAuth({ credentials: { api_key: adminDriveKey } });
+                        const drive = google.drive({ version: 'v3', auth });
+
+                        // المرور على مصفوفة ال-IDs ومسحها فيزيائياً وفوراً من حساب جوجل درايف للأدمن لتوفير مساحتك
+                        for (const fileId of targetPost.images) {
+                            // التحقق من أن القيمة المعطاة هي معرّف درايف (ليست مساراً محلياً قديماً)
+                            if (fileId && !fileId.startsWith('/uploads')) {
+                                await drive.files.delete({ fileId: fileId }).catch(() => {
+                                    console.log(`⚠️ المستند السحابي ${fileId} قد يكون ممسوحاً بالفعل مسبقاً من درايف.`);
+                                });
+                            }
+                        }
+                        console.log(`🗑️ [Admin Drive Purge] تم مسح وإبادة صور السلعة ${id} نهائياً من حساب Google Drive للأدمن بنجاح!`);
+                    } catch (driveErr) {
+                        console.error("تنبيه: فشل الوصول لـ Google Drive API لمسح الصور، جاري استكمال حذف المستند...", driveErr);
+                    }
+                }
             }
 
-            // اقتلاع وحذف الكارت نهائياً ومطلقاً من المونجو أطلس
+            // 2. اقتلاع وحذف الكارت نهائياً ومطلقاً من المونجو أطلس لإنهاء وجود المعروضات
             await MarketModel.deleteOne({ id: id });
 
-            io.emit('market_post_deleted', { postId: id });
-            res.json({ success: true });
+            // بث إشارة الحذف الفورية صامتاً في السحاب لكافة المتصفحات لتختفي السلعة فوراً دون ريفريش
+            if (typeof io !== 'undefined') {
+                io.emit('market_post_deleted', { postId: id });
+            }
+
+            console.log(`🗑️ [Market Delete Success] تم تدمير وإلغاء منشور البضاعة ${id} بنجاح نقي من السحاب!`);
+            res.json({ success: true, message: "🗑️ تم تدمير السلعة وإلغاء منشورها بنجاح نقي من السحاب ومن حساب جوجل درايف للأدمن!" });
         } else {
-            res.status(403).json({ success: false, message: "غير مصرح لك بالحذف سيبرانياً" });
+            res.status(403).json({ success: false, message: "🛑 عذراً، غير مصرح لك بالحذف سيبرانياً من خزائن المنصة!" });
         }
     } catch (err) {
+        console.error("خطأ معالجة الحذف السحابي اللامركزي لبضائع المتجر:", err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// 🧹 [تم التطهير السحابي الشامل] دالة آلية دورية (تشتغل كل ساعة) لتطهير وحذف السلع المنتهية بعد 3 أشهر من MongoDB Atlas
+// ==========================================================================
+// 🧹 [تحديث المراقب الفلكي للمتجر] - تطهير السلع المنتهية وصورها تلقائياً من درايف الأدمن
+// ==========================================================================
 setInterval(async () => {
     try {
         const now = Date.now();
 
-        // 1️⃣ قنص واستخراج السلع المنتهية من السحاب أولاً لحذف صورها الفيزيائية وتوفير المساحة
+        // 1️⃣ قنص واستخراج السلع المنتهية من السحاب أولاً بـ MongoDB Atlas لمعالجة صورها السحابية
         const expiredPosts = await MarketModel.find({ expiryDate: { $lte: now } });
         
         if (expiredPosts.length > 0) {
-            expiredPosts.forEach(post => {
-                if (post.images && post.images.length > 0) {
-                    post.images.forEach(imgUrl => {
-                        const filePath = path.join(UPLOADS_DIR, path.basename(imgUrl));
-                        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-                    });
+            // قنص وجلب حساب الأدمن Mostafa لقراءة مفتاح جوجل درايف الخاص به لإتمام الإبادة المؤتمتة
+            const adminDoc = await UserModel.findOne({ username: 'Admin_Mostafa' });
+            const adminDriveKey = adminDoc ? (adminDoc.googleFlashDriveApiKey || adminDoc.googleDriveApiKey) : null;
+
+            if (adminDriveKey) {
+                try {
+                    const { google } = require('googleapis');
+                    const auth = new google.auth.GoogleAuth({ credentials: { api_key: adminDriveKey } });
+                    const drive = google.drive({ version: 'v3', auth });
+
+                    // المرور على السلع المنتهية ومسح ملفاتها فيزيائياً وفوراً من حساب جوجل درايف للأدمن لتوفير مساحتك
+                    for (const post of expiredPosts) {
+                        if (post.images && post.images.length > 0) {
+                            for (const fileId of post.images) {
+                                // التحقق من أن القيمة هي معرّف درايف (ليست مساراً محلياً قديماً)
+                                if (fileId && !fileId.startsWith('/uploads')) {
+                                    await drive.files.delete({ fileId: fileId }).catch(() => {
+                                        console.log(`⚠️ المستند السحابي المنتهي ${fileId} قد يكون ممسوحاً بالفعل مسبقاً من درايف.`);
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    console.log(`🧹 [Automated Drive Purge] تم فحص وتطهير صور عدد ${expiredPosts.length} سلعة منتهية من حساب Google Drive للأدمن.`);
+                } catch (driveErr) {
+                    console.error("تنبيه: فشل الوصول لـ Google Drive API لمسح الصور المنتهية، جاري استكمال تصفية المونجو...", driveErr);
                 }
-            });
+            }
 
-            // 2️⃣ إبادة واقتلاع المنشورات المنتهية كلياً وقسرياً من قلب قاعدة البيانات السحابية
+            // 2️⃣ إبادة واقتلاع المنشورات المنتهية كلياً وقسرياً من قلب قاعدة البيانات السحابية MongoDB Atlas
             await MarketModel.deleteMany({ expiryDate: { $lte: now } });
-            console.log(`🧹 تم فحص ال-Cloud تلقائياً وحذف عدد ${expiredPosts.length} سلعة منتهية الصلاحية.`);
+            console.log(`🧹 [Market Database Cleaned] تم فحص ال-Cloud تلقائياً واقتلاع عدد ${expiredPosts.length} سلعة منتهية الصلاحية.`);
+            
+            // 3️⃣ جلب السلع النشطة المتبقية وضخ الحزمة المحدثة الحية لجميع المتصفحات لإنعاش الفيد تلقائياً دون ريفريش
+            const activePosts = await MarketModel.find({}).sort({ _id: -1 });
+            if (typeof io !== 'undefined') {
+                io.emit('sync_market_posts', activePosts); 
+            }
         }
-
-        // 3️⃣ جلب السلع النشطة المتبقية وضخ الحزمة المحدثة الحية لجميع المتصفحات لإنعاش الفيد
-        const activePosts = await MarketModel.find({}).sort({ _id: -1 });
-        io.emit('sync_market_posts', activePosts); 
-
     } catch (err) {
-        console.error("خطأ في دالة التنظيف الدوري للسوق السحابي:", err);
+        console.error("خطأ في دالة التنظيف الدوري للسوق السحابي اللامركزي:", err);
     }
-}, 60 * 60 * 1000); // تفقد دوري صارم كل 60 دقيقة فلكية
+}, 60 * 60 * 1000); // فحص أمني وتطهيري دوري دقيق يتفجر تلقائياً كل ساعة بالملي ثانيةتفقد دوري صارم كل 60 دقيقة فلكية
 
 // 🔥 مسار رفع وتحديث الصورة الشخصية للمستخدم محلياً
 app.post('/api/user/upload-avatar', upload.single('avatar'), (req, res) => {
