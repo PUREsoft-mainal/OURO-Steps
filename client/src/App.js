@@ -513,6 +513,7 @@ return (
           setShowAdminPanelModal={setShowAdminPanelModal} // 🚀 تمرير دالة التفجير الفوري للوحة الطلبات
           setShowFlashModal={setShowFlashModal} // 👈 تمرير دالة الفلاشة الجديدة هنا
           setShowWalletModal={setShowWalletModal} // 👈 👑 قُم بحقن وتمرير هذا السطر هنا لحسم الاتصال!
+          setShowInvoiceModal={setShowInvoiceModal} // 👈 تأكد من وجود هذا السطر هنا بالملي!
         />
 
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
