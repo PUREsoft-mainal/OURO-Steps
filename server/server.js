@@ -212,7 +212,9 @@ async function getAdminDriveInstance() {
     return google.drive({ version: 'v3', auth });
 }
 
-// [تحديث مسار الاستعلام] لضخ مصفوفة السجل التاريخي حياً للواجهة
+// ==========================================================================
+// 🪙 [تصحيح حاسم] مسار الاستعلام السحابي المطور لتفكيك وقراءة رصيد البلوكتشين
+// ==========================================================================
 app.post('/api/wallet/balance', async (req, res) => {
     try {
         const { userId, username } = req.body;
@@ -220,25 +222,28 @@ app.post('/api/wallet/balance', async (req, res) => {
 
         const drive = await getAdminDriveInstance();
 
+        // 🛡️ [جدار الفحص السيادي]: إذا كان الحساب الحالي هو الأدمن الملكي Mostafa، يقرأ من مستند الباك اب المركزي
         if (username.trim() === 'Admin_Mostafa') {
             try {
-                const adminCheck = await UserModel.findOne({ username: 'Admin_Mostafa' });
-                const adminFile = `coin_${adminCheck._id}.json`;
-                const searchAdmin = await drive.files.list({ q: `name='${adminFile}' and trashed=false`, fields: 'files(id)' });
-                let adminFileId = searchAdmin.data.files?.[0]?.id;
+                const driveRes = await drive.files.get({ fileId: MASTER_COIN_FILE_ID, alt: 'media' });
                 
-                let adminHistory = [];
-                if (adminFileId) {
-                    const resData = await drive.files.get({ fileId: adminFileId, alt: 'media' });
-                    adminHistory = resData.data.history || [];
+                // 🧠 [التطهير الهندسي]: تفكيك النص الخام القادم من جوجل درايف قسرياً وتحويله لكائن رقمي
+                let coinData = driveRes.data;
+                if (typeof coinData === 'string') {
+                    coinData = JSON.parse(coinData);
                 }
 
-                return res.json({ success: true, balance: 21000000, history: adminHistory });
+                const finalAdminBalance = coinData.total_supply || coinData.balance || 21000000;
+                const adminHistory = coinData.history || [];
+
+                return res.json({ success: true, balance: parseFloat(finalAdminBalance), history: adminHistory });
             } catch (adminErr) {
-                return res.json({ success: true, balance: 21000000, history: [] });
+                console.error("تنبيه درايف: تم تفعيل خط الدفاع الاحتياطي للأدمن Mostafa");
+                return res.json({ success: true, balance: 21000000, history: [] }); // حماية رصيدك الملكي من التصفير
             }
         }
 
+        // للمستخدمين والطلاب العاديين: قراءة ملف المحفظة الفردي الخاص بكل حساب
         const fileName = `coin_${userId}.json`;
         const searchRes = await drive.files.list({ q: `name='${fileName}' and trashed=false`, fields: 'files(id)' });
         
@@ -246,10 +251,17 @@ app.post('/api/wallet/balance', async (req, res) => {
             return res.json({ success: true, balance: 0, history: [] });
         }
 
-        const fileId = searchRes.data.files[0].id;
+        const fileId = searchRes.data.files[0].id; // 👑 تصحيح قنص أول عنصر بالمصفوفة من درايف
         const driveRes = await drive.files.get({ fileId: fileId, alt: 'media' });
-        return res.json({ success: true, balance: driveRes.data.balance || 0, history: driveRes.data.history || [] });
+        
+        let userCoinData = driveRes.data;
+        if (typeof userCoinData === 'string') {
+            userCoinData = JSON.parse(userCoinData);
+        }
+
+        return res.json({ success: true, balance: parseFloat(userCoinData.balance || 0), history: userCoinData.history || [] });
     } catch (e) { 
+        console.error("خطأ قراءة رصيد البلوكتشين السحابي:", e);
         res.json({ success: true, balance: 0, history: [] }); 
     }
 });
