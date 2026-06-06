@@ -192,48 +192,50 @@ const storage = multer.diskStorage({
 const upload = multer({ storage }); // تأكيد تفعيل الحزمة هنا مرة واحدة فقط في رأس الملف
 
 // ==========================================================================
-// 👑 🪙 [The Sovereign OURO Smart Contract Core & Mining Engine - Web3 Core]
+// 🪙 [تم التطهير والحسم السيادي] - العقد الذكي ومحرك التعدين الصافي لبلوكتشين OURO
 // ==========================================================================
 const { google } = require('googleapis');
 
-// 🔒 مواصفات وقوانين العقد الذكي الصارمة للعملة الرقمية لعام 2026 م [▲]
+// 🔒 قوانين ومواصفات العقد الذكي الثابتة والمقاومة للتضخم لعام 2026 م
 const OURO_SMART_CONTRACT = {
     name: "OURO Steps Token",
     symbol: "OURO",
-    totalSupply: 21000000.00, // الحد الأقصى الصلب والمقاوم للتضخم [▲]
-    blockchainTaxFee: 0.05,    // ضريبة معالجة الحوالات الثابتة 5% لصالح الأدمن Mostafa [▲]
-    genesisBlockTime: new Date("2026-06-06T00:00:00Z"),
+    totalSupply: 21000000.00, 
+    blockchainTaxFee: 0.05,    // ضريبة معالجة الحوالات الثابتة 5% لصالح الأدمن
     adminWalletUsername: "Admin_Mostafa"
 };
+
+// المعرّف الفريد الصافي للملف المستخرج من رابط جوجل درايف الخاص بك لملفouro_blockchain_backup.json
+const MASTER_COIN_FILE_ID = "1BPFRFaUGm6yrII7yf6vbi49EJLpaBk0B"; 
 
 // دالة تفويض قفل الاتصال بجوجل درايف الخاص بالأدمن لإيداع كتل المحافظ
 async function getAdminDriveInstance() {
     const adminDoc = await UserModel.findOne({ username: OURO_SMART_CONTRACT.adminWalletUsername });
     const adminDriveKey = adminDoc ? (adminDoc.googleFlashDriveApiKey || adminDoc.googleDriveApiKey) : null;
-    if (!adminDriveKey) throw new Error("⚠️ مفتاح ربط درايف الأدمن مفقود، يرجى تفعيله بالفلاشة أولاً!");
+    if (!adminDriveKey) throw new Error("⚠️ مفتاح ربط درايف الأدمن مفقود!");
     
     const auth = new google.auth.GoogleAuth({ credentials: { api_key: adminDriveKey } });
     return google.drive({ version: 'v3', auth });
 }
 
-// ⛏️ [محرك التعدين والأرشفة السحابية الذكية للمحافظ]: قراءة وتوليد الأصول المشفرة
+// ⛏️ [محرك التعدين والأرشفة السحابية الذكية للمحافظ]: توليد وقراءة الأصول المشفرة بالـ ID
 async function loadOrMineUserWallet(drive, userId, username) {
     const fileName = `coin_${userId}.json`;
     try {
         const searchRes = await drive.files.list({ q: `name='${fileName}' and trashed=false`, fields: 'files(id)' });
         
-        // 🚀 آلية التعدين الأولى: لو الحساب المفتوح هو الأدمن Mostafa ولم ينشأ ملفه بعد، يتم تعدين وضخ الـ 21 مليون عملة كاملة داخل كتلته فوراً!
-        if (searchRes.data.files.length === 0) {
+        // آلية التعدين البدئية: لو الحساب المفتوح هو الأدمن Mostafa ولم ينشأ ملفه بعد، يتم ضخ الـ 21 مليون عملة فوراً
+        if (!searchRes.data.files || searchRes.data.files.length === 0) {
             let initialBalance = 0;
             if (username === OURO_SMART_CONTRACT.adminWalletUsername) {
-                initialBalance = OURO_SMART_CONTRACT.totalSupply; // ضخ كامل المعروض السيادي للأدمن [▲]
-                console.log(`⛏️ [Genesis Block Mined] تم تشغيل دالة التعدين الأولى وتوليد الـ 21,000,000 عملة لحساب الأدمن Mostafa!`);
+                initialBalance = OURO_SMART_CONTRACT.totalSupply; 
+                console.log(`⛏️ [Genesis Block Mined] تم تعدين وضخ الـ 21,000,000 عملة لحساب الأدمن Mostafa!`);
             }
 
             const genesisData = { balance: initialBalance, history: [], version: 1 };
             const media = { mimeType: 'application/json', body: JSON.stringify(genesisData) };
             
-            const createRes = await drive.files.create({
+            await drive.files.create({
                 resource: { name: fileName, mimeType: 'application/json' },
                 media: media,
                 fields: 'id'
@@ -249,7 +251,6 @@ async function loadOrMineUserWallet(drive, userId, username) {
         if (typeof walletData === 'string') walletData = JSON.parse(walletData);
         return walletData;
     } catch (err) {
-        // خط دفاع أمني صامت لحماية محفظة الأدمن من التصفير العشوائي عند تذبذب تصاريح جوجل
         if (username === OURO_SMART_CONTRACT.adminWalletUsername) {
             return { balance: OURO_SMART_CONTRACT.totalSupply, history: [] };
         }
@@ -269,17 +270,14 @@ app.post('/api/wallet/balance', async (req, res) => {
         return res.json({ 
             success: true, 
             balance: parseFloat(userWallet.balance || 0), 
-            history: userWallet.history || [],
-            tokenSpec: { symbol: OURO_SMART_CONTRACT.symbol, name: OURO_SMART_CONTRACT.name }
+            history: userWallet.history || []
         });
     } catch (e) {
         console.error("خطأ قراءة أصول العقد الذكي:", e);
-        // حماية رصيدك الملكي قسرياً حتى لو فصلت شبكة جوجل درايف
         const fallbackBal = (req.body.username === OURO_SMART_CONTRACT.adminWalletUsername) ? OURO_SMART_CONTRACT.totalSupply : 0;
         res.json({ success: true, balance: fallbackBal, history: [] });
     }
 });
-
 
 // ==========================================================================
 // 🕋 [صمام الأمان البنكي للكعبة] حقن المسارين تبادلياً لإبادة الـ 404 كلياً فالسحاب
@@ -490,6 +488,9 @@ io.on('connection', (socket) => {
     // ==========================================================================
     // 🪙 [تحديث محرك التحويل] - تنفيذ بروتوكول العقد الذكي اللامركزي وقفل ال-Drive
     // ==========================================================================
+    // ==========================================================================
+    // 🪙 [تم الحسم والتطهير] - مستمع تحويل العملات وتطبيق قوانين العقد الذكي بالـ ID
+    // ==========================================================================
     socket.on('transfer_ouro_coins', async (payload) => {
         try {
             const { senderId, senderName, targetUserId, amount } = payload;
@@ -536,13 +537,13 @@ io.on('connection', (socket) => {
             adminWallet.history.unshift({ txId: 'tax_' + Date.now(), type: 'tax', counterparty: senderName, amount: taxFee, tax: 0, time: transactionTime });
             adminWallet.balance = parseFloat((adminWallet.balance + taxFee).toFixed(2));
 
-            // 6. 🚀 [محرك الأرشفة السحابية المطور]: ضخ وإعادة كتابة ملفات ال-JSON المحدثة في Google Drive
+            // 6. 🚀 [محرك الأرشفة السحابية المطور للمطابقة المباشرة بقنص أول عنصر بالصفيف]:
             const updateFileInDrive = async (fileName, dataObj) => {
                 const search = await drive.files.list({ q: `name='${fileName}' and trashed=false`, fields: 'files(id)' });
                 const media = { mimeType: 'application/json', body: JSON.stringify(dataObj) };
                 
                 if (search.data.files && search.data.files.length > 0) {
-                    const fileId = search.data.files[0].id;
+                    const fileId = search.data.files[0].id; // قنص أول عنصر بالمصفوفة بدقة
                     await drive.files.update({ fileId: fileId, media: media });
                 } else {
                     await drive.files.create({ resource: { name: fileName, mimeType: 'application/json' }, media: media });
