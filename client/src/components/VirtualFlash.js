@@ -66,12 +66,13 @@ const VirtualFlash = ({ user, socket }) => {
       });
     }
 
+    // 🧹 دالة تنظيف مستمعات السوكت عند إغلاق واجهة الفلاشة
     return () => {
         if (socket) socket.off('flash_db_updated');
     };
   }, [user?.username, socket]);
 
-  // دالة التعامل مع رفع الملفات أو المجلدات البرمجية المدمجة والمضغوطة
+  // 📥 دالة التعامل مع رفع الملفات أو المجلدات البرمجية المدمجة والمضغوطة
   const handleFlashUpload = async (e) => {
     const file = e.target.files ? e.target.files[0] : null;
     if (!file) return;
@@ -86,13 +87,14 @@ const VirtualFlash = ({ user, socket }) => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       if (res.data.success) {
-        alert("💾 🎉 تم إيداع وحفظ الملف في فلاشتك الافتراضية بنجاح ولمدة 72 ساعة!");
+        // 👑 [تصحيح الإشعار] تعديل الرسالة لتتوافق بالملي مع التخزين الأزلي الدائم
+        alert("💾 🎉 تم إيداع وتشفير الملف في خزنتك السحابية الدائمة بنجاح وأمان كامل!");
       }
       setUploading(false);
-      e.target.value = ""; // إعادة تهيئة حقل الإدخال
+      e.target.value = ""; // إعادة تهيئة حقل الإدخال بنعومة
     } catch (err) {
       console.error(err);
-      alert("❌ فشل إيداع الملف بالفلاشة، تحقق من السيرفر السحابي.");
+      alert("❌ فشل إيداع الملف بالفلاشة، تحقق من السيرفر السحابي وقاعدة البيانات.");
       setUploading(false);
     }
   };
