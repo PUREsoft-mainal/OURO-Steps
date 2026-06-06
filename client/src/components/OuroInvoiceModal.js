@@ -127,35 +127,51 @@ const OuroInvoiceModal = ({ user, onClose }) => {
           </div>
         </div>
         {/* الجانب الأيسر: العرض التفاعلي الحي المباشر لشكل الفاتورة المذهبة قبل التصدير */}
-        <div style={{ flex: '1.2', minWidth: '340px', background: '#000', padding: '15px', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.3)', boxShadow: '0 0 15px rgba(212,175,55,0.1)' }}>
+        {/* الجانب الأيسر: المعاينة الحية للفاتورة وحقن اللوجو الحر للشركة مع تثبيت اسم منصة OURO بالسقف */}
+        <div style={{ flex: '1.2', minWidth: '350px', background: '#000', padding: '15px', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.3)', boxShadow: '0 0 15px rgba(212,175,55,0.1)' }}>
           <div id="ouroPrintedInvoiceZone" style={{ direction: 'rtl', textalign: 'right', fontFamily: 'sans-serif', padding: '15px', background: '#000', color: '#fff' }}>
             
-            {/* ترويسة الفاتورة المذهبة واللوجو */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid var(--gold-primary)', paddingBottom: '10px', marginBottom: '15px' }}>
-              <div>
-                <h2 style={{ color: 'var(--gold-primary)', margin: '0 0 4px 0', fontSize: '18px', fontWeight: 'bold' }}>منصة OURO Steps </h2>
-                <small style={{ color: 'var(--text-muted)', fontSize: '9px' }}>تاريخ المعاملة: {new Date().toLocaleDateString('ar-EG')}</small>
+            {/* 👑 🏛️ [سقف التوثيق السيادي للمنصة] - تثبيت اسم وشعار منصة OURO Steps أعلى الفاتورة دائماً كضامن رسمي */}
+            <div style={{ textalign: 'center', borderBottom: '1px dashed rgba(212,175,55,0.3)', paddingBottom: '8px', marginBottom: '12px' }}>
+              <h2 style={{ color: 'var(--gold-primary)', margin: 0, fontSize: '14px', fontWeight: 'bold', letterSpacing: '0.5px' }}>🏛️ مستند موثق عبر منصة OURO Steps الملكية 2026 👑</h2>
+            </div>
+
+            {/* ترويسة الفاتورة المرنة وحقن الهوية البصرية اللامركزية والحرّة للشركة المستخدمة */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid var(--gold-primary)', paddingBottom: '10px', marginBottom: '15px' }}>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                {/* رسم اللوجو الحر للشركة المصدرة إن وُجد، أو وضع أيقونة افتراضية فخمة */}
+                {companyLogo ? (
+                  <img src={companyLogo} alt="company-logo" style={{ width: '45px', height: '45px', objectFit: 'contain', borderRadius: '4px', border: '1px solid rgba(212,175,55,0.2)' }} />
+                ) : (
+                  <span style={{ fontSize: '28px' }}>💼</span>
+                )}
+                <div>
+                  {/* اسم الشركة وعنوانها يتغيرون بحرية كاملة حسب إدخال المستخدم */}
+                  <h3 style={{ color: 'var(--gold-primary)', margin: '0 0 2px 0', fontSize: '14px', fontWeight: 'bold' }}>{companyName || "اسم الشركة المصدرة..."}</h3>
+                  <small style={{ color: 'var(--text-muted)', fontSize: '9px', display: 'block' }}>📍 المقر: {companyAddress || "العنوان غير محدد..."}</small>
+                  <small style={{ color: 'rgba(255,255,255,0.3)', fontSize: '8px' }}>تاريخ المعاملة: {new Date().toLocaleDateString('ar-EG')}</small>
+                </div>
               </div>
               <div style={{ textalign: 'left' }}>
-                <h3 style={{ color: '#fff', margin: 0, fontSize: '14px', fontWeight: 'bold' }}>{invoiceType}</h3>
-                <small style={{ color: 'var(--text-muted)', fontSize: '9px' }}>الرقم المرجعي: #{Date.now().toString().slice(-6)}</small>
+                <h3 style={{ color: '#fff', margin: 0, fontSize: '12px', fontWeight: 'bold' }}>{invoiceType}</h3>
+                <small style={{ color: 'var(--text-muted)', fontSize: '8px' }}>الرقم المرجعي: #{Date.now().toString().slice(-6)}</small>
               </div>
             </div>
 
-            {/* بيانات العميل */}
-            <div style={{ marginBottom: '15px', background: 'rgba(255,255,255,0.02)', padding: '8px', borderRadius: '4px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--gold-primary)', display: 'block', fontWeight: 'bold' }}> السيد / شركة:</span>
-              <strong style={{ fontSize: '13px', color: '#fff' }}>{clientName || "................................................"}</strong>
+            {/* بيانات العميل المستهدف */}
+            <div style={{ marginBottom: '12px', background: 'rgba(255,255,255,0.02)', padding: '8px', borderRadius: '4px' }}>
+              <span style={{ fontSize: '10px', color: 'var(--gold-primary)', display: 'block', fontWeight: 'bold' }}>👤 السيد / شركة (العميل المستلم):</span>
+              <strong style={{ fontSize: '12px', color: '#fff' }}>{clientName || "................................................"}</strong>
             </div>
 
-            {/* جدول عرض الأصناف النقي والمنظم للمتصفحات */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', marginBottom: '15px' }}>
+            {/* جدول عرض الأصناف والخدمات المنظم للمتصفحات وطابعات ال-PDF */}
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', marginBottom: '12px' }}>
               <thead>
                 <tr style={{ background: 'rgba(212,175,55,0.15)', color: 'var(--gold-primary)' }}>
                   <th style={{ border: '1px solid rgba(212,175,55,0.3)', padding: '6px', textalign: 'right' }}>الصنف / الخدمة المطلوبة</th>
                   <th style={{ border: '1px solid rgba(212,175,55,0.3)', padding: '6px', textalign: 'center' }}>الكمية</th>
                   <th style={{ border: '1px solid rgba(212,175,55,0.3)', padding: '6px', textalign: 'center' }}>السعر</th>
-                  <th style={{ border: '1px solid rgba(212,175,55,0.3)', padding: '6px', textalign: 'center' }}>العائد</th>
+                  <th style={{ border: '1px solid rgba(212,175,55,0.3)', padding: '6px', textalign: 'center' }}>الإجمالي</th>
                 </tr>
               </thead>
               <tbody>
@@ -170,19 +186,19 @@ const OuroInvoiceModal = ({ user, onClose }) => {
               </tbody>
             </table>
 
-            {/* المجموع والضرائب والخصم والإجمالي النهائي الفخم */}
-            <div style={{ width: '60%', marginRight: 'auto', display: 'flex', flexDirection: 'column', gap: '4px', borderTop: '1px solid rgba(212,175,55,0.2)', paddingTop: '8px', fontSize: '11px' }}>
+            {/* الحسابات التلقائية المذهبة بالأسفل */}
+            <div style={{ width: '65%', marginRight: 'auto', display: 'flex', flexDirection: 'column', gap: '3px', borderTop: '1px solid rgba(212,175,55,0.2)', paddingTop: '6px', fontSize: '11px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>المجموع الفرعي:</span><span>{subTotal.toFixed(2)} جنية</span></div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>الضريبة المضافة ({taxRate}%):</span><span>+{taxAmount.toFixed(2)} جنية</span></div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>قيمة الخصم الممنوح:</span><span style={{ color: '#c0392b' }}>-{parseFloat(discount || 0).toFixed(2)} جنية</span></div>
               <div style={{ display: 'flex', justifyContent: 'space-between', background: 'rgba(39,174,96,0.1)', padding: '6px', borderRadius: '4px', marginTop: '4px', border: '1px solid #27ae60' }}>
                 <strong style={{ color: '#27ae60' }}>الإجمالي الكلي النهائي:</strong>
-                <strong style={{ color: '#27ae60', fontSize: '13px', fontFamily: 'monospace' }}>{finalTotal.toFixed(2)} جنية مصري</strong>
+                <strong style={{ color: '#27ae60', fontSize: '12px', fontFamily: 'monospace' }}>{finalTotal.toFixed(2)} جنية مصري</strong>
               </div>
             </div>
 
-            {/* التذليل والأختام والتوثيقات */}
-            <div style={{ marginTop: '25px', textalign: 'center', borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '10px' }}>
+            {/* التذليل والأختام والتوثيقات الموحدة لـ OURO Steps */}
+            <div style={{ marginTop: '20px', textalign: 'center', borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '8px' }}>
               <small style={{ color: 'var(--gold-primary)', fontSize: '9px', fontFamily: 'monospace', display: 'block' }}>👑 تم توليد وتأمين هذا المستند عبر محرك الفواتير السحابي الموحد لـ OURO Steps 2026 🏛️</small>
             </div>
 
@@ -194,4 +210,4 @@ const OuroInvoiceModal = ({ user, onClose }) => {
   );
 };
 
-export default OuroInvoiceModal; // 👑 التصدير القياسي للمكون بنقاء ثبات فلكي 100%
+export default OuroInvoiceModal; // 👑 القفل القياسي والتصدير النهائي للمكون بنقاء ثبات فلكي 100%
