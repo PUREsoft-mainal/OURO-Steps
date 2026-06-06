@@ -13,7 +13,8 @@ const ActionBar = ({
   setShowCenterModal,
   setShowFlashModal,
   setShowWalletModal, // 👑 [تم الحقن] استقبال دالة فتح المحفظة المنبثقة من المكون الأب App.js
-  setShowAdminPanelModal // 🚀 تم التثبيت الشرعي هنا لمنع خطأ الـ undef
+  setShowAdminPanelModal, // 🚀 تم التثبيت الشرعي هنا لمنع خطأ الـ undef
+  setShowInvoiceModal // 👈 👑 حقن دالة الفواتير الجديدة هنا
 }) => {    
   
   // 👑 دالة ذكية معقمة لتفتيت التنبيهات وإطلاق النوافذ الموجهة فوراً دون تضارب
@@ -140,6 +141,20 @@ const ActionBar = ({
         onClick={() => { if (typeof setShowAdminPanelModal === 'function') setShowAdminPanelModal(true); }}
       >
         👑 الإدارة
+      </button>
+
+                {/* 🧾 الزر الملكي المطور لمحرك الفواتير الرقمية وعروض الأسعار الفورية */}
+      <button 
+        type="button" 
+        className="action-bar-btn"
+        onClick={() => {
+          if (typeof setShowInvoiceModal === 'function') {
+            setShowInvoiceModal(true);
+          }
+        }}
+        style={{ borderColor: '#27ae60' }}
+      >
+        🧾 الفواتير والأسعار
       </button>
 
     </div>
