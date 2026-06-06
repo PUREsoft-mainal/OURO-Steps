@@ -86,7 +86,7 @@ function App() {
       });
     }
     return () => { if (socket) socket.off('ouro_coins_synced'); };
-  }, [isLogged, user]);
+  }, [isLogged, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 👑 [دالة الحذف السحابية المحدثة] إطلاق نبضة الإبادة السيبرانية لكارت المنتج وتطهيره من MongoDB Atlas
   const handleDeletePost = async (postId) => {
