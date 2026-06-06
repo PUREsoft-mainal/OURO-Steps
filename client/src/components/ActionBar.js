@@ -32,7 +32,7 @@ const ActionBar = ({
         className="action-bar-btn gold-glow-btn" 
         onClick={() => handleButtonClick('friends')} 
       >
-        🔍 البحث عن صديق
+       إضافة صديق
       </button>
       
       {/* 👑 طبقة الدائرة النيونية اللامعة حول زر الأصدقاء الحركي دون مساس بجيناته */}
@@ -42,7 +42,7 @@ const ActionBar = ({
           className="action-bar-btn gold-glow-btn" 
           onClick={() => handleButtonClick('my_friends_list')} 
         >
-          🤝 الأصدقاء
+          الأصدقاء
         </button>
         
         {/* 🔴 تنبثق الدائرة الحمراء النيونية النابضة بالحياة تلقائياً إذا كان هناك طلبات واردة معلقة أكبر من صفر */}
@@ -60,7 +60,7 @@ const ActionBar = ({
           }
         }}
       >
-        🕋 مواقيت الصلاة
+        🕋 الصلاة
       </button>
       
       {/* 🛍️ زر المتجر الملكي المستقل لاستدعاء ملف الـ Market المطور */}
@@ -85,7 +85,7 @@ const ActionBar = ({
           }
         }}
       >
-         API
+        API KEY
       </button>
 
       {/* 🪙 الزر الملكي المطور لبلوكتشين ومحفظة العملات الداخلي */}
@@ -99,7 +99,7 @@ const ActionBar = ({
         }}
         style={{ borderColor: 'var(--gold-primary)' }}
       >
-        🪙 المحفظة الرقمية
+        المحفظة
       </button>
 
       {/* 🏛️ [الكمبلة التعليمية المكتسحة] زر إطلاق السنتر والاجتماعات والبث الحي والمذكرات */}
@@ -112,7 +112,7 @@ const ActionBar = ({
           }
         }}
       >
-        🏛️ سنتر/اجتماعات
+        غرفة بث حى
       </button>
 
       {/* 📟 [نقل وتوطين الفلاشة الرقمية الموقوتة] زر إطلاق واستدعاء صندوق الفلاشة العائم بدقة بصرية ممتدة */}
@@ -125,7 +125,7 @@ const ActionBar = ({
           }
         }}
       >
-        📟الفلاشة
+        الفلاشة
       </button>
 
       <button 
@@ -139,7 +139,7 @@ const ActionBar = ({
         }} 
         onClick={() => { if (typeof setShowAdminPanelModal === 'function') setShowAdminPanelModal(true); }}
       >
-        👑 طلبات الإدارة
+        👑 الإدارة
       </button>
 
     </div>
