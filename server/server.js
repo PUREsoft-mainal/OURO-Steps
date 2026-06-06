@@ -1553,8 +1553,6 @@ app.post('/api/user/upload-avatar', upload.single('avatar'), (req, res) => {
 // ==========================================================================
 // 📟 [تحديث مسارات الفلاشة اللامركزية] - الارتباط التام بـ GOOGLE DRIVE API KEY
 // ==========================================================================
-const { google } = require('googleapis'); // استدعاء حزمة قفل بوابات جوجل
-
 // أ) مسار رفع الملفات الحقيقي والموجه مباشرة إلى حساب Google Drive الخاص بالمستخدم
 app.post('/api/flash/upload', upload.single('flashFile'), async (req, res) => {
     try {
