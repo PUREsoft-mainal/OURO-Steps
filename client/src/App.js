@@ -61,6 +61,32 @@ function App() {
   const [showAdminPanelModal, setShowAdminPanelModal] = useState(false);
   const [pendingCenterRequests, setPendingCenterRequests] = useState([]);
   const [pendingApiRequests, setPendingApiRequests] = useState([]);
+  const [ouroBalance, setOuroBalance] = useState(0);
+  const [showWalletModal, setShowWalletModal] = useState(false);
+
+  // دالة المراقبة والاستدعاء المباشر لرصيد المحفظة من سحابة الأدمن
+  const fetchOuroWalletBalance = async () => {
+    if (!isLogged || !user) return;
+    try {
+      const res = await axios.post(`${API_BASE}/api/wallet/balance`, { userId: user._id || user.user_id, username: user.username });
+      if (res.data && typeof res.data.balance !== 'undefined') setOuroBalance(res.data.balance);
+    } catch (e) {}
+  };
+
+  useEffect(() => {
+    fetchOuroWalletBalance();
+    if (socket) {
+      // الاستماع للنبضات الفورية عند إتمام أي حوالة لإعادة شحن الرصيد بلحظتها دون ريفريش
+      socket.on('ouro_coins_synced', (data) => {
+        const myId = user?._id || user?.user_id;
+        if (myId === data.senderId || myId === data.targetUserId || myId === data.adminId) {
+          fetchOuroWalletBalance();
+        }
+      });
+    }
+    return () => { if (socket) socket.off('ouro_coins_synced'); };
+  }, [isLogged, user]);
+
   // 👑 [دالة الحذف السحابية المحدثة] إطلاق نبضة الإبادة السيبرانية لكارت المنتج وتطهيره من MongoDB Atlas
   const handleDeletePost = async (postId) => {
     if (!window.confirm("🗑️ هل أنت متأكد من حذف هذه السلعة وإلغاء منشورها نهائياً من السحاب؟")) return;
@@ -421,16 +447,22 @@ return (
     <div className="app-container" style={{ backgroundImage: "url('/assets/background.png')", backgroundSize: 'cover' }}>
       <div className="app-overlay">
         
-        {/* 👑 [نظام الهيدر الإداري الملكي الموحد] تصفية كاملة من رواسب العملات والحفاظ على نقاء الأبعاد والعدادات الحية */}
+        {/* 👑 [نظام الهيدر وبلوكتشين OURO الموحد] رصد ومراقبة الرصيد حياً بسقف المنصة بنقاء تفاعلي */}
         <Header 
           activeUsers={activeUsers} 
           totalUsers={totalUsers} 
           user={user} 
           renderCoinBadge={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(0,0,0,0.4)', padding: '3px 10px', borderRadius: '4px', border: '1px solid #27ae60' }}>
-              <span style={{ color: '#27ae60', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                🔐 نظام التصاريح الإدارية نشط 🏛️
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.6)', padding: '4px 12px', borderRadius: '4px', border: '1px solid var(--gold-primary)', boxShadow: '0 0 8px rgba(212,175,55,0.2)' }}>
+              <span style={{ color: 'var(--gold-primary)', fontSize: '13px' }}>🪙</span>
+              <span style={{ color: '#fff', fontSize: '11px', fontWeight: 'bold' }}>رصيدك السحابي:</span>
+              <strong style={{ color: '#27ae60', fontSize: '12px', fontFamily: 'monospace' }}>{ouroBalance.toFixed(2)} OURO</strong>
+              <button 
+                onClick={() => setShowWalletModal(true)}
+                style={{ background: 'var(--gold-primary)', color: '#000', border: 'none', borderRadius: '3px', fontSize: '10px', padding: '2px 6px', cursor: 'pointer', fontWeight: 'bold', marginLeft: '5px' }}
+              >
+                ➕ حوالة
+              </button>
             </div>
           }
         />
@@ -510,6 +542,15 @@ return (
             setAllUsers={setAllUsers} // 👈 حقن وتمرير دالة التحديث الصامتة هنا
             loading={loading}         // 👈 حقن حالة التحميل التلقائي هنا
             onClose={() => setShowDiscovery(false)} 
+          />
+        )}
+
+        {showWalletModal && (
+          <OuroWalletModal 
+            user={user}
+            currentBalance={ouroBalance}
+            socket={socket}
+            onClose={() => setShowWalletModal(false)}
           />
         )}
 
