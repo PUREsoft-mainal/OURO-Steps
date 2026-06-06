@@ -17,6 +17,8 @@ import DiscoveryStore from './components/DiscoveryStore';
 import Market from './components/Market'; // استدعاء ملف السوق المستقل الجديد
 import ApiKeyModal from './components/ApiKeyModal';
 import OuroCenterModal from './components/OuroCenterModal';
+import OuroCenterModal from './components/OuroCenterModal';
+import OuroWalletModal from './components/OuroWalletModal'; // 👑 🪙 قُم بحقن هذا السطر السحري هنا فوراً!
 import './App.css';
 
 // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
