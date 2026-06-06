@@ -63,14 +63,17 @@ function App() {
   const [pendingCenterRequests, setPendingCenterRequests] = useState([]);
   const [pendingApiRequests, setPendingApiRequests] = useState([]);
   const [ouroBalance, setOuroBalance] = useState(0);
+  const [ouroHistory, setOuroHistory] = useState([]); // 👑 State جديد لتخزين سجل المعاملات
   const [showWalletModal, setShowWalletModal] = useState(false);
 
-  // دالة المراقبة والاستدعاء المباشر لرصيد المحفظة من سحابة الأدمن
   const fetchOuroWalletBalance = async () => {
     if (!isLogged || !user) return;
     try {
       const res = await axios.post(`${API_BASE}/api/wallet/balance`, { userId: user._id || user.user_id, username: user.username });
-      if (res.data && typeof res.data.balance !== 'undefined') setOuroBalance(res.data.balance);
+      if (res.data) {
+        if (typeof res.data.balance !== 'undefined') setOuroBalance(res.data.balance);
+        if (res.data.history) setOuroHistory(res.data.history); // 🚀 شحن السجل حياً
+      }
     } catch (e) {}
   };
 
@@ -551,6 +554,7 @@ return (
           <OuroWalletModal 
             user={user}
             currentBalance={ouroBalance}
+            transactionHistory={ouroHistory} // 👈 👑 ضخ وحقن مصفوفة سجل المعاملات هنا بالملي!
             socket={socket}
             onClose={() => setShowWalletModal(false)}
           />
