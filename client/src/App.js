@@ -77,18 +77,28 @@ function App() {
     } catch (e) {}
   };
 
+  // 👑 [مستمع الرصد والتحجيم الدوري المباشر لملف العملات بالسحاب]
   useEffect(() => {
-    fetchOuroWalletBalance();
+    fetchOuroWalletBalance(); // الاستدعاء الفوري الأول عند الدخول
+
     if (socket) {
-      // الاستماع للنبضات الفورية عند إتمام أي حوالة لإعادة شحن الرصيد بلحظتها دون ريفريش
       socket.on('ouro_coins_synced', (data) => {
         const myId = user?._id || user?.user_id;
         if (myId === data.senderId || myId === data.targetUserId || myId === data.adminId) {
-          fetchOuroWalletBalance();
+          fetchOuroWalletBalance(); // إنعاش لحظي فور إتمام أي حوالة
         }
       });
     }
-    return () => { if (socket) socket.off('ouro_coins_synced'); };
+
+    // ⏳ [محرك المراقبة الدائمة]: إجبار المتصفح على مراجعة وتحديث الرصيد من سحابة الأدمن تلقائياً كل 30 ثانية رغماً عن الكاش
+    const walletInterval = setInterval(() => {
+      fetchOuroWalletBalance();
+    }, 30 * 1000); // 30 ثانية بدقة فلكية
+
+    return () => { 
+      if (socket) socket.off('ouro_coins_synced'); 
+      clearInterval(walletInterval); // إبادة التوقيت عند الخروج لحماية المعالج
+    };
   }, [isLogged, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 👑 [دالة الحذف السحابية المحدثة] إطلاق نبضة الإبادة السيبرانية لكارت المنتج وتطهيره من MongoDB Atlas
