@@ -94,7 +94,7 @@ const OuroInvoiceModal = ({ user, onClose }) => {
               <option value="عرض سعر فوري">📊 عرض سعر فوري</option>
               <option value="سند قبض مالي">💰 سند قبض مالي</option>
             </select>
-            <input type="text" placeholder="👤 اسم العميل / الشركة..." value={clientName} onChange={e => setClientName(e.target.value)} style={{ flex: 1, padding: '8px', background: '#000', color: '#fff', border: '1px solid var(--border-glass)', borderRadius: '4px', fontSize: '12px' }} />
+            <input type="text" placeholder=" اسم العميل / الشركة..." value={clientName} onChange={e => setClientName(e.target.value)} style={{ flex: 1, padding: '8px', background: '#000', color: '#fff', border: '1px solid var(--border-glass)', borderRadius: '4px', fontSize: '12px' }} />
           </div>
 
           <div style={{ background: '#000', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.02)' }}>
@@ -133,7 +133,7 @@ const OuroInvoiceModal = ({ user, onClose }) => {
             {/* ترويسة الفاتورة المذهبة واللوجو */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid var(--gold-primary)', paddingBottom: '10px', marginBottom: '15px' }}>
               <div>
-                <h2 style={{ color: 'var(--gold-primary)', margin: '0 0 4px 0', fontSize: '18px', fontWeight: 'bold' }}>منصة OURO Core Steps 🏛️</h2>
+                <h2 style={{ color: 'var(--gold-primary)', margin: '0 0 4px 0', fontSize: '18px', fontWeight: 'bold' }}>منصة OURO Steps </h2>
                 <small style={{ color: 'var(--text-muted)', fontSize: '9px' }}>تاريخ المعاملة: {new Date().toLocaleDateString('ar-EG')}</small>
               </div>
               <div style={{ textalign: 'left' }}>
@@ -144,7 +144,7 @@ const OuroInvoiceModal = ({ user, onClose }) => {
 
             {/* بيانات العميل */}
             <div style={{ marginBottom: '15px', background: 'rgba(255,255,255,0.02)', padding: '8px', borderRadius: '4px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--gold-primary)', display: 'block', fontWeight: 'bold' }}>👤 السيد / شركة:</span>
+              <span style={{ fontSize: '11px', color: 'var(--gold-primary)', display: 'block', fontWeight: 'bold' }}> السيد / شركة:</span>
               <strong style={{ fontSize: '13px', color: '#fff' }}>{clientName || "................................................"}</strong>
             </div>
 
