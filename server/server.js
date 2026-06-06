@@ -230,92 +230,6 @@ app.post('/api/wallet/balance', async (req, res) => {
     } catch (e) { res.json({ success: true, balance: 0 }); }
 });
 
-// ب) مستمع قنوات السوكت الحية لعمليات تحويل الأموال والخصم وضريبة الـ 5% لصالح الأدمن
-// احقن هذا الحدث بداخل جسد الـ io.on('connection', (socket) => { ... }) الموحد لديك:
-socket.on('transfer_ouro_coins', async (payload) => {
-    try {
-        const { senderId, senderName, targetUserId, amount } = payload;
-        const transferAmount = parseFloat(amount);
-        if (!senderId || !targetUserId || transferAmount <= 0 || isNaN(transferAmount)) return;
-
-        const drive = await getAdminDriveInstance();
-        const adminDoc = await UserModel.findOne({ username: 'Admin_Mostafa' });
-        const adminId = adminDoc._id.toString();
-
-        // 1. حساب الضريبة الموازية للبلوكتشين 5% المستقطعة لصالح محفظة الأدمن
-        const taxFee = transferAmount * 0.05;
-        const totalDeduction = transferAmount + taxFee;
-
-        // 2. جلب وتحديث محفظة المرسل
-        let senderBalance = 0;
-        const senderFile = `coin_${senderId}.json`;
-        const searchSender = await drive.files.list({ q: `name='${senderFile}' and trashed=false`, fields: 'files(id)' });
-        let senderFileId = searchSender.data.files[0]?.id;
-        
-        if (senderFileId) {
-            const resData = await drive.files.get({ fileId: senderFileId, alt: 'media' });
-            senderBalance = resData.data.balance || 0;
-        }
-
-        if (senderBalance < totalDeduction) {
-            return socket.emit('error_msg', '🛑 رصيدك الحالي غير كافٍ لإتمام عملية التحويل ودفع ضريبة الـ 5% للبلوكتشين!');
-        }
-
-        // 3. جلب وتحديث محفظة المستقبل
-        let targetBalance = 0;
-        const targetFile = `coin_${targetUserId}.json`;
-        const searchTarget = await drive.files.list({ q: `name='${targetFile}' and trashed=false`, fields: 'files(id)' });
-        let targetFileId = searchTarget.data.files[0]?.id;
-
-        if (targetFileId) {
-            const resData = await drive.files.get({ fileId: targetFileId, alt: 'media' });
-            targetBalance = resData.data.balance || 0;
-        }
-
-        // 4. خصم وإيداع المبالغ سحابياً
-        const newSenderBal = senderBalance - totalDeduction;
-        const newTargetBal = targetBalance + transferAmount;
-
-        // تحديث ملف المرسل في درايف الأدمن
-        const senderMedia = { mimeType: 'application/json', body: JSON.stringify({ balance: newSenderBal }) };
-        if (senderFileId) {
-            await drive.files.update({ fileId: senderFileId, media: senderMedia });
-        } else {
-            await drive.files.create({ resource: { name: senderFile, mimeType: 'application/json' }, media: senderMedia });
-        }
-
-        // تحديث ملف المستقبل في درايف الأدمن
-        const targetMedia = { mimeType: 'application/json', body: JSON.stringify({ balance: newTargetBal }) };
-        if (targetFileId) {
-            await drive.files.update({ fileId: targetFileId, media: targetMedia });
-        } else {
-            await drive.files.create({ resource: { name: targetFile, mimeType: 'application/json' }, media: targetMedia });
-        }
-
-        // 5. إيداع ضريبة الـ 5% في محفظة الأدمن الفورية `coin_(adminId).json`
-        let adminBalance = 0;
-        const adminFile = `coin_${adminId}.json`;
-        const searchAdmin = await drive.files.list({ q: `name='${adminFile}' and trashed=false`, fields: 'files(id)' });
-        let adminFileId = searchAdmin.data.files[0]?.id;
-
-        if (adminFileId) {
-            const resData = await drive.files.get({ fileId: adminFileId, alt: 'media' });
-            adminBalance = resData.data.balance || 0;
-        }
-        const newAdminBal = adminBalance + taxFee;
-        const adminMedia = { mimeType: 'application/json', body: JSON.stringify({ balance: newAdminBal }) };
-        if (adminFileId) {
-            await drive.files.update({ fileId: adminFileId, media: adminMedia });
-        } else {
-            await drive.files.create({ resource: { name: adminFile, mimeType: 'application/json' }, media: adminMedia });
-        }
-
-        // بث إشعارات إنعاش المحافظ لحظياً لكافة المتصفحات دون وميض
-        io.emit('ouro_coins_synced', { senderId, targetUserId, adminId });
-        socket.emit('error_msg', `✅ تم تحويل ${transferAmount} OURO بنجاح! خصم ضريبة ${taxFee} لصالح الإدارة.`);
-    } catch (err) { console.error(err); }
-});
-
 // ==========================================================================
 // 🕋 [صمام الأمان البنكي للكعبة] حقن المسارين تبادلياً لإبادة الـ 404 كلياً فالسحاب
 // ==========================================================================
@@ -520,6 +434,93 @@ io.on('connection', (socket) => {
     // المزامنة الفورية للإحصائيات الحية بجلب إجمالي الأعضاء المسجلين من السحاب
     UserModel.countDocuments().then(total => {
         io.emit('update_stats', { totalUsers: total, activeUsers });
+    });
+
+        // ==========================================================================
+    // 🪙 [تم دمج قفل الحسم اللامركزي للمحفظة داخل جسد الـ connection الرئيسي]
+    // ==========================================================================
+    socket.on('transfer_ouro_coins', async (payload) => {
+        try {
+            const { senderId, senderName, targetUserId, amount } = payload;
+            const transferAmount = parseFloat(amount);
+            if (!senderId || !targetUserId || transferAmount <= 0 || isNaN(transferAmount)) return;
+
+            const drive = await getAdminDriveInstance();
+            const adminDoc = await UserModel.findOne({ username: 'Admin_Mostafa' });
+            const adminId = adminDoc._id.toString();
+
+            // 1. حساب الضريبة الموازية للبلوكتشين 5% المستقطعة لصالح محفظة الأدمن
+            const taxFee = transferAmount * 0.05;
+            const totalDeduction = transferAmount + taxFee;
+
+            // 2. جلب وتحديث محفظة المرسل
+            let senderBalance = 0;
+            const senderFile = `coin_${senderId}.json`;
+            const searchSender = await drive.files.list({ q: `name='${senderFile}' and trashed=false`, fields: 'files(id)' });
+            let senderFileId = searchSender.data.files?.[0]?.id; // 👑 [تصحيح مجهري لقراءة المصفوفة]
+            
+            if (senderFileId) {
+                const resData = await drive.files.get({ fileId: senderFileId, alt: 'media' });
+                senderBalance = resData.data.balance || 0;
+            }
+
+            if (senderBalance < totalDeduction) {
+                return socket.emit('error_msg', '🛑 رصيدك الحالي غير كافٍ لإتمام عملية التحويل ودفع ضريبة الـ 5% للبلوكتشين!');
+            }
+
+            // 3. جلب وتحديث محفظة المستقبل
+            let targetBalance = 0;
+            const targetFile = `coin_${targetUserId}.json`;
+            const searchTarget = await drive.files.list({ q: `name='${targetFile}' and trashed=false`, fields: 'files(id)' });
+            let targetFileId = searchTarget.data.files?.[0]?.id;
+
+            if (targetFileId) {
+                const resData = await drive.files.get({ fileId: targetFileId, alt: 'media' });
+                targetBalance = resData.data.balance || 0;
+            }
+
+            // 4. خصم وإيداع المبالغ سحابياً
+            const newSenderBal = senderBalance - totalDeduction;
+            const newTargetBal = targetBalance + transferAmount;
+
+            // تحديث ملف المرسل في درايف الأدمن
+            const senderMedia = { mimeType: 'application/json', body: JSON.stringify({ balance: newSenderBal }) };
+            if (senderFileId) {
+                await drive.files.update({ fileId: senderFileId, media: senderMedia });
+            } else {
+                await drive.files.create({ resource: { name: senderFile, mimeType: 'application/json' }, media: senderMedia });
+            }
+
+            // تحديث ملف المستقبل في درايف الأدمن
+            const targetMedia = { mimeType: 'application/json', body: JSON.stringify({ balance: newTargetBal }) };
+            if (targetFileId) {
+                await drive.files.update({ fileId: targetFileId, media: targetMedia });
+            } else {
+                await drive.files.create({ resource: { name: targetFile, mimeType: 'application/json' }, media: targetMedia });
+            }
+
+            // 5. إيداع ضريبة الـ 5% في محفظة الأدمن الفورية
+            let adminBalance = 0;
+            const adminFile = `coin_${adminId}.json`;
+            const searchAdmin = await drive.files.list({ q: `name='${adminFile}' and trashed=false`, fields: 'files(id)' });
+            let adminFileId = searchAdmin.data.files?.[0]?.id;
+
+            if (adminFileId) {
+                const resData = await drive.files.get({ fileId: adminFileId, alt: 'media' });
+                adminBalance = resData.data.balance || 0;
+            }
+            const newAdminBal = adminBalance + taxFee;
+            const adminMedia = { mimeType: 'application/json', body: JSON.stringify({ balance: newAdminBal }) };
+            if (adminFileId) {
+                await drive.files.update({ fileId: adminFileId, media: adminMedia });
+            } else {
+                await drive.files.create({ resource: { name: adminFile, mimeType: 'application/json' }, media: adminMedia });
+            }
+
+            // بث إشعارات إنعاش المحافظ لحظياً لكافة المتصفحات دون وميض
+            io.emit('ouro_coins_synced', { senderId, targetUserId, adminId });
+            socket.emit('error_msg', `✅ تم تحويل ${transferAmount} OURO بنجاح! خصم ضريبة ${taxFee} لصالح الإدارة.`);
+        } catch (err) { console.error("خطأ تحويل البلوكتشين:", err); }
     });
 
     // ==========================================================================
