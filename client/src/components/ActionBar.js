@@ -12,6 +12,7 @@ const ActionBar = ({
   setShowApiKeyModal,
   setShowCenterModal,
   setShowFlashModal,
+  setShowWalletModal, // 👑 [تم الحقن] استقبال دالة فتح المحفظة المنبثقة من المكون الأب App.js
   setShowAdminPanelModal // 🚀 تم التثبيت الشرعي هنا لمنع خطأ الـ undef
 }) => {    
   
@@ -85,6 +86,20 @@ const ActionBar = ({
         }}
       >
          API
+      </button>
+
+      {/* 🪙 الزر الملكي المطور لبلوكتشين ومحفظة العملات الداخلي */}
+      <button 
+        type="button" 
+        className="action-bar-btn gold-glow-btn"
+        onClick={() => {
+          if (typeof setShowWalletModal === 'function') {
+            setShowWalletModal(true);
+          }
+        }}
+        style={{ borderColor: 'var(--gold-primary)' }}
+      >
+        🪙 المحفظة الرقمية
       </button>
 
       {/* 🏛️ [الكمبلة التعليمية المكتسحة] زر إطلاق السنتر والاجتماعات والبث الحي والمذكرات */}
