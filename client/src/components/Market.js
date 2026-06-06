@@ -1,17 +1,22 @@
 import React, { useState } from 'react';
 import '../App.css';
 
-// 📸 كبسولة الـ Slider التفاعلية لتقليب وعرض صور البضاعة المتعددة بنقاء 100%
+// 📸 كبسولة الـ Slider المحدثة لتقليب وعرض صور البضاعة المستوردة من درايف الأدمن Mostafa
 const ProductImageSlider = ({ images, apiBase }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const total = images?.length || 0;
 
   if (total === 0) return <div className="fb-img-wrapper"><img src="/assets/logo.png" alt="Ouro" className="fb-product-img" /></div>;
 
+  // 👑 [صياغة الرابط السيادي المحمي للتحميل والعرض الحركي طيراناً من حساب الأدمن]
+  const driveImgUrl = images[currentIndex].startsWith('/uploads') 
+    ? `${apiBase}${images[currentIndex]}` 
+    : `${apiBase}/api/flash/download/Admin_Mostafa/${images[currentIndex]}`; // سحب الصورة حياً من درايف الأدمن عبر جسر السيرفر
+
   return (
     <div className="ouro-slider-container" style={{ position: 'relative', width: '100%', overflow: 'hidden', borderRadius: '8px', background: '#070707', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '10px' }}>
-      <div className="fb-img-wrapper" style={{ cursor: 'pointer', textAlign: 'center', position: 'relative', minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => window.open(`${apiBase}${images[currentIndex]}`, '_blank')}>
-        <img src={`${apiBase}${images[currentIndex]}`} alt="product" className="fb-product-img" style={{ maxWidth: '100%', maxHeight: '350px', objectFit: 'contain' }} />
+      <div className="fb-img-wrapper" style={{ cursor: 'pointer', textAlign: 'center', position: 'relative', minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => window.open(driveImgUrl, '_blank')}>
+        <img src={driveImgUrl} alt="product" className="fb-product-img" style={{ maxWidth: '100%', maxHeight: '350px', objectFit: 'contain' }} />
       </div>
       {total > 1 && (
         <>
@@ -24,7 +29,7 @@ const ProductImageSlider = ({ images, apiBase }) => {
               ))}
             </div>
             <small style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: 'bold' }}>
-              📸 الصورة {currentIndex + 1} من {total} {currentIndex === 0 && '• (البداية 🏁)'} {currentIndex === total - 1 && '• (النهاية 🔄)'}
+              📸 الصورة {currentIndex + 1} من {total}
             </small>
           </div>
         </>
