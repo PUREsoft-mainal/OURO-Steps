@@ -207,27 +207,46 @@ async function getAdminDriveInstance() {
     return google.drive({ version: 'v3', auth });
 }
 
-// أ) مسار إحضار رصيد العملات الحالي للمستخدم من ملفه السحابي لربطه مع سقف المنصة
+// [تحديث مسار الاستعلام] لضخ مصفوفة السجل التاريخي حياً للواجهة
 app.post('/api/wallet/balance', async (req, res) => {
     try {
         const { userId, username } = req.body;
-        if (!userId) return res.json({ success: true, balance: 0 });
+        if (!userId || !username) return res.json({ success: true, balance: 0, history: [] });
 
         const drive = await getAdminDriveInstance();
+
+        if (username.trim() === 'Admin_Mostafa') {
+            try {
+                const adminCheck = await UserModel.findOne({ username: 'Admin_Mostafa' });
+                const adminFile = `coin_${adminCheck._id}.json`;
+                const searchAdmin = await drive.files.list({ q: `name='${adminFile}' and trashed=false`, fields: 'files(id)' });
+                let adminFileId = searchAdmin.data.files?.[0]?.id;
+                
+                let adminHistory = [];
+                if (adminFileId) {
+                    const resData = await drive.files.get({ fileId: adminFileId, alt: 'media' });
+                    adminHistory = resData.data.history || [];
+                }
+
+                return res.json({ success: true, balance: 21000000, history: adminHistory });
+            } catch (adminErr) {
+                return res.json({ success: true, balance: 21000000, history: [] });
+            }
+        }
+
         const fileName = `coin_${userId}.json`;
-        
-        // البحث عن ملف محفظة المستخدم على درايف الأدمن
         const searchRes = await drive.files.list({ q: `name='${fileName}' and trashed=false`, fields: 'files(id)' });
         
         if (searchRes.data.files.length === 0) {
-            // أول عملية أو إقلاع: تصفير وتوليد المحفظة السحابية تلقائياً
-            return res.json({ success: true, balance: 0 });
+            return res.json({ success: true, balance: 0, history: [] });
         }
 
         const fileId = searchRes.data.files[0].id;
         const driveRes = await drive.files.get({ fileId: fileId, alt: 'media' });
-        return res.json({ success: true, balance: driveRes.data.balance || 0 });
-    } catch (e) { res.json({ success: true, balance: 0 }); }
+        return res.json({ success: true, balance: driveRes.data.balance || 0, history: driveRes.data.history || [] });
+    } catch (e) { 
+        res.json({ success: true, balance: 0, history: [] }); 
+    }
 });
 
 // ==========================================================================
@@ -436,8 +455,8 @@ io.on('connection', (socket) => {
         io.emit('update_stats', { totalUsers: total, activeUsers });
     });
 
-        // ==========================================================================
-    // 🪙 [تم دمج قفل الحسم اللامركزي للمحفظة داخل جسد الـ connection الرئيسي]
+    // ==========================================================================
+    // 🪙 [تحديث محرك التحويل] - ضخ وأرشفة سجل المعاملات الحية بداخل محافظ ال-Drive
     // ==========================================================================
     socket.on('transfer_ouro_coins', async (payload) => {
         try {
@@ -449,19 +468,21 @@ io.on('connection', (socket) => {
             const adminDoc = await UserModel.findOne({ username: 'Admin_Mostafa' });
             const adminId = adminDoc._id.toString();
 
-            // 1. حساب الضريبة الموازية للبلوكتشين 5% المستقطعة لصالح محفظة الأدمن
+            // 1. حساب الضريبة الموازية للبلوكتشين 5% لصالح محفظة الأدمن
             const taxFee = transferAmount * 0.05;
             const totalDeduction = transferAmount + taxFee;
 
             // 2. جلب وتحديث محفظة المرسل
             let senderBalance = 0;
+            let senderHistory = [];
             const senderFile = `coin_${senderId}.json`;
             const searchSender = await drive.files.list({ q: `name='${senderFile}' and trashed=false`, fields: 'files(id)' });
-            let senderFileId = searchSender.data.files?.[0]?.id; // 👑 [تصحيح مجهري لقراءة المصفوفة]
+            let senderFileId = searchSender.data.files?.[0]?.id;
             
             if (senderFileId) {
                 const resData = await drive.files.get({ fileId: senderFileId, alt: 'media' });
                 senderBalance = resData.data.balance || 0;
+                senderHistory = resData.data.history || [];
             }
 
             if (senderBalance < totalDeduction) {
@@ -470,6 +491,7 @@ io.on('connection', (socket) => {
 
             // 3. جلب وتحديث محفظة المستقبل
             let targetBalance = 0;
+            let targetHistory = [];
             const targetFile = `coin_${targetUserId}.json`;
             const searchTarget = await drive.files.list({ q: `name='${targetFile}' and trashed=false`, fields: 'files(id)' });
             let targetFileId = searchTarget.data.files?.[0]?.id;
@@ -477,30 +499,58 @@ io.on('connection', (socket) => {
             if (targetFileId) {
                 const resData = await drive.files.get({ fileId: targetFileId, alt: 'media' });
                 targetBalance = resData.data.balance || 0;
+                targetHistory = resData.data.history || [];
             }
 
-            // 4. خصم وإيداع المبالغ سحابياً
+            // 🚀 قنص حساب المستقبل سحابياً لقراءة اسمه الحقيقي وعرضه في قائمة المعاملات
+            const targetUserDoc = await UserModel.findById(targetUserId).catch(() => null);
+            const targetName = targetUserDoc ? targetUserDoc.username : "مستقبل مجهول";
+
+            const transactionTime = new Date().toLocaleDateString('ar-EG') + ' ' + new Date().toLocaleTimeString('ar-EG');
+            const txId = 'tx_' + Date.now();
+
+            // 4. صياغة وأرشفة الحوالة داخل مصفوفة سجل المرسل (صادرة)
+            senderHistory.unshift({
+                txId,
+                type: 'out',
+                counterparty: targetName,
+                amount: transferAmount,
+                tax: taxFee,
+                time: transactionTime
+            });
+
+            // 5. صياغة وأرشفة الحوالة داخل مصفوفة سجل المستقبل (واردة)
+            targetHistory.unshift({
+                txId,
+                type: 'in',
+                counterparty: senderName,
+                amount: transferAmount,
+                tax: 0,
+                time: transactionTime
+            });
+
             const newSenderBal = senderBalance - totalDeduction;
             const newTargetBal = targetBalance + transferAmount;
 
-            // تحديث ملف المرسل في درايف الأدمن
-            const senderMedia = { mimeType: 'application/json', body: JSON.stringify({ balance: newSenderBal }) };
+            // تحديث قفل ملف المرسل في درايف الأدمن
+            const senderMedia = { mimeType: 'application/json', body: JSON.stringify({ balance: newSenderBal, history: senderHistory }) };
             if (senderFileId) {
                 await drive.files.update({ fileId: senderFileId, media: senderMedia });
             } else {
                 await drive.files.create({ resource: { name: senderFile, mimeType: 'application/json' }, media: senderMedia });
             }
 
-            // تحديث ملف المستقبل في درايف الأدمن
-            const targetMedia = { mimeType: 'application/json', body: JSON.stringify({ balance: newTargetBal }) };
+            // تحديث قفل ملف المستقبل في درايف الأدمن
+            const targetMedia = { mimeType: 'application/json', body: JSON.stringify({ balance: newTargetBal, history: targetHistory }) };
             if (targetFileId) {
                 await drive.files.update({ fileId: targetFileId, media: targetMedia });
             } else {
                 await drive.files.create({ resource: { name: targetFile, mimeType: 'application/json' }, media: targetMedia });
             }
 
-            // 5. إيداع ضريبة الـ 5% في محفظة الأدمن الفورية
+            // 6. إيداع ضريبة الـ 5% في محفظة الأدمن الفورية
             let adminBalance = 0;
+            let adminHistory = [];
             const adminFile = `coin_${adminId}.json`;
             const searchAdmin = await drive.files.list({ q: `name='${adminFile}' and trashed=false`, fields: 'files(id)' });
             let adminFileId = searchAdmin.data.files?.[0]?.id;
@@ -508,20 +558,32 @@ io.on('connection', (socket) => {
             if (adminFileId) {
                 const resData = await drive.files.get({ fileId: adminFileId, alt: 'media' });
                 adminBalance = resData.data.balance || 0;
+                adminHistory = resData.data.history || [];
             }
+            
+            adminHistory.unshift({
+                txId: 'tax_' + Date.now(),
+                type: 'tax',
+                counterparty: senderName,
+                amount: taxFee,
+                tax: 0,
+                time: transactionTime
+            });
+
             const newAdminBal = adminBalance + taxFee;
-            const adminMedia = { mimeType: 'application/json', body: JSON.stringify({ balance: newAdminBal }) };
+            const adminMedia = { mimeType: 'application/json', body: JSON.stringify({ balance: newAdminBal, history: adminHistory }) };
             if (adminFileId) {
                 await drive.files.update({ fileId: adminFileId, media: adminMedia });
             } else {
                 await drive.files.create({ resource: { name: adminFile, mimeType: 'application/json' }, media: adminMedia });
             }
 
-            // بث إشعارات إنعاش المحافظ لحظياً لكافة المتصفحات دون وميض
+            // بث إشعارات إنعاش المحافظ والسجلات لحظياً لكافة الأجهزة
             io.emit('ouro_coins_synced', { senderId, targetUserId, adminId });
             socket.emit('error_msg', `✅ تم تحويل ${transferAmount} OURO بنجاح! خصم ضريبة ${taxFee} لصالح الإدارة.`);
-        } catch (err) { console.error("خطأ تحويل البلوكتشين:", err); }
+        } catch (err) { console.error("خطأ معالجة أرشفة البلوكتشين:", err); }
     });
+
 
     // ==========================================================================
     // 🏛️ [تحديث مستمعي السنتر والـ API المطورين] - احقنهم أسفل بلوك join_group_room مباشرة:
