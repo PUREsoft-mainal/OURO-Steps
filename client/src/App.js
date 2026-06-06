@@ -18,6 +18,7 @@ import Market from './components/Market'; // استدعاء ملف السوق ا
 import ApiKeyModal from './components/ApiKeyModal';
 import OuroCenterModal from './components/OuroCenterModal';
 import OuroWalletModal from './components/OuroWalletModal'; // 👑 🪙 قُم بحقن هذا السطر السحري هنا فوراً!
+import OuroInvoiceModal from './components/OuroInvoiceModal'; // 👑 قُم بحقن هذا السطر السحري هنا فوراً!
 import './App.css';
 
 // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
@@ -65,6 +66,7 @@ function App() {
   const [ouroBalance, setOuroBalance] = useState(0);
   const [ouroHistory, setOuroHistory] = useState([]); // 👑 State جديد لتخزين سجل المعاملات
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false); // كبسولة الفواتير وعروض الأسعار
 
   const fetchOuroWalletBalance = async () => {
     if (!isLogged || !user) return;
@@ -586,6 +588,13 @@ return (
             socket={socket}
             API_BASE={API_BASE}
             onClose={() => setShowCenterModal(false)}
+          />
+        )}
+
+        {showInvoiceModal && (
+          <OuroInvoiceModal 
+            user={user}
+            onClose={() => setShowInvoiceModal(false)}
           />
         )}
 
