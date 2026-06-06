@@ -194,14 +194,19 @@ const upload = multer({ storage }); // تأكيد تفعيل الحزمة هنا
 // ==========================================================================
 // 🪙 [محرك البلوكتشين الداخلي اللامركزي - OURO Core Currency]
 // ==========================================================================
+// ==========================================================================
+// 🪙 [محرك البلوكتشين الداخلي اللامركزي - OURO Core Currency]
+// ==========================================================================
 const { google } = require('googleapis');
-const MASTER_COIN_FILE = 'ouro_blockchain_backup.json';
+
+// 👑 [تم الحسم] حقن المعرّف الفريد الصافي للملف المستخرج من رابط جوجل درايف الخاص بك
+const MASTER_COIN_FILE_ID = "1BPFRFaUGm6yrII7yf6vbi49EJLpaBk0B"; 
 
 // دالة تفويض الاتصال بدرايف الأدمن لعمليات القراءة والكتابة للعملة
 async function getAdminDriveInstance() {
     const adminDoc = await UserModel.findOne({ username: 'Admin_Mostafa' });
     const adminDriveKey = adminDoc ? (adminDoc.googleFlashDriveApiKey || adminDoc.googleDriveApiKey) : null;
-    if (!adminDriveKey) throw new Error("مفتاح درايف الأدمن مفقود");
+    if (!adminDriveKey) throw new Error("⚠️ مفتاح درايف الأدمن مفقود، يرجى ربطه بالفلاشة أو السنتر أولاً!");
     
     const auth = new google.auth.GoogleAuth({ credentials: { api_key: adminDriveKey } });
     return google.drive({ version: 'v3', auth });
