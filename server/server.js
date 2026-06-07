@@ -565,28 +565,28 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 📑 ب) مسار الأدمن Mostafa للموافقة وتفعيل صلاحية الـ 365 يوماً السنوية فالسحاب بالـ ID
-    // احقن هذا المستمع بداخل حدث موافقات الأدمن الموحد في السيرفر:
+    // 📑 ب) [مستمع قبول الشركات] - تفويض ترخيص المصنع السنوي 365 يوماً بالـ ID
     socket.on('admin_approve_company_system', async (data) => {
         try {
-            if (!data || !data.requestId) return;
-        
-            const expiryDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 🔒 تفعيل سنة كاملة (365 يوماً بالملي)
+            if (!data || !data.applicantName) return;
+            
+            // حساب وتوليد تاريخ انتهاء الصلاحية فلكياً بعد سنة كاملة (365 يوماً)
+            const expiryDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); 
 
-            // تحديث صلاحيات المصنع وحفظ حقل تاريخ انتهاء الصلاحية بـ MongoDB Atlas
+            // تحديث الصلاحيات فوراً في قاعدة البيانات السحابية MongoDB Atlas للمستخدم
             await UserModel.updateOne(
-                { username: data.applicantName }, 
+                { username: data.applicantName.trim() }, 
                 { $set: { canAccessCompanySystem: true, companySystemExpiry: expiryDate } }
             );
 
-            // ضخ قائمة التحديث الحي لإنعاش شاشات المتصفحات فوراً
+            // بث إشارة الفتح والإنعاش الفوري للواجهة الأمامية للمستخدم المستهدف
             io.emit('company_system_granted', { 
-                username: data.applicantName, 
+                username: data.applicantName.trim(), 
                 expiryDate: expiryDate 
             });
-        
-            console.log(`✔️ [Company OS Activated] تم منح ترخيص المصنع السنوي للعضو: ${data.applicantName}`);
-        } catch (e) { console.error(e); }
+            
+            console.log(`✔️ [Company OS Activated] تم منح ترخيص سنوي للعضو: ${data.applicantName}`);
+        } catch (e) { console.error("خطأ تفعيل ترخيص الشركات السنوي:", e); }
     });
 
 
@@ -1622,13 +1622,15 @@ app.post('/api/user/upload-avatar', upload.single('avatar'), (req, res) => {
 // 🏛️ [محرك تراخيص نظام الشركات والمصانع السنوي الموقوت]
 // ==========================================================================
 
-// 📑 أ) مسار إرسال طلب اشتراك المصنع السنوي من العميل للأدمن Mostafa
+// ==========================================================================
+// 🏛️ 📑 أ) [تم الحسم والتطهير كلياً] - مسار إرسال طلب اشتراك المصنع السنوي النقي
+// ==========================================================================
 app.post('/api/company/request-access', async (req, res) => {
     try {
         const { username } = req.body;
-        if (!username) return res.status(400).json({ success: false });
+        if (!username) return res.status(400).json({ success: false, message: "⚠️ بيانات العضو ناقصة" });
 
-        // تدوين وثيقة الطلب وإرسال نبضة سوكت حية لشاشة الأدمن Mostafa المعلقة
+        // تدوين وثيقة طلب الترخيص السنوي المستقل لـ 365 يوماً كاملة
         const newRequest = {
             requestId: 'comp_' + Date.now(),
             applicant: username.trim(),
@@ -1637,14 +1639,18 @@ app.post('/api/company/request-access', async (req, res) => {
             time: new Date().toLocaleDateString('ar-EG')
         };
 
-        // بث الطلب حياً لسيادتك في لوحة الموافقات الإدارية الملكية
+        // 🚀 [كسر التداخل الأزلي]: بث وإرسال نبضة الحوالة عبر قناة سيادية ومستقلة تماماً للأدمن مصطفى
         if (typeof io !== 'undefined') {
-            io.emit('admin_receive_teacher_request', newRequest); 
+            io.emit('admin_receive_company_request', newRequest); 
         }
 
         res.json({ success: true, message: "🚀 طيران سحابي: تم إرسال طلب تفعيل نظام الشركات للأدمن Mostafa بنجاح!" });
-    } catch (e) { res.status(500).json({ success: false }); }
+    } catch (e) { 
+        console.error("خطأ معالجة مسار إرسال طلب الشركات:", e);
+        res.status(500).json({ success: false }); 
+    }
 });
+
 
 // ==========================================================================
 // 📟 [تحديث مسارات الفلاشة اللامركزية] - الارتباط التام بـ GOOGLE DRIVE API KEY
