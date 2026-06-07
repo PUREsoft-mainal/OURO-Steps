@@ -565,30 +565,34 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 📑 ب) [مستمع قبول الشركات] - تفويض ترخيص المصنع السنوي 365 يوماً بالـ ID
+    // ==========================================================================
+    // 🏛️ [تحديث سيادي قاطع] - توثيق ترخيص الشركات السنوي للأبد بـ MongoDB Atlas
+    // ==========================================================================
     socket.on('admin_approve_company_system', async (data) => {
         try {
             if (!data || !data.applicantName) return;
             
-            // حساب وتوليد تاريخ انتهاء الصلاحية فلكياً بعد سنة كاملة (365 يوماً)
-            const expiryDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); 
+            const targetUsername = data.applicantName.trim();
+            const expiryDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // تفعيل سنة كاملة (365 يوماً بالملي)
 
-            // تحديث الصلاحيات فوراً في قاعدة البيانات السحابية MongoDB Atlas للمستخدم
+            // 1. تحديث وحفظ الصلاحيات والمواقيت فالسحاب بـ MongoDB Atlas للأبد
             await UserModel.updateOne(
-                { username: data.applicantName.trim() }, 
+                { username: targetUsername }, 
                 { $set: { canAccessCompanySystem: true, companySystemExpiry: expiryDate } }
             );
 
-            // بث إشارة الفتح والإنعاش الفوري للواجهة الأمامية للمستخدم المستهدف
+            // 2. [تحديث شريان الجلسة حياً] بث الإشارة السحابية المحدثة لإنعاش المتصفحات والـ States فوراً
             io.emit('company_system_granted', { 
-                username: data.applicantName.trim(), 
-                expiryDate: expiryDate 
+                username: targetUsername, 
+                canAccessCompanySystem: true,
+                companySystemExpiry: expiryDate 
             });
             
-            console.log(`✔️ [Company OS Activated] تم منح ترخيص سنوي للعضو: ${data.applicantName}`);
-        } catch (e) { console.error("خطأ تفعيل ترخيص الشركات السنوي:", e); }
+            console.log(`✔️ [Company OS Activated For Good] تم توثيق ترخيص سنوي دائم للعضو بـ Atlas: ${targetUsername}`);
+        } catch (e) { 
+            console.error("خطأ معالجة وتوثيق تراخيص الشركات السنوية بالـ Cloud:", e); 
+        }
     });
-
 
     // ==========================================================================
     // 🏛️ [تحديث مستمعي السنتر والـ API المطورين] - احقنهم أسفل بلوك join_group_room مباشرة:
