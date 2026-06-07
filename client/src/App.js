@@ -703,85 +703,48 @@ return (
         </div>
 
         {/* ========================================================================== */}
-        {/* 👑 [لوحة التحكم والطلبات المركزية للأدمن] - عرض وقبول اشتراكات السنتر ومفاتيح الـ API */}
+        {/* ⚙️ [لوحة الأدمن الملكية الموحدة] - صندوق الموافقات والطلبات السنوية والسناتر */}
         {/* ========================================================================== */}
         {showAdminPanelModal && (
           <div className="discovery-overlay" onClick={() => setShowAdminPanelModal(false)}>
-            <div className="discovery-window gold-border" onClick={e => e.stopPropagation()} style={{ width: '95%', maxWidth: '750px', background: '#070707', padding: '20px' }}>
+            <div className="discovery-window gold-border" onClick={e => e.stopPropagation()} style={{ width: '92%', maxWidth: '600px', background: '#070707', padding: '20px', borderRadius: '12px' }}>
               
-              <div className="discovery-tabs" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                <h3 style={{ color: 'var(--gold-primary)', margin: 0, fontSize: '15px' }}>👑 غرفة إدارة وتفويض طلبات المنصة السيادية (Admin Control)</h3>
-                <button className="close-discovery" onClick={() => setShowAdminPanelModal(false)}>✖</button>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #c0392b', paddingBottom: '10px' }}>
+                <h3 style={{ color: '#c0392b', margin: 0, fontSize: '15px', fontWeight: 'bold' }}>👑 غرف تحكم الإدارة العليا - الأدمن Mostafa</h3>
+                <button className="close-discovery" onClick={() => setShowAdminPanelModal(false)}>×</button>
               </div>
 
-              <div className="discovery-body scrollbar-gold" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
+              <div className="discovery-body scrollbar-gold" style={{ maxHeight: '60vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 
-                {/* 🔴 القسم الأول: طلبات الاشتراك الشهري للبث الحي والسنتر (30 يوماً) */}
-                <h4 style={{ color: '#fff', borderBottom: '1px solid rgba(212,175,55,0.2)', paddingBottom: '6px', fontSize: '12px', textAlign: 'right' }}>🏛️ طلبات فتح البث الحي والسنتر المعلقة:</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '25px' }}>
-                  {pendingCenterRequests.map(r => (
-                    <div key={r.requestId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#000', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-glass)' }}>
-                      <span style={{ color: '#fff', fontSize: '11px', textAlign: 'right' }}>👤 يطالب المحاضر/المستخدم <strong style={{color:'var(--gold-primary)'}}>{r.applicant}</strong> بتفعيل صلاحية السنتر والاجتماعات لـ 30 يوماً.</span>
-                      <button 
-                        className="gold-btn-small" 
-                        style={{ background: '#27ae60', color: '#fff', border: 'none', padding: '4px 12px', cursor: 'pointer' }}
-                        onClick={() => {
-                          if (socket) {
-                            socket.emit('admin_approve_teacher_request', { requestId: r.requestId });
-                            setPendingCenterRequests(prev => prev.filter(p => p.requestId !== r.requestId));
-                            alert(`✔️ تم تفعيل وصيانة صلاحية السنتر للمحاضر ${r.applicant} بنجاح لـ 30 يوماً كاملة!`);
-                          }
-                        }}
-                      >
-                        موافق ✔️
-                      </button>
-                    </div>
-                  ))}
-                  {pendingCenterRequests.length === 0 && <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center' }}>لا توجد طلبات اشتراك سنتر معلقة حالياً...</p>}
-                </div>
+                {/* 📋 أ) عرض طلبات الشركات والمصانع السنوية المعلقة (تم نقلها بنجاح هنا) */}
+                {companyRequests.length > 0 ? (
+                  <div style={{ background: 'rgba(41,128,185,0.05)', padding: '12px', borderRadius: '8px', border: '1px solid #2980b9' }}>
+                    <small style={{ color: '#2980b9', display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>🏛️ طلبات تفعيل أنظمة الشركات والمصانع المعلقة:</small>
+                    {companyRequests.map(r => (
+                      <div key={r.requestId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#000', padding: '8px 12px', borderRadius: '4px', marginBottom: '5px' }}>
+                        <span style={{ color: '#fff', fontSize: '11px' }}>👤 يطلب المستثمر <strong style={{color:'#2980b9'}}>{r.applicant}</strong> فتح وتفعيل نظام المصانع السنوي</span>
+                        <button className="gold-btn-small" style={{ background: '#27ae60', border: 'none', color: '#fff', padding: '4px 12px', cursor: 'pointer', borderRadius: '4px', fontWeight: 'bold', fontSize: '10px' }} onClick={() => handleApproveCompanySystem(r.requestId, r.applicant)}>موافق (سنة كاملة) ✔️</button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center', margin: '5px 0' }}>📋 لا توجد طلبات شركات معلقة حالياً...</p>
+                )}
 
-                {/* ⚙️ القسم الثاني: طلبات استخراج مفاتيح الـ API مع عرض المزايا المحددة */}
-                <h4 style={{ color: '#fff', borderBottom: '1px solid rgba(212,175,55,0.2)', paddingBottom: '6px', fontSize: '12px', textAlign: 'right' }}>🔑 طلبات استخراج وتفعيل مفاتيح الـ API الخارجية:</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {pendingApiRequests.map(k => (
-                    <div key={k.keyId} style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: '#000', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-glass)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: '#fff', fontSize: '11px' }}>🛠️ المطور: <strong style={{color:'var(--gold-primary)'}}>{k.applicant}</strong> | وصف المفتاح: ({k.label})</span>
-                        <button 
-                          className="gold-btn-small" 
-                          style={{ background: '#27ae60', color: '#fff', border: 'none', padding: '4px 12px', cursor: 'pointer' }}
-                          onClick={async () => {
-                            try {
-                              const res = await axios.post(`${API_BASE}/api/developer/approve-key`, { adminUsername: user?.username, keyId: k.keyId });
-                              if (res.data.success) {
-                                setPendingApiRequests(prev => prev.filter(p => p.keyId !== k.keyId));
-                                alert(res.data.message || "🔑 تم تفويض وتفعيل مفتاح الـ API بنجاح!");
-                              }
-                            } catch (e) { alert("❌ فشل تفعيل المفتاح."); }
-                          }}
-                        >
-                          موافق ✔️
-                        </button>
+                {/* 🏛️ ب) عرض طلبات السناتر والاجتماعات القديمة لـ 30 يوماً المعلقة بالمنصة */}
+                {adminRequests.length > 0 ? (
+                  <div style={{ background: 'rgba(212,175,55,0.05)', padding: '12px', borderRadius: '8px', border: '1px solid var(--gold-primary)', marginTop: '5px' }}>
+                    <small style={{ color: 'var(--gold-primary)', display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>🏫 طلبات فتح السناتر المعلقة (30 يوماً):</small>
+                    {adminRequests.map(r => (
+                      <div key={r.requestId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#000', padding: '8px 12px', borderRadius: '4px', marginBottom: '5px' }}>
+                        <span style={{ color: '#fff', fontSize: '11px' }}>👤 يطلب المستخدم <strong style={{color:'var(--gold-primary)'}}>{r.applicant}</strong> فتح سنتر خاص به للتدريس</span>
+                        <button className="gold-btn-small" style={{ background: '#27ae60', border: 'none', color: '#fff', padding: '4px 12px', cursor: 'pointer', borderRadius: '4px', fontWeight: 'bold', fontSize: '10px' }} onClick={() => handleAdminApprove(r.requestId)}>موافق (30 يوماً) ✔️</button>
                       </div>
-                      
-                      {/* عرض المزايا والمواصفات التي اختارها المطور بدقة مجهرية */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '6px', borderRadius: '4px' }}>
-                        <small style={{ color: 'var(--text-muted)', fontSize: '10px' }}>المزايا المطلوبة للمفتاح:</small>
-                        {k.scopes && Object.keys(k.scopes).filter(s => k.scopes[s] && s !== 'wallet').map(s => (
-                          <span key={s} style={{ background: 'rgba(212,175,55,0.1)', color: 'var(--gold-primary)', fontSize: '8px', padding: '2px 6px', borderRadius: '3px', border: '1px solid rgba(212,175,55,0.15)' }}>
-                            {s === 'all_features' && '🌟 كامل المنصة'}
-                            {s === 'prayer_times' && '🕋 الصلاة'}
-                            {s === 'virtual_flash' && '📟 الفلاشة'}
-                            {s === 'market' && '🛍️ المتجر'}
-                            {s === 'center' && '🏛️ السنتر'}
-                            {s === 'ads' && '📣 الإعلانات'}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                  {pendingApiRequests.length === 0 && <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center' }}>لا توجد طلبات مفاتيح API معلقة حالياً...</p>}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center', margin: '5px 0' }}>🏫 لا توجد طلبات سناتر معلقة حالياً...</p>
+                )}
 
               </div>
             </div>
