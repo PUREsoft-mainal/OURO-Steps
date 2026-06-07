@@ -82,8 +82,8 @@ function App() {
       });
     }
     return () => { if (socket) socket.off('admin_receive_company_request'); };
-  }, [socket, user]);
-
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  
   // دالة تفعيل رخص الشركات والمصانع السنوية للمستخدم بنجاح 365 يوماً
   const handleApproveCompanySystem = (reqId, applicant) => {
     if (socket) {
