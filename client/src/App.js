@@ -69,6 +69,7 @@ function App() {
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false); // كبسولة الفواتير وعروض الأسعار
   const [showCompanyModal, setShowCompanyModal] = useState(false); // نظام تشغيل الشركات والمصانع
+  const [adminRequests, setAdminRequests] = useState([]);
   // دالة تفعيل رخص الشركات والمصانع السنوية للمستخدم بنجاح 365 يوماً
   const handleApproveCompanySystem = (reqId, applicant) => {
     if (socket) {
