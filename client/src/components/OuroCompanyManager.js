@@ -39,15 +39,19 @@ const OuroCompanyManager = ({ user, socket, API_BASE, onClose }) => {
   const isAdmin = user?.username === 'Admin_Mostafa' || user?.role === 'Admin';
 
   // ⏳ خطاف المراقبة الدائم والجلب التلقائي للترخيص ومفتاح درايف المصنع فور إقلاع الواجهة
+  // ⏳ [محرك التحصين ومنع الاختفاء] خطاف المراقبة الدائم والجلب التلقائي للترخيص السنوي رغماً عن الكاش
   useEffect(() => {
-    if (user?.username) {
-      // فحص تصريح الترخيص السنوي وحالة مستند العضو بالملي ثانية
-      if (user?.canAccessCompanySystem) {
+    // 1. الفحص الصارم للمطابقة وقراءة تصاريح الـ Cloud الممررة للجلسة الحالية
+    if (user) {
+      const isUserLicensed = user.canAccessCompanySystem || user.role === 'Admin' || user.username === 'Admin_Mostafa';
+      if (isUserLicensed) {
         setHasLicense(true);
-        setLicenseExpiry(user?.companySystemExpiry);
+        setLicenseExpiry(user.companySystemExpiry || "سنة كاملة مأمنة");
       }
-      
-      // جلب صامت لمفتاح جوجل درايف المخصص للمصنع عبر ال-API
+    }
+    
+    // 2. جلب صامت وسريع لمفتاح جوجل درايف المخصص للمصنع عبر ال-API لعدم انتظار السوكت
+    if (user?.username) {
       axios.post(`${API_BASE}/api/flash/get-drive-key`, { username: user.username })
         .then(res => {
           if (res.data && res.data.flashDriveApiKey) {
@@ -57,17 +61,25 @@ const OuroCompanyManager = ({ user, socket, API_BASE, onClose }) => {
         }).catch(() => {});
     }
 
+    // 3. الاستماع للقناة الحية عند ضغط الأدمن على زر الموافقة لشحن الصلاحية بلحظتها دون وميض
     if (socket) {
       socket.on('company_system_granted', (data) => {
         if (data.username === user?.username) {
           setHasLicense(true);
-          setLicenseExpiry(data.expiryDate);
+          setLicenseExpiry(data.companySystemExpiry);
+          // تحديث كائن الـ user محلياً في الجلسة المفتوحة لكي لا تطلب الفتح مرة أخرى عند الإغلاق
+          if(user) {
+            user.canAccessCompanySystem = true;
+            user.companySystemExpiry = data.companySystemExpiry;
+          }
           alert("👑 مبروك! وافق الأدمن Mostafa على طلبك وتم تفعيل نظام الشركات السنوي لك لـ 365 يوماً!");
         }
       });
     }
+
     return () => { if (socket) socket.off('company_system_granted'); };
-  }, [user, socket, API_BASE]);
+  }, [user, socket, API_BASE]); // قفل مأمن ومحكم بنسبة 100%
+
   // 🚀 دالة إرسال طلب الترخيص السنوي للأدمن Mostafa
   const handleRequestLicense = async () => {
     try {
