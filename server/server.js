@@ -565,6 +565,30 @@ io.on('connection', (socket) => {
         }
     });
 
+    // 📑 ب) مسار الأدمن Mostafa للموافقة وتفعيل صلاحية الـ 365 يوماً السنوية فالسحاب بالـ ID
+    // احقن هذا المستمع بداخل حدث موافقات الأدمن الموحد في السيرفر:
+    socket.on('admin_approve_company_system', async (data) => {
+        try {
+            if (!data || !data.requestId) return;
+        
+            const expiryDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 🔒 تفعيل سنة كاملة (365 يوماً بالملي)
+
+            // تحديث صلاحيات المصنع وحفظ حقل تاريخ انتهاء الصلاحية بـ MongoDB Atlas
+            await UserModel.updateOne(
+                { username: data.applicantName }, 
+                { $set: { canAccessCompanySystem: true, companySystemExpiry: expiryDate } }
+            );
+
+            // ضخ قائمة التحديث الحي لإنعاش شاشات المتصفحات فوراً
+            io.emit('company_system_granted', { 
+                username: data.applicantName, 
+                expiryDate: expiryDate 
+            });
+        
+            console.log(`✔️ [Company OS Activated] تم منح ترخيص المصنع السنوي للعضو: ${data.applicantName}`);
+        } catch (e) { console.error(e); }
+    });
+
 
     // ==========================================================================
     // 🏛️ [تحديث مستمعي السنتر والـ API المطورين] - احقنهم أسفل بلوك join_group_room مباشرة:
@@ -1592,6 +1616,34 @@ app.post('/api/user/upload-avatar', upload.single('avatar'), (req, res) => {
         console.error("خطأ في رفع الصورة الشخصية:", err);
         res.status(500).json({ success: false });
     }
+});
+
+// ==========================================================================
+// 🏛️ [محرك تراخيص نظام الشركات والمصانع السنوي الموقوت]
+// ==========================================================================
+
+// 📑 أ) مسار إرسال طلب اشتراك المصنع السنوي من العميل للأدمن Mostafa
+app.post('/api/company/request-access', async (req, res) => {
+    try {
+        const { username } = req.body;
+        if (!username) return res.status(400).json({ success: false });
+
+        // تدوين وثيقة الطلب وإرسال نبضة سوكت حية لشاشة الأدمن Mostafa المعلقة
+        const newRequest = {
+            requestId: 'comp_' + Date.now(),
+            applicant: username.trim(),
+            type: 'company_system',
+            status: 'pending',
+            time: new Date().toLocaleDateString('ar-EG')
+        };
+
+        // بث الطلب حياً لسيادتك في لوحة الموافقات الإدارية الملكية
+        if (typeof io !== 'undefined') {
+            io.emit('admin_receive_teacher_request', newRequest); 
+        }
+
+        res.json({ success: true, message: "🚀 طيران سحابي: تم إرسال طلب تفعيل نظام الشركات للأدمن Mostafa بنجاح!" });
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 
 // ==========================================================================
