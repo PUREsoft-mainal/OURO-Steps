@@ -488,20 +488,6 @@ return (
     <div className="app-container" style={{ backgroundImage: "url('/assets/background.png')", backgroundSize: 'cover' }}>
       <div className="app-overlay">
 
-          {/* 🛠️ [لوحة الأدمن الملكية الخاصة بـ Mostafa] لعرض طلبات تراخيص الشركات السنوية 365 يوماً */}
-        {(user?.username === 'Admin_Mostafa' || user?.role === 'Admin') && companyRequests.length > 0 && (
-          <div style={{ background: 'rgba(41,128,185,0.05)', padding: '12px', borderRadius: '8px', border: '1px solid #2980b9', marginBottom: '15px' }}>
-            <small style={{ color: '#2980b9', display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>👑 إشعارات الإدارة: طلبات تفعيل أنظمة الشركات والمصانع المعلقة:</small>
-            {companyRequests.map(r => (
-              <div key={r.requestId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#000', padding: '8px 12px', borderRadius: '4px', marginBottom: '5px' }}>
-                <span style={{ color: '#fff', fontSize: '11px' }}>👤 يطلب المستخدم المستثمر <strong style={{color:'#2980b9'}}>{r.applicant}</strong> تفعيل نظام تشغيل وإدارة المصانع والشركات السنوي لحسابه</span>
-                <button className="gold-btn-small" style={{ background: '#27ae60', border: 'none', color: '#fff', padding: '4px 14px', cursor: 'pointer', borderRadius: '4px', fontWeight: 'bold', fontSize: '11px' }} onClick={() => handleApproveCompanySystem(r.requestId, r.applicant)}>موافق وتفعيل سنة كاملة ✔️</button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        
         {/* 👑 [نظام الهيدر وبلوكتشين OURO الموحد] رصد ومراقبة الرصيد حياً بسقف المنصة بنقاء تفاعلي */}
         <Header 
           activeUsers={activeUsers} 
