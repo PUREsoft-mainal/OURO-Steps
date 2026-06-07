@@ -723,7 +723,7 @@ return (
                     {companyRequests.map(r => (
                       <div key={r.requestId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#000', padding: '8px 12px', borderRadius: '4px', marginBottom: '5px' }}>
                         <span style={{ color: '#fff', fontSize: '11px' }}>👤 يطلب المستثمر <strong style={{color:'#2980b9'}}>{r.applicant}</strong> فتح وتفعيل نظام المصانع السنوي</span>
-                        <button className="gold-btn-small" style={{ background: '#27ae60', border: 'none', color: '#fff', padding: '4px 12px', cursor: 'pointer', borderRadius: '4px', fontWeight: 'bold', fontSize: '10px' }} onClick={() => handleApproveCompanySystem(r.requestId, r.applicant)}>موافق (سنة كاملة) ✔️</button>
+                        <button className="gold-btn-small" style={{ background: '#27ae60', border: 'none', color: '#fff', padding: '4px 12px', cursor: 'pointer', borderRadius: '4px', fontWeight: 'bold', fontSize: '10px' }} onClick={() => { if (socket) { socket.emit('admin_approve_teacher_request', { requestId: r.requestId }); setAdminRequests(prev => prev.filter(req => req.requestId !== r.requestId)); alert("👑 تم تفعيل ترخيص السنتر والاجتماعات للمستخدم بنجاح لمدة 30 يوماً!"); } }} >موافق (30 يوماً) ✔️</button>
                       </div>
                     ))}
                   </div>
