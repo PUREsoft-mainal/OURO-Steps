@@ -161,7 +161,7 @@ const OuroInvoiceModal = ({ user, onClose }) => {
             
             {/* 👑 🏛️ [سقف التوثيق السيادي للمنصة] - تثبيت اسم وشعار منصة OURO Steps أعلى الفاتورة دائماً كضامن رسمي */}
             <div style={{ textAlign: 'center', borderBottom: '1px dashed rgba(212,175,55,0.3)', paddingBottom: '8px', marginBottom: '12px' }}>
-              <h2 style={{ color: 'var(--gold-primary)', margin: 0, fontSize: '14px', fontWeight: 'bold', letterSpacing: '0.5px' }}>🏛️ مستند موثق عبر منصة OURO Steps الملكية 2026 👑</h2>
+              <h2 style={{ color: 'var(--gold-primary)', margin: 0, fontSize: '14px', fontWeight: 'bold', letterSpacing: '0.5px' }}> مستند موثق عبر منصة OURO Steps 👑</h2>
             </div>
 
             {/* ترويسة الفاتورة المرنة وحقن الهوية البصرية اللامركزية والحرّة للشركة المستخدمة */}
