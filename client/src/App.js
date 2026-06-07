@@ -69,6 +69,14 @@ function App() {
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false); // كبسولة الفواتير وعروض الأسعار
   const [showCompanyModal, setShowCompanyModal] = useState(false); // نظام تشغيل الشركات والمصانع
+  // دالة تفعيل رخص الشركات والمصانع السنوية للمستخدم بنجاح 365 يوماً
+  const handleApproveCompanySystem = (reqId, applicant) => {
+    if (socket) {
+      socket.emit('admin_approve_company_system', { requestId: reqId, applicantName: applicant });
+      setAdminRequests(prev => prev.filter(r => r.requestId !== reqId));
+      alert("👑 تم تفعيل ترخيص نظام إدارة الشركات والمصانع السنوي للمستخدم بنجاح لمدة سنة كاملة!");
+    }
+  };
 
   const fetchOuroWalletBalance = async () => {
     if (!isLogged || !user) return;
