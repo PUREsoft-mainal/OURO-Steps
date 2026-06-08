@@ -395,6 +395,26 @@ function App() {
   // 👑 [قفل الحسم] إغلاق الـ useEffect الكلي للأحداث بنقاء رياضي وصارم مع تفادي فحص الـ ESLint
   }, [isLogged, currentGroup.id, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // ==========================================================================
+  // 🏛️ [حقن شريان جديد بالكامل] - تحصين الجلسة العلوية وتثبيت رخصة الشركات السنوية للأبد
+  // ==========================================================================
+  useEffect(() => {
+    if (socket) {
+      socket.on('company_system_granted', (data) => {
+        // إذا كان اسم المستخدم المطابق هو صاحب الحساب الحالي
+        if (data.username === user?.username) {
+          // تحديث كائن ال-user العلوي قسرياً ليشمل الصلاحيات السنوية الجديدة في ال-State العلوية
+          setUser(prevUser => ({
+            ...prevUser,
+            canAccessCompanySystem: true,
+            companySystemExpiry: data.companySystemExpiry
+          }));
+        }
+      });
+    }
+    return () => { if (socket) socket.off('company_system_granted'); };
+  }, [socket, user?.username]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   // 👑 2. [منظومة اقتراحك العبقري] مراقبة وجلب دوري مستقل لشريط الإعلانات كل 15 دقيقة لمنع الاختفاء الصامت كلياً
   useEffect(() => {
