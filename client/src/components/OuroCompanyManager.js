@@ -38,8 +38,7 @@ const OuroCompanyManager = ({ user, socket, API_BASE, onClose }) => {
 
   const isAdmin = user?.username === 'Admin_Mostafa' || user?.role === 'Admin';
 
-  // ⏳ خطاف المراقبة الدائم والجلب التلقائي للترخيص ومفتاح درايف المصنع فور إقلاع الواجهة
-  // ⏳ [محرك التحصين ومنع الاختفاء] خطاف المراقبة الدائم والجلب التلقائي للترخيص السنوي رغماً عن الكاش
+   // ⏳ [محرك التحصين ومنع الاختفاء] خطاف المراقبة الدائم والجلب التلقائي للترخيص السنوي رغماً عن الكاش
   useEffect(() => {
     // 1. الفحص الصارم للمطابقة وقراءة تصاريح الـ Cloud الممررة للجلسة الحالية
     if (user) {
@@ -79,6 +78,7 @@ const OuroCompanyManager = ({ user, socket, API_BASE, onClose }) => {
 
     return () => { if (socket) socket.off('company_system_granted'); };
   }, [user, socket, API_BASE]); // قفل مأمن ومحكم بنسبة 100%
+
 
   // 🚀 دالة إرسال طلب الترخيص السنوي للأدمن Mostafa
   const handleRequestLicense = async () => {
