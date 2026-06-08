@@ -709,7 +709,7 @@ return (
         </div>
 
         {/* ========================================================================== */}
-        {/* ⚙️ [تم الحسم والتطهير كلياً] - لوحة الأدمن الملكية الموحدة للموافقات السحابية */}
+        {/* ⚙️ [تم الحسم والتطهير النهائي] - لوحة الأدمن الملكية الشاملة والموحدة للطلبات */}
         {/* ========================================================================== */}
         {showAdminPanelModal && (
           <div className="discovery-overlay" onClick={() => setShowAdminPanelModal(false)}>
@@ -723,23 +723,23 @@ return (
               <div className="discovery-body scrollbar-gold" style={{ maxHeight: '60vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 
                 {/* 📋 أ) عرض طلبات الشركات والمصانع السنوية الموقوتة (365 يوماً بالملي ثانية) */}
-                {companyRequests.length > 0 ? (
+                {companyRequests && companyRequests.length > 0 && (
                   <div style={{ background: 'rgba(41,128,185,0.05)', padding: '12px', borderRadius: '8px', border: '1px solid #2980b9' }}>
                     <small style={{ color: '#2980b9', display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>🏛️ طلبات تفعيل أنظمة الشركات والمصانع المعلقة:</small>
                     {companyRequests.map(r => (
                       <div key={r.requestId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#000', padding: '8px 12px', borderRadius: '4px', marginBottom: '5px' }}>
                         <span style={{ color: '#fff', fontSize: '11px' }}>👤 يطلب المستثمر <strong style={{color:'#2980b9'}}>{r.applicant}</strong> فتح وتفعيل نظام المصانع السنوي</span>
-                        {/* 👑 [تم التصحيح والتحصين] إطلاق حدث سوكت الشركات السنوي الصحيح وتطهيره من التداخل */}
                         <button className="gold-btn-small" style={{ background: '#27ae60', border: 'none', color: '#fff', padding: '4px 12px', cursor: 'pointer', borderRadius: '4px', fontWeight: 'bold', fontSize: '10px' }} onClick={() => { if (socket) { socket.emit('admin_approve_company_system', { requestId: r.requestId, applicantName: r.applicant }); setCompanyRequests(prev => prev.filter(req => req.requestId !== r.requestId)); alert(`🏛️ تم قبول طلب المستثمر (${r.applicant}) وتفعيل نظام الشركات بنجاح لمدة سنة كاملة!`); } }} >موافق (سنة كاملة) ✔️</button>
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center', margin: '5px 0' }}>📋 لا توجد طلبات شركات معلقة حالياً...</p>
+                )}
+                {(!companyRequests || companyRequests.length === 0) && (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center', margin: '2px 0' }}>📋 لا توجد طلبات شركات معلقة حالياً...</p>
                 )}
 
-                {/* 🏛️ ب) عرض طلبات السناتر والاجتماعات القديمة الموقوتة لـ 30 يوماً بالمنصة */}
-                {adminRequests.length > 0 ? (
+                {/* 🏫 ب) عرض طلبات السناتر والاجتماعات القديمة الموقوتة لـ 30 يوماً بالمنصة */}
+                {adminRequests && adminRequests.length > 0 && (
                   <div style={{ background: 'rgba(212,175,55,0.05)', padding: '12px', borderRadius: '8px', border: '1px solid var(--gold-primary)', marginTop: '5px' }}>
                     <small style={{ color: 'var(--gold-primary)', display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>🏫 طلبات فتح السناتر المعلقة (30 يوماً):</small>
                     {adminRequests.map(r => (
@@ -749,8 +749,9 @@ return (
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center', margin: '5px 0' }}>🏫 لا توجد طلبات سناتر معلقة حالياً...</p>
+                )}
+                {(!adminRequests || adminRequests.length === 0) && (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center', margin: '2px 0' }}>🏫 لا توجد طلبات سناتر معلقة حالياً...</p>
                 )}
 
               </div>
