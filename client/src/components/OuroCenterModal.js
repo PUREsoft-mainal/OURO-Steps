@@ -536,20 +536,6 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
           )}
 
 
-              <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
-                {!isUserVerifiedInGlobalFile && (
-                  <button className="gold-btn" style={{ flex: 1, background: '#e67e22', border: 'none', color: '#fff', cursor: 'pointer', padding: '10px', fontWeight: 'bold' }} onClick={submitSubscribeRequest}>
-                    🌟 إرسال طلب اشتراك سنتر (30 يوماً للأدمن)
-                  </button>
-                )}
-                <button className="gold-btn" style={{ flex: 1, background: '#2980b9', border: 'none', color: '#fff', cursor: 'pointer', padding: '10px', fontWeight: 'bold' }} onClick={() => submitStudentJoinRequest(centerMeta.activeRoom ? "المحاضر النشط" : "Admin_Mostafa")}>
-                  🤝 اضغط هنا لطلب (( انضمام )) للبث المباشر والمذكرات
-                </button>
-              </div>
-            </div>
-          )}
-
-
           {/* 📹 2. لوحة الفيديوهات المسجلة بـ ساعات المشاهدة */}
           {activeSubTab === 'videos' && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '15px' }}>
