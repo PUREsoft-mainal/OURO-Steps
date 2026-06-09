@@ -330,101 +330,31 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
     }
   };
 
-    return (
-    <div className="discovery-overlay no-select-zone" onClick={onClose} style={{ userSelect: 'none' }}>
-      <div className="discovery-window gold-border" onClick={e => e.stopPropagation()} style={{ width: '95%', maxWidth: '850px', background: '#090909' }}>
+  return (
+    <div className="discovery-overlay" onClick={onClose}>
+      <div className="discovery-window gold-border scrollbar-gold" onClick={e => e.stopPropagation()} style={{ width: '96%', maxWidth: '1050px', background: '#070707', padding: '20px', borderRadius: '12px', display: 'flex', gap: '20px', flexWrap: 'wrap', maxHeight: '85vh', overflowY: 'auto' }}>
         
-        <div className="discovery-tabs" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-          <h3 style={{ color: 'var(--gold-primary)', margin: 0, fontSize: '15px' }}>🏛️ سنتر OURO Steps المحمي سيبرانياً ضد تصوير الشاشة</h3>
-          <button className="close-discovery" onClick={onClose}>✖</button>
-        </div>
-
-        {/* 🛠️ [لوحة الأدمن الملكية] لعرض طلبات الاشتراكات المعلقة */}
-        {isAdmin && adminRequests.length > 0 && (
-          <div style={{ background: 'rgba(212,175,55,0.05)', padding: '10px', borderRadius: '6px', border: '1px solid var(--gold-primary)', marginBottom: '15px' }}>
-            <small style={{ color: 'var(--gold-primary)', display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>👑 إشعارات الأدمن: طلبات فتح السناتر المعلقة:</small>
-            {adminRequests.map(r => (
-              <div key={r.requestId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#000', padding: '6px 10px', borderRadius: '4px', marginBottom: '4px' }}>
-                <span style={{ color: '#fff', fontSize: '11px' }}>👤 يطلب المستخدم <strong style={{color:'var(--gold-primary)'}}>{r.applicant}</strong> فتح سنتر خاص به للتدريس والاجتماعات</span>
-                <button className="gold-btn-small" style={{ background: '#27ae60', border: 'none', color: '#fff', padding: '2px 10px', cursor: 'pointer' }} onClick={() => handleAdminApprove(r.requestId)}>موافق ✔️</button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* الأزرار الأربعة العلوية الملتزمة ديناميكياً بـ activeSubTab الموحد */}
-        <div style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.5)', padding: '6px', borderRadius: '6px', border: '1px solid var(--border-glass)', marginBottom: '20px' }}>
-          <button className={`action-bar-btn ${activeSubTab === 'live' ? 'gold-glow-btn' : ''}`} style={{ flex: 1, fontSize: '11px', padding: '6px', color: '#fff', border: activeSubTab === 'live' ? '1px solid var(--gold-primary)' : '1px solid transparent' }} onClick={() => setActiveSubTab('live')}>🔴 Live البث المباشر</button>
-          <button className={`action-bar-btn ${activeSubTab === 'videos' ? 'gold-glow-btn' : ''}`} style={{ flex: 1, fontSize: '11px', padding: '6px', color: '#fff', border: activeSubTab === 'videos' ? '1px solid var(--gold-primary)' : '1px solid transparent' }} onClick={() => setActiveSubTab('videos')}>📹 الفيديوهات المسجلة</button>
-          <button className={`action-bar-btn ${activeSubTab === 'images' ? 'gold-glow-btn' : ''}`} style={{ flex: 1, fontSize: '11px', padding: '6px', color: '#fff', border: activeSubTab === 'images' ? '1px solid var(--gold-primary)' : '1px solid transparent' }} onClick={() => setActiveSubTab('images')}>🖼️ معرض الصور</button>
-          <button className={`action-bar-btn ${activeSubTab === 'pdf' ? 'gold-glow-btn' : ''}`} style={{ flex: 1, fontSize: '11px', padding: '6px', color: '#fff', border: activeSubTab === 'pdf' ? '1px solid var(--gold-primary)' : '1px solid transparent' }} onClick={() => setActiveSubTab('pdf')}>📄 المذكرات PDF</button>
-          <button onClick={() => setActiveSubTab('lectures')} style={{ padding: '6px 12px', fontSize: '11px', color: '#fff', background: activeSubTab === 'lectures' ? 'var(--gold-primary)' : 'transparent', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>🎬 محاضرات البث</button>
-        </div>
-
-        <div className="discovery-body scrollbar-gold" style={{ maxHeight: '55vh', overflowY: 'auto', padding: '5px' }}>
-
-          {/* 🎬 2. تبويب محاضرات البث الحية ومنظومة الانضمام والموافقات السنوية */}
-          {activeSubTab === 'lectures' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%' }}>
-              
-              {/* لوحة المعلم: تظهر فقط وحصرياً لسيادتك أو للمعلم المضيف لرصد طلبات انضمام الطلاب */}
-              {studentJoinRequests.length > 0 && (
-                <div style={{ background: 'rgba(39,174,96,0.05)', padding: '12px', borderRadius: '8px', border: '1px solid #27ae60' }}>
-                  <small style={{ color: '#27ae60', display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>📥 طلبات انضمام الطلاب المعلقة لبثك الحالي:</small>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {studentJoinRequests.map(req => (
-                      <div key={req.requestId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#000', padding: '6px 10px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.02)' }}>
-                        <span style={{ color: '#fff', fontSize: '11px' }}>👤 يطلب الطالب <strong style={{color:'var(--gold-primary)'}}>{req.studentName}</strong> الانضمام لمشاهدة محاضراتك التعليمية</span>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          <button style={{ background: '#27ae60', border: 'none', color: '#fff', padding: '3px 10px', cursor: 'pointer', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }} onClick={() => handleProcessStudentRequest(req, 'approved')}>✔️ قبول</button>
-                          <button style={{ background: '#c0392b', border: 'none', color: '#fff', padding: '3px 10px', cursor: 'pointer', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }} onClick={() => handleProcessStudentRequest(req, 'rejected')}>❌ رفض</button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* جدول عرض المدرسين والمحاضرات المتصلة حياً بالشبكة الآن أمام الطلاب */}
-              <h4 style={{ color: 'var(--gold-primary)', fontSize: '12px', margin: 0, textAlign: 'right' }}>📋 قائمة المعلمين المتواجدين بغرفة البث الحركي الآن:</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '220px', overflowY: 'auto' }}>
-                {liveTeachers.map((teacher, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#000', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-glass)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '20px' }}>👨‍🏫</span>
-                      <div style={{ textAlign: 'right' }}>
-                        <strong style={{ color: '#fff', fontSize: '12px', display: 'block' }}>المحاضر: {teacher.username}</strong>
-                        <small style={{ color: 'var(--text-muted)', fontSize: '9px' }}>عنوان المحاضرة: بث تعليمي تفاعلي مباشر 📡</small>
-                      </div>
-                    </div>
-                    {/* منع المعلم من التحويل والضغط على زر الانضمام لحسابه الشخصي */}
-                    {teacher.username !== user?.username ? (
-                      <button type="button" onClick={() => handleSendJoinRequest(teacher)} style={{ background: 'var(--gold-primary)', color: '#000', border: 'none', padding: '6px 14px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>
-                        🔗 الانضمام الآن
-                      </button>
-                    ) : (
-                      <span style={{ fontSize: '10px', color: '#27ae60', background: 'rgba(39,174,96,0.1)', padding: '4px 8px', borderRadius: '4px' }}>✨ غرفتك النشطة</span>
-                    )}
-                  </div>
-                ))}
-                {liveTeachers.length === 0 && (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center', margin: '15px 0' }}>📋 لا توجد قنوات أو محاضرات بث نشطة بالشبكة حالياً... في انتظار المحاضرين.</p>
-                )}
-              </div>
-            </div>
-          )}
-
+        {/* الجانب الأيمن: نافذة العرض السينمائي للبث ومقعد المعلم والأدوات الأربعة */}
+        <div style={{ flex: '2', minWidth: '340px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
           
-          {/* 🔴 1. لوحة الـ LIVE والبث التفاعلي وجدار الحماية ضد التجسس وتصوير الشاشة */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(212,175,55,0.2)', paddingBottom: '8px' }}>
+            <h3 style={{ color: 'var(--gold-primary)', margin: 0, fontSize: '15px', fontWeight: 'bold' }}>🏛️ سنتر واجتماعات OURO التعليمي الحركي المباشر</h3>
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              <button type="button" onClick={() => setActiveSubTab('live')} style={{ padding: '6px 12px', fontSize: '11px', color: '#fff', background: activeSubTab === 'live' ? 'var(--gold-primary)' : 'transparent', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>🎥 البث المباشر</button>
+              <button type="button" onClick={() => setActiveSubTab('lectures')} style={{ padding: '6px 12px', fontSize: '11px', color: '#fff', background: activeSubTab === 'lectures' ? 'var(--gold-primary)' : 'transparent', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>🎬 محاضرات البث</button>
+            </div>
+          </div>
+
+          {/* 🔴 1. لوحة الـ LIVE والبث التفاعلي وجدار الحماية ضد التجسس */}
           {activeSubTab === 'live' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               
-              {/* 👑 [شريان حقن وقفل مفتاح Google Drive API KEY اللامركزي للمحاضرين] */}
-              {(centerMeta.hasAccess || isAdmin || isUserVerifiedInGlobalFile) && (
+              {/* شريان حقن وقفل مفتاح Google Drive API KEY للمحاضرين */}
+              {(centerMeta.hasAccess || user?.role === 'Admin' || user?.username === 'Admin_Mostafa' || activeSubscribers.some(s => s.username === user?.username)) && (
                 <form onSubmit={handleSaveDriveKey} style={{ background: 'rgba(212,175,55,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.15)', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '11px', color: 'var(--gold-primary)', fontWeight: 'bold', whiteSpace: 'nowrap' }}>🔑 Google Drive API KEY:</span>
                   <input 
-                    type="password" // حماية الخصوصية ومنع الكشف أثناء البث المباشر
+                    type="password" 
                     placeholder={isSavedKey ? "••••••••••••••••••••••••••••••••" : "الصق هنا مفتاح الـ API KEY الخاص بحساب Google Drive الخاص بك..."}
                     value={isSavedKey ? "" : driveApiKey}
                     onChange={(e) => { setIsSavedKey(false); setDriveApiKey(e.target.value); }}
@@ -437,21 +367,18 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
                 </form>
               )}
 
-              {/* 👑 [تحديث الهيكل المزدوج]: تقسيم الواجهة لعرض البث الحي وبجواره الشات الجانبي لتعليقات الطلاب */}
               <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', width: '100%' }}>
-                
-                {/* 📹 صندوق عرض الكاميرا والفيديو للمحاضر */}
+
+                {/* صندوق عرض الكاميرا والفيديو للمحاضر */}
                 <div style={{ flex: '2', minWidth: '300px', height: '260px', background: '#000', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.2)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
                   
                   {liveStreamActive ? (
                     <>
-                      {/* 🟢 [تحديث الحسم] ظهور دائرة تومض باللون الأخضر النيوني النابض حياً بداخل السنتر */}
                       <div style={{ position: 'absolute', top: '10px', right: '10px', background: '#000', border: '1px solid #27ae60', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', zIndex: 10, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span className="green-pulse-dot" style={{ display: 'inline-block', background: '#27ae60', width: '8px', height: '8px', borderRadius: '50%' }}>●</span>
+                        <span style={{ display: 'inline-block', background: '#27ae60', width: '8px', height: '8px', borderRadius: '50%' }}>●</span>
                         <span style={{ color: '#27ae60' }}>البث الحي مِصرح ونشط 🏛️</span>
                       </div>
                       
-                      {/* 👑 ربط الكاميرا بالمستعرض الفيزيائي عبر ال-ref المطور ومسارات ال-Stream */}
                       <video 
                         ref={localVideoRef}
                         id="ouroLiveVideoPreview" 
@@ -461,88 +388,41 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
                         style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', background: '#000' }} 
                       />
                       
-                      <button 
-                        className="gold-btn-small" 
-                        style={{ position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', background: '#c0392b', color: '#fff', border: 'none', cursor: 'pointer', zIndex: 10 }} 
-                        onClick={() => {
-                          if (streamRef && streamRef.current) {
-                            streamRef.current.getTracks().forEach(track => track.stop());
-                          } else {
-                            const videoElement = document.getElementById('ouroLiveVideoPreview');
-                            if (videoElement && videoElement.srcObject) {
-                              videoElement.srcObject.getTracks().forEach(track => track.stop());
-                            }
+                      <div style={{ position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '8px', zIndex: 10 }}>
+                        <button type="button" onClick={handleToggleCamera} style={{ background: isCamActive ? '#c0392b' : '#27ae60', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>
+                          {isCamActive ? "🛑 إيقاف الكاميرا" : "📸 تشغيل الكاميرا"}
+                        </button>
+                        <button type="button" onClick={() => {
+                          const videoElement = document.getElementById('ouroLiveVideoPreview');
+                          if (videoElement && videoElement.srcObject) {
+                            videoElement.srcObject.getTracks().forEach(track => track.stop());
                           }
                           setLiveStreamActive(false);
-                        }}
-                      >
-                        إنهـاء البث ❌
-                      </button>
+                          setIsCamActive(false);
+                        }} style={{ background: '#333', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}>
+                          إنهـاء المعاينة ✖
+                        </button>
+                      </div>
                     </>
                   ) : (
                     <>
                       <span style={{ fontSize: '40px' }}>🎥</span>
                       <p style={{ color: 'var(--text-muted)', fontSize: '11px', padding: '0 20px', textAlign: 'center' }}>
-                        {isUserVerifiedInGlobalFile ? "🔓 تم مطابقة هويتك والـ ID بالملف العام للمشتركين! يمكنك إطلاق الإشارة الآن." : "🔒 لفتح السنتر وبدء البث، يجب إرسال طلب اشتراك للأدمن لتوثيق اسمك والـ ID بالملف المشترك لـ 30 يوماً."}
+                        {activeSubscribers.some(s => s.username === user?.username) || user?.username === 'Admin_Mostafa' ? "🔓 تم مطابقة هويتك والـ ID بالملف العام للمشتركين! يمكنك إطلاق الإشارة الآن." : "🔒 لفتح السنتر وبدء البث، يجب إرسال طلب اشتراك للأدمن لتوثيق اسمك والـ ID بالملف المشترك لـ 30 يوماً."}
                       </p>
                       
-                      {/* 🚀 زر تشغيل البث الحي ينبثق تلقائياً فقط وحصرياً إذا طابق الفحص هويتك والـ ID بالملف العام المشترك */}
-                      {isUserVerifiedInGlobalFile && (
-                        <button 
-                          className="gold-btn-small" 
-                          style={{ marginTop: '10px', fontWeight: 'bold', background: '#27ae60', color: '#fff', border: 'none', padding: '8px 18px', boxShadow: '0 0 10px rgba(39,174,96,0.4)', cursor: 'pointer' }} 
-                          onClick={handleStartLiveStream} 
-                        >
+                      {(activeSubscribers.some(s => s.username === user?.username) || user?.username === 'Admin_Mostafa') && (
+                        <button className="gold-btn-small" style={{ marginTop: '10px', fontWeight: 'bold', background: '#27ae60', color: '#fff', border: 'none', padding: '8px 18px', cursor: 'pointer' }} onClick={() => setLiveStreamActive(true)}>
                           بدء البث 🚀
                         </button>
                       )}
                     </>
                   )}
                 </div>
-
-                {/* 👑 [تم الدمج والحسم موضعياً] - حقن أزرار طلب اشتراك السنتر للمعلمين وطلب الانضمام للطلاب */}
-                <div style={{ display: 'flex', gap: '10px', marginTop: '10px', width: '100%', clear: 'both' }}>
-                   {!isUserVerifiedInGlobalFile && (
-                      <button 
-                        className="gold-btn" 
-                        style={{ flex: 1, background: '#e67e22', border: 'none', color: '#fff', cursor: 'pointer', padding: '10px', fontWeight: 'bold', fontSize: '11px', borderRadius: '4px' }} 
-                        onClick={typeof submitSubscribeRequest === 'function' ? submitSubscribeRequest : () => { if(socket && user) socket.emit('submit_teacher_subscribe_request', { username: user.username }); alert("🚀 تم قذف طلب تفعيل السنتر للأدمن Mostafa بنجاح!"); }}
-                      >
-                        🌟 إرسال طلب اشتراك سنتر (30 يوماً للأدمن)
-                      </button>
-                    )}
-                      <button 
-                        className="gold-btn" 
-                        style={{ flex: 1, background: '#2980b9', border: 'none', color: '#fff', cursor: 'pointer', padding: '10px', fontWeight: 'bold', fontSize: '11px', borderRadius: '4px' }} 
-                        onClick={() => {
-                          if (typeof submitStudentJoinRequest === 'function') {
-                            submitStudentJoinRequest(centerMeta.activeRoom ? "المحاضر النشط" : "Admin_Mostafa");
-                          } else if (socket && user) {
-                            socket.emit('student_submit_join_request', {
-                              requestId: 'join_' + Date.now(),
-                              studentName: user.username,
-                              studentId: user._id || user.user_id,
-                              targetTeacherName: "Admin_Mostafa",
-                              targetTeacherId: "admin"
-                            });
-                            alert("🤝 تم إرسال طلب انضمام للبث المباشر والمذكرات حياً!");
-                          }
-                        }}
-                      >
-                        🤝 اضغط هنا لطلب (( انضمام )) للبث المباشر والمذكرات
-                      </button>
-                    </div>
-
-                  </div> {/* إغلاق صندوق تيار البث أو الحاوية المحيطة بالأزرار */}
-                </div> {/* إغلاق لوحة التحكم */}
-              )}
-
-
-                {/* 💬 👑 [حقن شريط الشات الجانبي لتعليقات الطلاب التفاعلية حياً عبر السوكت] */}
+                {/* شريط الشات الجانبي لتعليقات الطلاب التفاعلية حياً */}
                 <div style={{ flex: '1', minWidth: '240px', height: '260px', background: '#000', border: '1px solid var(--border-glass)', borderRadius: '8px', padding: '10px', display: 'flex', flexDirection: 'column' }}>
                   <small style={{ color: 'var(--gold-primary)', fontSize: '11px', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '4px', marginBottom: '6px', display: 'block', textAlign: 'right' }}>💬 تعليقات الطلاب الحية (Real-time):</small>
                   
-                  {/* حاوية تدفق الرسائل */}
                   <div className="scrollbar-gold" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingBottom: '4px' }}>
                     {chatMessages && chatMessages.map(msg => (
                       <div key={msg.id} style={{ background: 'rgba(255,255,255,0.03)', padding: '5px 8px', borderRadius: '4px', border: '1px solid rgba(212,175,55,0.05)' }}>
@@ -555,81 +435,84 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
                     ))}
                     <div ref={chatEndRef} />
                     {(!chatMessages || chatMessages.length === 0) && (
-                      <p style={{ color: 'var(--text-muted)', fontSize: '9px', textAlign: 'center', marginTop: '30px' }}>⏳ لا توجد تعليقات حالياً... اطلب من الطلاب التفاعل بالبث.</p>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '9px', textAlign: 'center', marginTop: '30px' }}>⏳ لا توجد تعليقات حالياً...</p>
                     )}
                   </div>
 
-                  {/* صندوق الكتابة السريع للتعليق الفوري في قاع الشات الجانبي */}
                   <form onSubmit={handleSendComment} style={{ display: 'flex', gap: '4px', marginTop: '6px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '6px' }}>
-                    <input 
-                      type="text" 
-                      placeholder="اكتب تعليقك الحركي بالبث..." 
-                      value={newComment} 
-                      onChange={e => setNewComment(e.target.value)} 
-                      style={{ flex: 1, padding: '5px', background: '#111', color: '#fff', border: '1px solid var(--border-glass)', borderRadius: '4px', fontSize: '10px' }} 
-                      required 
-                    />
+                    <input type="text" placeholder="اكتب تعليقك الحركي بالبث..." value={newComment} onChange={e => setNewComment(e.target.value)} style={{ flex: 1, padding: '5px', background: '#111', color: '#fff', border: '1px solid var(--border-glass)', borderRadius: '4px', fontSize: '10px' }} required />
                     <button type="submit" style={{ background: 'var(--gold-primary)', border: 'none', borderRadius: '4px', padding: '4px 10px', fontWeight: 'bold', color: '#000', fontSize: '10px', cursor: 'pointer' }}>بث</button>
                   </form>
                 </div>
 
+              </div> {/* إغلاق صف تيار البث المشترك */}
+
+              {/* حقن دمج وحفظ الأزرار اللامركزية المخصصة للاشتراك والطلب للطلاب */}
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px', width: '100%' }}>
+                {!(activeSubscribers.some(s => s.username === user?.username) || user?.username === 'Admin_Mostafa') && (
+                  <button type="button" className="gold-btn" style={{ flex: 1, background: '#e67e22', border: 'none', color: '#fff', cursor: 'pointer', padding: '10px', fontWeight: 'bold', fontSize: '11px', borderRadius: '4px' }} onClick={() => { if(socket && user) { socket.emit('submit_teacher_subscribe_request', { username: user.username }); alert("🚀 تم قذف طلب تفعيل السنتر للأدمن Mostafa بنجاح!"); } }}>
+                    🌟 إرسال طلب اشتراك سنتر (30 يوماً للأدمن)
+                  </button>
+                )}
+                <button type="button" className="gold-btn" style={{ flex: 1, background: '#2980b9', border: 'none', color: '#fff', cursor: 'pointer', padding: '10px', fontWeight: 'bold', fontSize: '11px', borderRadius: '4px' }} onClick={() => { if(socket && user) { socket.emit('student_submit_join_request', { requestId: 'join_' + Date.now(), studentName: user.username, studentId: user._id || user.user_id, targetTeacherName: 'Admin_Mostafa', targetTeacherId: 'admin' }); alert("🤝 تم إرسال طلب انضمام للبث المباشر والمذكرات حياً!"); } }}>
+                  🤝 اضغط هنا لطلب (( انضمام )) للبث المباشر والمذكرات
+                </button>
+              </div>
+
+            </div>
+          )}
+          {/* 🎬 2. تبويب محاضرات البث الحية ومنظومة الانضمام والموافقات */}
+          {activeSubTab === 'lectures' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%' }}>
+              
+              {studentJoinRequests && studentJoinRequests.length > 0 && (
+                <div style={{ background: 'rgba(39,174,96,0.05)', padding: '12px', borderRadius: '8px', border: '1px solid #27ae60' }}>
+                  <small style={{ color: '#27ae60', display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>📥 طلبات انضمام الطلاب المعلقة لبثك الحالي:</small>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {studentJoinRequests.map(req => (
+                      <div key={req.requestId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#000', padding: '6px 10px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                        <span style={{ color: '#fff', fontSize: '11px' }}>👤 يطلب الطالب <strong style={{color:'var(--gold-primary)'}}>{req.studentName}</strong> الانضمام لمشاهدة محاضراتك التعليمية</span>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button type="button" style={{ background: '#27ae60', border: 'none', color: '#fff', padding: '3px 10px', cursor: 'pointer', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }} onClick={() => handleProcessStudentRequest(req, 'approved')}>✔️ قبول</button>
+                          <button type="button" style={{ background: '#c0392b', border: 'none', color: '#fff', padding: '3px 10px', cursor: 'pointer', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }} onClick={() => handleProcessStudentRequest(req, 'rejected')}>❌ رفض</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <h4 style={{ color: 'var(--gold-primary)', fontSize: '12px', margin: 0, textAlign: 'right' }}>📋 قائمة المعلمين المتواجدين بغرفة البث الحركي الآن:</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '220px', overflowY: 'auto' }}>
+                {liveTeachers && liveTeachers.map((teacher, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#000', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-glass)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '20px' }}>👨‍🏫</span>
+                      <div style={{ textAlign: 'right' }}>
+                        <strong style={{ color: '#fff', fontSize: '12px', display: 'block' }}>المحاضر: {teacher.username}</strong>
+                        <small style={{ color: 'var(--text-muted)', fontSize: '9px' }}>عنوان المحاضرة: بث تعليمي تفاعلي مباشر 📡</small>
+                      </div>
+                    </div>
+                    {teacher.username !== user?.username ? (
+                      <button type="button" onClick={() => handleSendJoinRequest(teacher)} style={{ background: 'var(--gold-primary)', color: '#000', border: 'none', padding: '6px 14px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>
+                        🔗 الانضمام الآن
+                      </button>
+                    ) : (
+                      <span style={{ fontSize: '10px', color: '#27ae60', background: 'rgba(39,174,96,0.1)', padding: '4px 8px', borderRadius: '4px' }}>✨ غرفتك النشطة</span>
+                    )}
+                  </div>
+                ))}
+                {(!liveTeachers || liveTeachers.length === 0) && (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center', margin: '15px 0' }}>📋 لا توجد قنوات أو محاضرات بث نشطة بالشبكة حالياً...</p>
+                )}
               </div>
             </div>
           )}
 
-
-          {/* 📹 2. لوحة الفيديوهات المسجلة بـ ساعات المشاهدة */}
-          {activeSubTab === 'videos' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '15px' }}>
-              {recordedVideos.map((vid, idx) => (
-                <div key={vid.id || idx} className="facebook-post-card gold-border" style={{ padding: '12px', background: '#000', borderRadius: '6px' }}>
-                  <div style={{ width: '100%', height: '100px', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '30px', position: 'relative' }}>
-                    🎬
-                    <button className="gold-btn-small" style={{ position: 'absolute', bottom: '5px', left: '5px', background: 'rgba(41,128,185,0.85)', color: '#fff', fontSize: '9px', border: 'none', cursor: 'pointer' }} onClick={() => alert("📥 جاري تحميل كورس المحاضرة المحمي لجهازك...")}>تنزيل 📥</button>
-                  </div>
-                  <h5 style={{ color: '#fff', margin: '10px 0 5px 0', fontSize: '11px', textAlign: 'right' }}>📌 {vid.title}</h5>
-                  <small style={{ color: 'var(--gold-primary)', fontSize: '10px', display: 'block', textAlign: 'right' }}>⏳ ساعات المشاهدة التراكمية: <strong>{vid.watchHours} ساعة</strong></small>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* 🖼️ 3. لوحة الصور والخرائط التوضيحية المأمنة */}
-          {activeSubTab === 'images' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
-              {centerImages.map((img, idx) => (
-                <div key={idx} className="mini-user-card" style={{ padding: '6px', background: '#000', textAlign: 'center' }}>
-                  <img src={img.url} alt="center-img" style={{ width: '100%', height: '110px', objectFit: 'cover', borderRadius: '4px' }} />
-                  <small style={{ color: '#fff', display: 'block', fontSize: '10px', marginTop: '4px' }}>{img.title}</small>
-                  <button className="assign-btn-gold" style={{ width: '100%', background: '#27ae60', color: '#fff', border: 'none', fontSize: '10px', marginTop: '5px', cursor: 'pointer' }} onClick={() => alert("📥 جاري حفظ اللوحة التعليمية...")}>حفظ لجهازي 📥</button>
-                </div>
-              ))}
-              {centerImages.length === 0 && <p style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-muted)', fontSize: '11px', padding: '20px 0' }}>معرض الصور التوضيحية فارغ حالياً...</p>}
-            </div>
-          )}
-
-          {/* 📄 4. لوحة المذكرات والملازم PDF المحمية من النسخ */}
-          {activeSubTab === 'pdf' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {centerPdfs.map((pdf, idx) => (
-                <div key={idx} className="mini-user-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: '#000', border: '1px solid var(--border-glass)', borderRadius: '6px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '20px' }}>📄</span>
-                    <div style={{ textAlign: 'right' }}>
-                      <strong style={{ color: '#fff', fontSize: '12px', display: 'block' }}>{pdf.title}</strong>
-                      <small style={{ color: 'var(--text-muted)', fontSize: '9px' }}>الحجم: {pdf.size}</small>
-                    </div>
-                  </div>
-                  <button className="gold-btn-small" style={{ background: '#2980b9', color: '#fff', border: 'none', cursor: 'pointer' }} onClick={() => alert("📥 جاري تحميل مذكرة الـ PDF المحمية...")}>تحميل المستند 📥</button>
-                </div>
-              ))}
-            </div>
-          )}
-
-        </div> 
-      </div> 
-    </div> 
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default OuroCenterModal; // 👑 القفل القياسي والتصدير الشرعي للمكون بنقاء 100%
+export default OuroCenterModal;
