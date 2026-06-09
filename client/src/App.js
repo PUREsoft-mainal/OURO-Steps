@@ -20,6 +20,7 @@ import OuroCenterModal from './components/OuroCenterModal';
 import OuroWalletModal from './components/OuroWalletModal'; // 👑 🪙 قُم بحقن هذا السطر السحري هنا فوراً!
 import OuroInvoiceModal from './components/OuroInvoiceModal'; // 👑 قُم بحقن هذا السطر السحري هنا فوراً!
 import OuroCompanyManager from './components/OuroCompanyManager'; // 👑 🏛️ حقن السيستم العملاق للشركات هنا
+import OuroDocEngine from './components/OuroDocEngine'; // 👑 📝 حقن محرك صياغة المستندات والملازم الملكي هنا
 import './App.css';
 
 // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
@@ -71,6 +72,7 @@ function App() {
   const [showCompanyModal, setShowCompanyModal] = useState(false); // نظام تشغيل الشركات والمصانع
   const [adminRequests, setAdminRequests] = useState([]);
   const [companyRequests, setCompanyRequests] = useState([]); // مصفوفة طلبات الشركات المستقلة
+  const [showDocEngineModal, setShowDocEngineModal] = useState(false); // محرك صياغة المستندات والملازم
 
   // ==========================================================================
   // 👑 📡 [دمج وتصحيح شريان الاستقبال المزدوج] قنص طلبات السنتر والشركات معاً حياً
@@ -739,6 +741,14 @@ return (
             onClose={() => setShowCompanyModal(false)}
           />
         )}
+
+        {showDocEngineModal && (
+          <OuroDocEngine 
+            user={user}
+            onClose={() => setShowDocEngineModal(false)}
+          />
+        )}
+
 
         {/* [موضع الشريط السفلي الصحيح أفقياً] */}
         <div style={{ padding: '0 20px', width: '100%', boxSizing: 'border-box', marginTop: '15px', marginBottom: '15px' }}>
