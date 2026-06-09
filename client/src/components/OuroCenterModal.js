@@ -24,6 +24,31 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
     // 🔑 [متغيرات جديدة] لإدارة وحفظ وقراءة مفتاح Google Drive API KEY للمدرس
   const [driveApiKey, setDriveApiKey] = useState("");
   const [isSavedKey, setIsSavedKey] = useState(false);
+    // 👑 [تم الحقن موضعياً] - تروس مراجع الكاميرا الفيزيائية والشات الجانبي الطائر
+  const localVideoRef = React.useRef(null);
+  const streamRef = React.useRef(null);
+  const chatEndRef = React.useRef(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [newComment, setNewComment] = useState("");
+
+  // 👑 [تم الحقن موضعياً] - مستمع قنص تعليقات الطلاب وإبادة الكاميرا عند الخروج
+  useEffect(() => {
+    if (socket) {
+      socket.on('receive_center_live_comment', (msg) => {
+        setChatMessages(prev => [...prev, msg]);
+      });
+    }
+    return () => {
+      if (socket) socket.off('receive_center_live_comment');
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
 
   // خطاف الجلب التلقائي لمفتاح الداريف الخاص بالمستخدِم فور فتح السنتر
   useEffect(() => {
@@ -38,6 +63,37 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
         .catch(() => {});
     }
   }, [user?.username]);
+
+    // 👑 [تم الحقن موضعياً] - محرك تشغيل الكاميرا الحقيقي وبث تعليقات الطلاب
+  const handleToggleCamera = async () => {
+    try {
+      if (isCamActive) {
+        if (streamRef.current) streamRef.current.getVideoTracks().forEach(track => track.stop());
+        setIsCamActive(false);
+        if (localVideoRef.current) localVideoRef.current.srcObject = null;
+      } else {
+        const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: isMicActive });
+        streamRef.current = mediaStream;
+        if (localVideoRef.current) localVideoRef.current.srcObject = mediaStream;
+        setIsCamActive(true);
+      }
+    } catch (err) { alert("⚠️ يرجى منح المتصفح تصريح تشغيل الكاميرا."); }
+  };
+
+  const handleSendComment = (e) => {
+    e.preventDefault();
+    if (!newComment.trim() || !socket) return;
+    const commentPayload = {
+      id: 'comment_' + Date.now(),
+      sender: user?.username || "طالب",
+      text: newComment.trim(),
+      time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+    };
+    socket.emit('send_center_live_comment', commentPayload);
+    setChatMessages(prev => [...prev, commentPayload]);
+    setNewComment("");
+  };
+
 
   // دالة حفظ وإرسال مفتاح جوجل درايف السحابي بقفل قاعدة البيانات
   const handleSaveDriveKey = async (e) => {
@@ -258,58 +314,108 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
                 </form>
               )}
 
-              <div style={{ width: '100%', height: '220px', background: '#000', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.2)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+              {/* 👑 [تحديث الهيكل المزدوج]: تقسيم الواجهة لعرض البث الحي وبجواره الشات الجانبي لتعليقات الطلاب */}
+              <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', width: '100%' }}>
                 
-                {liveStreamActive ? (
-                  <>
-                    {/* 🟢 [تحديث الحسم] ظهور دائرة تومض باللون الأخضر النيوني النابض حياً بداخل السنتر */}
-                    <div style={{ position: 'absolute', top: '10px', right: '10px', background: '#000', border: '1px solid #27ae60', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', zIndex: 10, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span className="green-pulse-dot" style={{ display: 'inline-block', background: '#27ae60', width: '8px', height: '8px', borderRadius: '50%' }}>●</span>
-                      <span style={{ color: '#27ae60' }}>البث الحي مِصرح ونشط 🏛️</span>
-                    </div>
-                    
-                    <video 
-                      id="ouroLiveVideoPreview" 
-                      autoPlay 
-                      playsInline 
-                      muted 
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', background: '#000' }} 
-                    />
-                    
-                    <button 
-                      className="gold-btn-small" 
-                      style={{ position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', background: '#c0392b', color: '#fff', border: 'none', cursor: 'pointer', zIndex: 10 }} 
-                      onClick={() => {
-                        const videoElement = document.getElementById('ouroLiveVideoPreview');
-                        if (videoElement && videoElement.srcObject) {
-                          videoElement.srcObject.getTracks().forEach(track => track.stop());
-                        }
-                        setLiveStreamActive(false);
-                      }}
-                    >
-                      إنهـاء البث ❌
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <span style={{ fontSize: '40px' }}>🎥</span>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '11px', padding: '0 20px', textAlign: 'center' }}>
-                      {isUserVerifiedInGlobalFile ? "🔓 تم مطابقة هويتك والـ ID بالملف العام للمشتركين! يمكنك إطلاق الإشارة الآن." : "🔒 لفتح السنتر وبدء البث، يجب إرسال طلب اشتراك للأدمن لتوثيق اسمك والـ ID بالملف المشترك لـ 30 يوماً."}
-                    </p>
-                    
-                    {/* 🚀 زر تشغيل البث الحي ينبثق تلقائياً فقط وحصرياً إذا طابق الفحص هويتك والـ ID بالملف العام المشترك */}
-                    {isUserVerifiedInGlobalFile && (
+                {/* 📹 صندوق عرض الكاميرا والفيديو للمحاضر */}
+                <div style={{ flex: '2', minWidth: '300px', height: '260px', background: '#000', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.2)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                  
+                  {liveStreamActive ? (
+                    <>
+                      {/* 🟢 [تحديث الحسم] ظهور دائرة تومض باللون الأخضر النيوني النابض حياً بداخل السنتر */}
+                      <div style={{ position: 'absolute', top: '10px', right: '10px', background: '#000', border: '1px solid #27ae60', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', zIndex: 10, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span className="green-pulse-dot" style={{ display: 'inline-block', background: '#27ae60', width: '8px', height: '8px', borderRadius: '50%' }}>●</span>
+                        <span style={{ color: '#27ae60' }}>البث الحي مِصرح ونشط 🏛️</span>
+                      </div>
+                      
+                      {/* 👑 ربط الكاميرا بالمستعرض الفيزيائي عبر ال-ref المطور ومسارات ال-Stream */}
+                      <video 
+                        ref={localVideoRef}
+                        id="ouroLiveVideoPreview" 
+                        autoPlay 
+                        playsInline 
+                        muted 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', background: '#000' }} 
+                      />
+                      
                       <button 
                         className="gold-btn-small" 
-                        style={{ marginTop: '10px', fontWeight: 'bold', background: '#27ae60', color: '#fff', border: 'none', padding: '8px 18px', boxShadow: '0 0 10px rgba(39,174,96,0.4)', cursor: 'pointer' }} 
-                        onClick={handleStartLiveStream} 
+                        style={{ position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', background: '#c0392b', color: '#fff', border: 'none', cursor: 'pointer', zIndex: 10 }} 
+                        onClick={() => {
+                          if (streamRef && streamRef.current) {
+                            streamRef.current.getTracks().forEach(track => track.stop());
+                          } else {
+                            const videoElement = document.getElementById('ouroLiveVideoPreview');
+                            if (videoElement && videoElement.srcObject) {
+                              videoElement.srcObject.getTracks().forEach(track => track.stop());
+                            }
+                          }
+                          setLiveStreamActive(false);
+                        }}
                       >
-                        بدء البث 🚀
+                        إنهـاء البث ❌
                       </button>
+                    </>
+                  ) : (
+                    <>
+                      <span style={{ fontSize: '40px' }}>🎥</span>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '11px', padding: '0 20px', textAlign: 'center' }}>
+                        {isUserVerifiedInGlobalFile ? "🔓 تم مطابقة هويتك والـ ID بالملف العام للمشتركين! يمكنك إطلاق الإشارة الآن." : "🔒 لفتح السنتر وبدء البث، يجب إرسال طلب اشتراك للأدمن لتوثيق اسمك والـ ID بالملف المشترك لـ 30 يوماً."}
+                      </p>
+                      
+                      {/* 🚀 زر تشغيل البث الحي ينبثق تلقائياً فقط وحصرياً إذا طابق الفحص هويتك والـ ID بالملف العام المشترك */}
+                      {isUserVerifiedInGlobalFile && (
+                        <button 
+                          className="gold-btn-small" 
+                          style={{ marginTop: '10px', fontWeight: 'bold', background: '#27ae60', color: '#fff', border: 'none', padding: '8px 18px', boxShadow: '0 0 10px rgba(39,174,96,0.4)', cursor: 'pointer' }} 
+                          onClick={handleStartLiveStream} 
+                        >
+                          بدء البث 🚀
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {/* 💬 👑 [حقن شريط الشات الجانبي لتعليقات الطلاب التفاعلية حياً عبر السوكت] */}
+                <div style={{ flex: '1', minWidth: '240px', height: '260px', background: '#000', border: '1px solid var(--border-glass)', borderRadius: '8px', padding: '10px', display: 'flex', flexDirection: 'column' }}>
+                  <small style={{ color: 'var(--gold-primary)', fontSize: '11px', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '4px', marginBottom: '6px', display: 'block', textAlign: 'right' }}>💬 تعليقات الطلاب الحية (Real-time):</small>
+                  
+                  {/* حاوية تدفق الرسائل */}
+                  <div className="scrollbar-gold" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingBottom: '4px' }}>
+                    {chatMessages && chatMessages.map(msg => (
+                      <div key={msg.id} style={{ background: 'rgba(255,255,255,0.03)', padding: '5px 8px', borderRadius: '4px', border: '1px solid rgba(212,175,55,0.05)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', marginBottom: '2px' }}>
+                          <strong style={{ color: msg.sender === 'Admin_Mostafa' ? 'var(--gold-primary)' : '#2980b9' }}>{msg.sender}</strong>
+                          <span style={{ color: 'var(--text-muted)' }}>{msg.time}</span>
+                        </div>
+                        <p style={{ color: '#fff', fontSize: '10px', margin: 0, textAlign: 'right', wordBreak: 'break-all' }}>{msg.text}</p>
+                      </div>
+                    ))}
+                    <div ref={chatEndRef} />
+                    {(!chatMessages || chatMessages.length === 0) && (
+                      <p style={{ color: 'var(--text-muted)', fontSize: '9px', textAlign: 'center', marginTop: '30px' }}>⏳ لا توجد تعليقات حالياً... اطلب من الطلاب التفاعل بالبث.</p>
                     )}
-                  </>
-                )}
+                  </div>
+
+                  {/* صندوق الكتابة السريع للتعليق الفوري في قاع الشات الجانبي */}
+                  <form onSubmit={handleSendComment} style={{ display: 'flex', gap: '4px', marginTop: '6px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '6px' }}>
+                    <input 
+                      type="text" 
+                      placeholder="اكتب تعليقك الحركي بالبث..." 
+                      value={newComment} 
+                      onChange={e => setNewComment(e.target.value)} 
+                      style={{ flex: 1, padding: '5px', background: '#111', color: '#fff', border: '1px solid var(--border-glass)', borderRadius: '4px', fontSize: '10px' }} 
+                      required 
+                    />
+                    <button type="submit" style={{ background: 'var(--gold-primary)', border: 'none', borderRadius: '4px', padding: '4px 10px', fontWeight: 'bold', color: '#000', fontSize: '10px', cursor: 'pointer' }}>بث</button>
+                  </form>
+                </div>
+
               </div>
+            </div>
+          )}
+
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
                 {!isUserVerifiedInGlobalFile && (
