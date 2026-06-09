@@ -600,6 +600,7 @@ return (
           setShowWalletModal={setShowWalletModal} // 👈 👑 قُم بحقن وتمرير هذا السطر هنا لحسم الاتصال!
           setShowInvoiceModal={setShowInvoiceModal} // 👈 تأكد من وجود هذا السطر هنا بالملي!
           setShowCompanyModal={setShowCompanyModal}
+          setShowDocEngineModal={setShowDocEngineModal}
         />
 
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
