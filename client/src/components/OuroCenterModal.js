@@ -500,6 +500,44 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
                   )}
                 </div>
 
+                {/* 👑 [تم الدمج والحسم موضعياً] - حقن أزرار طلب اشتراك السنتر للمعلمين وطلب الانضمام للطلاب */}
+                <div style={{ display: 'flex', gap: '10px', marginTop: '10px', width: '100%', clear: 'both' }}>
+                  {!isUserVerifiedInGlobalFile && (
+                    <button 
+                      className="gold-btn" 
+                      style={{ flex: 1, background: '#e67e22', border: 'none', color: '#fff', cursor: 'pointer', padding: '10px', fontWeight: 'bold', fontSize: '11px', borderRadius: '4px' }} 
+                      onClick={typeof submitSubscribeRequest === 'function' ? submitSubscribeRequest : () => { if(socket && user) socket.emit('submit_teacher_subscribe_request', { username: user.username }); alert("🚀 تم قذف طلب تفعيل السنتر للأدمن Mostafa بنجاح!"); }}
+                    >
+                      🌟 إرسال طلب اشتراك سنتر (30 يوماً للأدمن)
+                    </button>
+                  )}
+                  <button 
+                    className="gold-btn" 
+                    style={{ flex: 1, background: '#2980b9', border: 'none', color: '#fff', cursor: 'pointer', padding: '10px', fontWeight: 'bold', fontSize: '11px', borderRadius: '4px' }} 
+                    onClick={() => {
+                      if (typeof submitStudentJoinRequest === 'function') {
+                        submitStudentJoinRequest(centerMeta.activeRoom ? "المحاضر النشط" : "Admin_Mostafa");
+                      } else if (socket && user) {
+                        socket.emit('student_submit_join_request', {
+                          requestId: 'join_' + Date.now(),
+                          studentName: user.username,
+                          studentId: user._id || user.user_id,
+                          targetTeacherName: "Admin_Mostafa",
+                          targetTeacherId: "admin"
+                        });
+                        alert("🤝 تم إرسال طلب انضمام للبث المباشر والمذكرات حياً!");
+                      }
+                    }}
+                  >
+                    🤝 اضغط هنا لطلب (( انضمام )) للبث المباشر والمذكرات
+                  </button>
+                </div>
+
+              </div> {/* إغلاق صندوق تيار البث أو الحاوية المحيطة بالأزرار */}
+            </div> {/* إغلاق لوحة التحكم */}
+          )}
+
+
                 {/* 💬 👑 [حقن شريط الشات الجانبي لتعليقات الطلاب التفاعلية حياً عبر السوكت] */}
                 <div style={{ flex: '1', minWidth: '240px', height: '260px', background: '#000', border: '1px solid var(--border-glass)', borderRadius: '8px', padding: '10px', display: 'flex', flexDirection: 'column' }}>
                   <small style={{ color: 'var(--gold-primary)', fontSize: '11px', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '4px', marginBottom: '6px', display: 'block', textAlign: 'right' }}>💬 تعليقات الطلاب الحية (Real-time):</small>
