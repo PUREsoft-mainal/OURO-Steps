@@ -650,7 +650,9 @@ io.on('connection', (socket) => {
         } catch (e) { console.error("خطأ معالجة وتوجيه طلب السنتر:", e); }
     });
 
-    // 2️⃣ [المستمع 2 المطور والمحمي بالـ ID]: استقبال موافقة الأدمن وزرع الملف العام للمشتركين
+    // ==========================================================================
+    // 🏫 [المستمع 2 المطور والمحمي بالـ ID] - استقبال موافقة الأدمن وزرع الملف العام للمشتركين
+    // ==========================================================================
     socket.on('admin_approve_teacher_request', async (data) => {
         try {
             if (!data || !data.requestId) return;
@@ -713,19 +715,19 @@ io.on('connection', (socket) => {
                 subscribersDb.push(newSubscriberObj);
                 fs.writeFileSync(ACTIVE_SUBSCRIBERS_PATH, JSON.stringify(subscribersDb, null, 2), 'utf-8');
 
-                // 📡 بث التحديث اللحظي الشامل لجميع المتصلين شامل قائمة المشتركين ومحرك الفحص
+                // 📡 [تصحيح البث والمطابقة] صب وتوجيه حزمة البيانات المحدثة لتلتحم بالملي ثانية مع ال-State الفرونت إند
                 io.emit('teacher_request_granted', { 
+                    requestId: data.requestId, // 👑 مررنا ال-ID لتقوم واجهتك بمسح السجل فوراً من قائمة الانتظار
                     username: applicantName, 
                     userId: teacherUser._id.toString(),
                     expiresAt: expiryDate,
-                    activeSubscribers: subscribersDb // ضخ المصفوفة المحدثة فوراً لتتغذى منها شاشات المراقبة
+                    activeSubscribers: subscribersDb 
                 });
 
                 console.log(`✔️ [Sovereign Activation] تم تفويض وتفعيل السنتر وأرشفة العضو بالـ ID بداخل الملف العام: ${applicantName}`);
             }
         } catch (e) { console.error("خطأ قبول وأرشفة طلب السنتر:", e); }
     });
-
 
     // 3️⃣ [المستمع 3]: استقبال طلب المطور لاستخراج مفتاح API وتوجيهه للأدمن بالـ ID لمنع التزييف
     socket.on('submit_developer_key_request', async (data) => {
@@ -748,7 +750,11 @@ io.on('connection', (socket) => {
         } catch (e) { console.error("خطأ معالجة طلب مفتاح الـ API:", e); }
     });
 
-    // 4️⃣ [المستمع 4]: المزامنة الحية وضخ حزم المذكرات والفيديوهات المسجلة للسنتر التعليمي
+// ==========================================================================
+// 🏫 [تم الحسم والتطهير النهائي] - توحيد مسارات وأحداث البث وقبول السنتر
+// ==========================================================================
+
+    // 4️⃣ [المستمع 4]: المزامنة الحية وضخ حزم المذكرات والفيديوهات المسجلة للسنتر التعليمي - لا يمس نهائياً
     socket.on('get_center_status', async (data) => {
         try {
             const latestCenter = await OuroCenterModel.findOne({}).sort({ createdAt: -1 });
@@ -768,26 +774,77 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 🏛️ [المستمع 2]: استقبال ضغطة زر (موافق) من الأدمن وتفعيل الصلاحية لـ 30 يوماً
+    // 🏛️ [المستمع 2 المطور والمطابق بالملي للواجهة والـ ID]: استقبال موافقة الأدمن لـ 30 يوماً
     socket.on('admin_approve_teacher_request', async (data) => {
         try {
             if (!data || !data.requestId) return;
             const reqDoc = await OuroCenterRequestModel.findOne({ requestId: data.requestId });
-            if (reqDoc) {
-                reqDoc.status = 'approved';
-                reqDoc.expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 🔒 30 يوماً بالملي
-                await reqDoc.save();
-                
-                // تحديث رتبة وصلاحية المستخدم بجدول الحسابات الرئيسي السحابي
-                await UserModel.updateOne(
-                    { username: reqDoc.applicant }, 
-                    { $set: { canHostCenter: true, centerExpiry: reqDoc.expiresAt } }
-                );
-                
-                io.emit('teacher_request_granted', { username: reqDoc.applicant, expiresAt: reqDoc.expiresAt });
-                console.log(`✔️ [Sovereign Activation] تم تفويض وتمديد سنتر المحاضر: ${reqDoc.applicant}`);
+            
+            // التطهير الآمن: استخراج اسم مقدم الطلب سواء من المونجو أو ملف الجدولة السحابي
+            let applicantName = reqDoc ? reqDoc.applicant : "";
+            
+            if (!reqDoc) {
+                let db = readCloudRequestsFile();
+                const jsonReq = db.centerRequests.find(r => r.requestId === data.requestId);
+                if (jsonReq) {
+                    applicantName = jsonReq.applicant;
+                    // مسح الطلب من المعلقات بالملف فور معالجته لمنع التكرار وحشو الهارد
+                    db.centerRequests = db.centerRequests.filter(r => r.requestId !== data.requestId);
+                    writeCloudRequestsFile(db);
+                }
             }
-        } catch (e) { console.error("خطأ قبول طلب السنتر:", e); }
+
+            if (applicantName) {
+                // 🚀 قنص حساب المدرس من MongoDB Atlas لاستخراج الـ Object ID الفريد التابع له
+                const teacherUser = await UserModel.findOne({ username: applicantName });
+                if (!teacherUser) {
+                    return socket.emit('error_msg', '🛑 فشل التفعيل: اسم المستخدم غير مسجل بقاعدة البيانات السحابية الحية.');
+                }
+
+                const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 🔒 تفعيل 30 يوماً بالملي ثانية كاملة
+                
+                // تحديث رتبة وصلاحية المستخدم بجدول التصاريح والحسابات سحابياً بالأطلس للأبد
+                await UserModel.updateOne({ username: applicantName }, { $set: { canHostCenter: true, centerExpiry: expiryDate } });
+                
+                // خط دفاع أمني لتحديث جدول الموافقات إذا كان الوثيقة قادمة من المونجو أطلس
+                if (reqDoc) {
+                    reqDoc.status = 'approved';
+                    reqDoc.expiresAt = expiryDate;
+                    await reqDoc.save();
+                }
+
+                // 🔐 [أرشفة وتحديث الملف العام للمشتركين النشطين بقفل الهارد المادي لضمان بقاء الخاصية مفتوحة]
+                const ACTIVE_SUBSCRIBERS_PATH = path.join(__dirname, 'ouro_active_teachers.json');
+                let subscribersDb = [];
+                try {
+                    if (fs.existsSync(ACTIVE_SUBSCRIBERS_PATH)) {
+                        subscribersDb = JSON.parse(fs.readFileSync(ACTIVE_SUBSCRIBERS_PATH, 'utf-8'));
+                    }
+                } catch (e) { subscribersDb = []; }
+
+                const newSubscriberObj = {
+                    username: applicantName,
+                    userId: teacherUser._id.toString(), // قفل وحفظ الهوية بالـ ID الفريد الصارم للمدرس
+                    expiresAt: expiryDate.getTime() // توثيق تاريخ الانتهاء الموقوت بالملي ثانية
+                };
+
+                // منع تكرار تدوين بيانات المدرس في الملف العام المشترك
+                subscribersDb = subscribersDb.filter(s => s.username !== applicantName);
+                subscribersDb.push(newSubscriberObj);
+                fs.writeFileSync(ACTIVE_SUBSCRIBERS_PATH, JSON.stringify(subscribersDb, null, 2), 'utf-8');
+
+                // 📡 [قفل البث التزامني الموحد والمطابق للمتصفح]: ضخ حزمة البيانات لإنعاش ال-States ومسح الكارت فوراً
+                io.emit('teacher_request_granted', { 
+                    requestId: data.requestId, // 👑 مررنا ال-ID لتقوم واجهتك بمسح السجل فوراً من قائمة الانتظار
+                    username: applicantName, 
+                    userId: teacherUser._id.toString(),
+                    expiresAt: expiryDate,
+                    activeSubscribers: subscribersDb 
+                });
+
+                console.log(`✔️ [Sovereign Activation] تم تفويض وتفعيل السنتر وأرشفة العضو بالـ ID: ${applicantName}`);
+            }
+        } catch (e) { console.error("خطأ قبول وأرشفة طلب السنتر المطور:", e); }
     });
 
     // 🏛️ [المستمع 3]: استقبال ضغطة زر (انضمام) من الطالب وإرسال إشعار فوري للمحاضر وصاحب السنتر
