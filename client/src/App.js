@@ -278,8 +278,8 @@ function App() {
         console.log("🏛️ [Sovereign License Locked] تم قفل وتأمين رخصة الشركات السنوية رغماً عن الريفريش!");
       }
     }
-  }, [isLogged, user?.canAccessCompanySystem]); // قفل مأمن ومستقر 100%
-  
+  }, [isLogged, user?.canAccessCompanySystem]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // 👑 1. المنظومة المركزية الشاملة والموحدة لإدارة أحداث السوكت (مخصصة ومطهرة للبث الحي والرسائل فقط دون تداخل)
   useEffect(() => {
     if (socket) {
