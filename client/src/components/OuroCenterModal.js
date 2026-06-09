@@ -30,6 +30,43 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
   const chatEndRef = React.useRef(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [newComment, setNewComment] = useState("");
+    // 👑 [تم الحقن موضعياً] - تروس تبويب محاضرات البث الحية وطلبات انضمام الطلاب
+  const [activeSubTab, setActiveSubTab] = useState("live"); // التبويب الحالي
+  const [liveTeachers, setLiveTeachers] = useState([]); // قائمة المدرسين المتصلين حياً الآن
+  const [studentJoinRequests, setStudentJoinRequests] = useState([]); // مصفوفة طلبات الطلاب المعلقة (تظهر للمعلم)
+
+  useEffect(() => {
+    if (socket) {
+      // 📡 مستمع استقبال قائمة المدرسين النشطين حالياً في الشبكة
+      socket.on('update_live_teachers_list', (list) => {
+        setLiveTeachers(list || []);
+      });
+
+      // 📡 مستمع المعلم: استقبال طلب انضمام فوري من طالب بالـ ID حياً
+      socket.on('teacher_receive_join_request', (req) => {
+        setStudentJoinRequests(prev => {
+          if (prev.some(p => p.requestId === req.requestId)) return prev;
+          return [...prev, req];
+        });
+      });
+
+      // 📡 مستمع الطالب: استقبال موافقة المعلم ودخوله للغرفة التعليمية
+      socket.on('student_join_request_approved', (data) => {
+        if (data.studentName === user?.username) {
+          alert(`🎉 مبروك! وافق المعلم ${data.teacherName} على انضمامك للغرفة التعليمية لمدة شهر كامل!`);
+          setLiveStreamActive(true); // تفجير شاشة الفيديو ودخوله للبث فوراً
+        }
+      });
+    }
+    return () => {
+      if (socket) {
+        socket.off('update_live_teachers_list');
+        socket.off('teacher_receive_join_request');
+        socket.off('student_join_request_approved');
+      }
+    };
+  }, [socket, user]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   // 👑 [تم الحقن موضعياً] - مستمع قنص تعليقات الطلاب وإبادة الكاميرا عند الخروج
   useEffect(() => {
@@ -63,6 +100,36 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
         .catch(() => {});
     }
   }, [user?.username]);
+
+    // 🚀 دالة الطالب: إرسال طلب انضمام فوري موجه لـ ID وعنوان المعلم بالسحاب
+  const handleSendJoinRequest = (teacherItem) => {
+    if (socket && user) {
+      socket.emit('student_submit_join_request', {
+        requestId: 'join_' + Date.now(),
+        studentName: user.username,
+        studentId: user._id || user.user_id,
+        targetTeacherName: teacherItem.username,
+        targetTeacherId: teacherItem.userId
+      });
+      alert(`🚀 تم قذف طلب الانضمام حياً للمعلم (${teacherItem.username}) وبانتظار الموافقة الرسمية!`);
+    }
+  };
+
+  // 👑 دالة المعلم: قبول انضمام الطالب ومنحه صلاحية الـ 30 يوماً الفلكية
+  const handleProcessStudentRequest = (reqItem, statusAction) => {
+    if (socket) {
+      socket.emit('teacher_respond_student_request', {
+        requestId: reqItem.requestId,
+        studentName: reqItem.studentName,
+        studentId: reqItem.studentId,
+        teacherName: user?.username,
+        action: statusAction // 'approved' أو 'rejected'
+      });
+      // مسح بطاقة العضو فوراً من قائمة الطلاب المعلقين للمعلم
+      setStudentJoinRequests(prev => prev.filter(r => r.requestId !== reqItem.requestId));
+    }
+  };
+
 
     // 👑 [تم الحقن موضعياً] - محرك تشغيل الكاميرا الحقيقي وبث تعليقات الطلاب
   const handleToggleCamera = async () => {
@@ -288,9 +355,62 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
           <button className={`action-bar-btn ${activeSubTab === 'videos' ? 'gold-glow-btn' : ''}`} style={{ flex: 1, fontSize: '11px', padding: '6px', color: '#fff', border: activeSubTab === 'videos' ? '1px solid var(--gold-primary)' : '1px solid transparent' }} onClick={() => setActiveSubTab('videos')}>📹 الفيديوهات المسجلة</button>
           <button className={`action-bar-btn ${activeSubTab === 'images' ? 'gold-glow-btn' : ''}`} style={{ flex: 1, fontSize: '11px', padding: '6px', color: '#fff', border: activeSubTab === 'images' ? '1px solid var(--gold-primary)' : '1px solid transparent' }} onClick={() => setActiveSubTab('images')}>🖼️ معرض الصور</button>
           <button className={`action-bar-btn ${activeSubTab === 'pdf' ? 'gold-glow-btn' : ''}`} style={{ flex: 1, fontSize: '11px', padding: '6px', color: '#fff', border: activeSubTab === 'pdf' ? '1px solid var(--gold-primary)' : '1px solid transparent' }} onClick={() => setActiveSubTab('pdf')}>📄 المذكرات PDF</button>
+          <button onClick={() => setActiveSubTab('lectures')} style={{ padding: '6px 12px', fontSize: '11px', color: '#fff', background: activeSubTab === 'lectures' ? 'var(--gold-primary)' : 'transparent', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>🎬 محاضرات البث</button>
         </div>
 
         <div className="discovery-body scrollbar-gold" style={{ maxHeight: '55vh', overflowY: 'auto', padding: '5px' }}>
+
+          {/* 🎬 2. تبويب محاضرات البث الحية ومنظومة الانضمام والموافقات السنوية */}
+          {activeSubTab === 'lectures' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%' }}>
+              
+              {/* لوحة المعلم: تظهر فقط وحصرياً لسيادتك أو للمعلم المضيف لرصد طلبات انضمام الطلاب */}
+              {studentJoinRequests.length > 0 && (
+                <div style={{ background: 'rgba(39,174,96,0.05)', padding: '12px', borderRadius: '8px', border: '1px solid #27ae60' }}>
+                  <small style={{ color: '#27ae60', display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>📥 طلبات انضمام الطلاب المعلقة لبثك الحالي:</small>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {studentJoinRequests.map(req => (
+                      <div key={req.requestId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#000', padding: '6px 10px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                        <span style={{ color: '#fff', fontSize: '11px' }}>👤 يطلب الطالب <strong style={{color:'var(--gold-primary)'}}>{req.studentName}</strong> الانضمام لمشاهدة محاضراتك التعليمية</span>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button style={{ background: '#27ae60', border: 'none', color: '#fff', padding: '3px 10px', cursor: 'pointer', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }} onClick={() => handleProcessStudentRequest(req, 'approved')}>✔️ قبول</button>
+                          <button style={{ background: '#c0392b', border: 'none', color: '#fff', padding: '3px 10px', cursor: 'pointer', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }} onClick={() => handleProcessStudentRequest(req, 'rejected')}>❌ رفض</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* جدول عرض المدرسين والمحاضرات المتصلة حياً بالشبكة الآن أمام الطلاب */}
+              <h4 style={{ color: 'var(--gold-primary)', fontSize: '12px', margin: 0, textAlign: 'right' }}>📋 قائمة المعلمين المتواجدين بغرفة البث الحركي الآن:</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '220px', overflowY: 'auto' }}>
+                {liveTeachers.map((teacher, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#000', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-glass)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '20px' }}>👨‍🏫</span>
+                      <div style={{ textAlign: 'right' }}>
+                        <strong style={{ color: '#fff', fontSize: '12px', display: 'block' }}>المحاضر: {teacher.username}</strong>
+                        <small style={{ color: 'var(--text-muted)', fontSize: '9px' }}>عنوان المحاضرة: بث تعليمي تفاعلي مباشر 📡</small>
+                      </div>
+                    </div>
+                    {/* منع المعلم من التحويل والضغط على زر الانضمام لحسابه الشخصي */}
+                    {teacher.username !== user?.username ? (
+                      <button type="button" onClick={() => handleSendJoinRequest(teacher)} style={{ background: 'var(--gold-primary)', color: '#000', border: 'none', padding: '6px 14px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>
+                        🔗 الانضمام الآن
+                      </button>
+                    ) : (
+                      <span style={{ fontSize: '10px', color: '#27ae60', background: 'rgba(39,174,96,0.1)', padding: '4px 8px', borderRadius: '4px' }}>✨ غرفتك النشطة</span>
+                    )}
+                  </div>
+                ))}
+                {liveTeachers.length === 0 && (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center', margin: '15px 0' }}>📋 لا توجد قنوات أو محاضرات بث نشطة بالشبكة حالياً... في انتظار المحاضرين.</p>
+                )}
+              </div>
+            </div>
+          )}
+
           
           {/* 🔴 1. لوحة الـ LIVE والبث التفاعلي وجدار الحماية ضد التجسس وتصوير الشاشة */}
           {activeSubTab === 'live' && (
