@@ -31,7 +31,6 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
   const [chatMessages, setChatMessages] = useState([]);
   const [newComment, setNewComment] = useState("");
     // 👑 [تم الحقن موضعياً] - تروس تبويب محاضرات البث الحية وطلبات انضمام الطلاب
-  const [activeSubTab, setActiveSubTab] = useState("live"); // التبويب الحالي
   const [liveTeachers, setLiveTeachers] = useState([]); // قائمة المدرسين المتصلين حياً الآن
   const [studentJoinRequests, setStudentJoinRequests] = useState([]); // مصفوفة طلبات الطلاب المعلقة (تظهر للمعلم)
 
