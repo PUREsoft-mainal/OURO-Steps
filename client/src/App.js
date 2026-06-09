@@ -732,7 +732,7 @@ return (
         </div>
 
         {/* ========================================================================== */}
-        {/* ⚙️ [تم الحسم والتطهير النهائي] - لوحة الأدمن الملكية الشاملة والموحدة للطلبات */}
+        {/* ⚙️ [تم التوحيد والحسم بالملي] - لوحة الأدمن الملكية الشاملة والموحدة للطلبات */}
         {/* ========================================================================== */}
         {showAdminPanelModal && (
           <div className="discovery-overlay" onClick={() => setShowAdminPanelModal(false)}>
@@ -745,7 +745,7 @@ return (
 
               <div className="discovery-body scrollbar-gold" style={{ maxHeight: '60vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 
-                {/* 📋 أ) عرض طلبات الشركات والمصانع السنوية الموقوتة (365 يوماً بالملي ثانية) */}
+                {/* 📋 أ) عرض طلبات الشركات والمصانع السنوية الموقوتة (365 يوماً بالملي ثانية) - لا تمس */}
                 {companyRequests && companyRequests.length > 0 && (
                   <div style={{ background: 'rgba(41,128,185,0.05)', padding: '12px', borderRadius: '8px', border: '1px solid #2980b9' }}>
                     <small style={{ color: '#2980b9', display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>🏛️ طلبات تفعيل أنظمة الشركات والمصانع المعلقة:</small>
@@ -761,19 +761,19 @@ return (
                   <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center', margin: '2px 0' }}>📋 لا توجد طلبات شركات معلقة حالياً...</p>
                 )}
 
-                {/* 🏫 ب) عرض طلبات السناتر والاجتماعات القديمة الموقوتة لـ 30 يوماً بالمنصة */}
-                {adminRequests && adminRequests.length > 0 && (
+                {/* 🏫 ب) عرض طلبات السناتر والاجتماعات الموقوتة لـ 30 يوماً بالمنصة - تم تصحيح المسميات بالملي */}
+                {pendingCenterRequests && pendingCenterRequests.length > 0 && (
                   <div style={{ background: 'rgba(212,175,55,0.05)', padding: '12px', borderRadius: '8px', border: '1px solid var(--gold-primary)', marginTop: '5px' }}>
                     <small style={{ color: 'var(--gold-primary)', display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>🏫 طلبات فتح السناتر المعلقة (30 يوماً):</small>
-                    {adminRequests.map(r => (
+                    {pendingCenterRequests.map(r => (
                       <div key={r.requestId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#000', padding: '8px 12px', borderRadius: '4px', marginBottom: '5px' }}>
                         <span style={{ color: '#fff', fontSize: '11px' }}>👤 يطلب المستخدم <strong style={{color:'var(--gold-primary)'}}>{r.applicant}</strong> فتح سنتر خاص به للتدريس</span>
-                        <button className="gold-btn-small" style={{ background: '#27ae60', border: 'none', color: '#fff', padding: '4px 12px', cursor: 'pointer', borderRadius: '4px', fontWeight: 'bold', fontSize: '10px' }} onClick={() => { if (socket) { socket.emit('admin_approve_teacher_request', { requestId: r.requestId }); setAdminRequests(prev => prev.filter(req => req.requestId !== r.requestId)); alert("👑 تم تفعيل ترخيص السنتر والاجتماعات للمستخدم بنجاح لمدة 30 يوماً!"); } }} >موافق (30 يوماً) ✔️</button>
+                        <button className="gold-btn-small" style={{ background: '#27ae60', border: 'none', color: '#fff', padding: '4px 12px', cursor: 'pointer', borderRadius: '4px', fontWeight: 'bold', fontSize: '10px' }} onClick={() => { if (socket) { socket.emit('admin_approve_teacher_request', { requestId: r.requestId }); setPendingCenterRequests(prev => prev.filter(req => req.requestId !== r.requestId)); alert("👑 تم تفعيل ترخيص السنتر والاجتماعات للمستخدم بنجاح لمدة 30 يوماً!"); } }} >موافق (30 يوماً) ✔️</button>
                       </div>
                     ))}
                   </div>
                 )}
-                {(!adminRequests || adminRequests.length === 0) && (
+                {(!pendingCenterRequests || pendingCenterRequests.length === 0) && (
                   <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center', margin: '2px 0' }}>🏫 لا توجد طلبات سناتر معلقة حالياً...</p>
                 )}
 
