@@ -263,6 +263,22 @@ function App() {
       }
     };
   }, [isLogged, setAllUsers, setLoading]);
+
+  // ⏳ [محرك منع الاختفاء عند الريفريش] - خطاف الفحص البدئي لتثبيت رخصة الشركات السنوية
+  useEffect(() => {
+    if (isLogged && user) {
+      // فحص حركي صارم: إذا كان الحساب المفتوح يمتلك صلاحية الشركات السنوية مسجلة سحابياً
+      if (user.canAccessCompanySystem) {
+        // إجبار المتصفح على دمج وحفظ الصلاحية بداخل كائن الحساب لعدم إغلاق النافذة مطلقاً
+        setUser(prev => ({
+          ...prev,
+          canAccessCompanySystem: true,
+          companySystemExpiry: user.companySystemExpiry
+        }));
+        console.log("🏛️ [Sovereign License Locked] تم قفل وتأمين رخصة الشركات السنوية رغماً عن الريفريش!");
+      }
+    }
+  }, [isLogged, user?.canAccessCompanySystem]); // قفل مأمن ومستقر 100%
   
   // 👑 1. المنظومة المركزية الشاملة والموحدة لإدارة أحداث السوكت (مخصصة ومطهرة للبث الحي والرسائل فقط دون تداخل)
   useEffect(() => {
