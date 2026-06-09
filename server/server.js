@@ -485,6 +485,47 @@ io.on('connection', (socket) => {
         io.emit('update_stats', { totalUsers: total, activeUsers });
     });
 
+        // ==========================================================================
+    // 🏫 🔗 [تم الحقن موضعياً] - بروتوكول طلبات انضمام الطلاب للسنتر والموافقات
+    // ==========================================================================
+    
+    // أ) مستمع الطالب: قذف طلب انضمام فوري وتوجيهه حصرياً لـ ID المعلم المستهدف
+    socket.on('student_submit_join_request', (payload) => {
+        try {
+            if (!payload || !payload.targetTeacherId) return;
+            // توجيه الطلب حياً لغرفة المعلم المعلق بالشبكة دون وسيط
+            socket.to(payload.targetTeacherId).emit('teacher_receive_join_request', payload);
+            // وبثه للغرفة العامة للأمان لضمان رصد النبضة
+            io.emit('teacher_receive_join_request', payload);
+        } catch (e) { console.error("خطأ تمرير طلب انضمام الطالب:", e); }
+    });
+
+    // ب) مستمع المعلم: معالجة الرد والقبول، وحفر وحقن الصلاحية لـ 30 يوماً بكتلة الطالب
+    socket.on('teacher_respond_student_request', async (data) => {
+        try {
+            if (!data || !data.studentId) return;
+
+            if (data.action === 'approved') {
+                const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // ترخيص 30 يوماً كاملة [▲]
+
+                // تحديث قاعدة البيانات السحابية MongoDB Atlas لتسجيل ارتباط الطالب بالمعلم لـ شهر كامل
+                await UserModel.updateOne(
+                    { username: data.studentName.trim() },
+                    { $set: { canAccessLiveStream: true, liveStreamExpiry: expiryDate, authorizedTeacherName: data.teacherName } }
+                );
+
+                // بث نبضة الفتح الفورية للمتصفح التابع للطالب ليفجر الشاشة ويدخله للبث فوراً
+                io.emit('student_join_request_approved', {
+                    studentName: data.studentName,
+                    teacherName: data.teacherName,
+                    expiresAt: expiryDate
+                });
+                console.log(`✔️ [Student Authorized] تم قبول انضمام الطالب (${data.studentName}) لسنتر المعلم: ${data.teacherName}`);
+            }
+        } catch (err) { console.error("خطأ معالجة رد المعلم على الطالب:", err); }
+    });
+
+
     // ==========================================================================
     // 🪙 [تحديث محرك التحويل] - تنفيذ بروتوكول العقد الذكي اللامركزي وقفل ال-Drive
     // ==========================================================================
