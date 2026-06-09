@@ -1708,6 +1708,13 @@ app.post('/api/company/request-access', async (req, res) => {
             time: new Date().toLocaleDateString('ar-EG')
         };
 
+        // 🧠 [تعديل الحسم دون حذف]: توثيق وتثبيت الطلب المعلق في حساب المستخدم بـ MongoDB Atlas
+        // لكي يقرأه السيرفر دائماً فور تسجيل الدخول أو عمل ريفريش للمتصفح ويمنع ضياع المعاملة
+        await UserModel.updateOne(
+            { username: username.trim() },
+            { $set: { companySystemStatus: 'pending', lastCompanyRequestId: newRequest.requestId } }
+        ).catch(err => console.log("تنبيه توثيق طلب الشركات بالأطلس:", err));
+
         // 🚀 [كسر التداخل الأزلي]: بث وإرسال نبضة الحوالة عبر قناة سيادية ومستقلة تماماً للأدمن مصطفى
         if (typeof io !== 'undefined') {
             io.emit('admin_receive_company_request', newRequest); 
