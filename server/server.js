@@ -650,15 +650,15 @@ io.on('connection', (socket) => {
         } catch (e) { console.error("خطأ معالجة وتوجيه طلب السنتر:", e); }
     });
 
-    // ==========================================================================
-    // 🏫 [المستمع 2 المطور والمحمي بالـ ID] - استقبال موافقة الأدمن وزرع الملف العام للمشتركين
+     // ==========================================================================
+    // 🏫 🏛️ [توحيد التروس والمطابقة بالملي] - مستمع موافقات الأدمن مصطفى للسنتر التعليمي
     // ==========================================================================
     socket.on('admin_approve_teacher_request', async (data) => {
         try {
             if (!data || !data.requestId) return;
             const reqDoc = await OuroCenterRequestModel.findOne({ requestId: data.requestId });
             
-            // التطهير الإضافي الخاص بك: إذا لم يجد السجل بالمونجو يبحث عنه بملف الـ JSON الموثق
+            // استخراج اسم مقدم الطلب سواء من قاعدة البيانات السحابية أو كتل الجدولة الآلية
             let applicantName = reqDoc ? reqDoc.applicant : "";
             
             if (!reqDoc) {
@@ -666,28 +666,22 @@ io.on('connection', (socket) => {
                 const jsonReq = db.centerRequests.find(r => r.requestId === data.requestId);
                 if (jsonReq) {
                     applicantName = jsonReq.applicant;
-                    // مسح الطلب من المعلقات بالملف فور معالجته لمنع التكرار
                     db.centerRequests = db.centerRequests.filter(r => r.requestId !== data.requestId);
                     writeCloudRequestsFile(db);
                 }
             }
 
             if (applicantName) {
-                // 🚀 قنص حساب المدرس من MongoDB Atlas لاستخراج الـ Object ID الفريد التابع له
+                // قنص حساب المدرس والمستثمر من MongoDB Atlas لاستخراج الـ ID الصارم له
                 const teacherUser = await UserModel.findOne({ username: applicantName });
                 if (!teacherUser) {
                     return socket.emit('error_msg', '🛑 فشل التفعيل: اسم المستخدم غير مسجل بقاعدة البيانات السحابية الحية.');
                 }
 
-                const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 🔒 تفعيل 30 يوماً بالملي
+                const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // تفعيل 30 يوماً بالملي
                 
-                // تحديث رتبة وصلاحية المستخدم بجدول التصاريح والحسابات سحابياً بالأطلس للأبد
+                // تحديث صلاحيات الحساب بالأطلس
                 await UserModel.updateOne({ username: applicantName }, { $set: { canHostCenter: true, centerExpiry: expiryDate } });
-                await mongoose.model('UserPermission').updateOne(
-                    { username: applicantName },
-                    { $set: { isAuthorizedTeacher: true, permissionExpiry: expiryDate, assignedBy: 'Admin_Mostafa' } },
-                    { upsert: true }
-                );
                 
                 if (reqDoc) {
                     reqDoc.status = 'approved';
@@ -695,7 +689,11 @@ io.on('connection', (socket) => {
                     await reqDoc.save();
                 }
 
-                // 🔐 [زراعة وحقن الملف العام للمشتركين النشطين بقفل الهارد المادي]
+                // قنص الحساب الملكي لسيادتك لمعرفة الـ ID والمطابقة الصارمة مع جدار حماية الفرونت إند
+                const adminDoc = await UserModel.findOne({ username: 'Admin_Mostafa' });
+                const adminId = adminDoc ? adminDoc._id.toString() : null;
+
+                // 🔐 أرشفة وتحديث الملف العام للمشتركين النشطين بقفل الهارد المادي
                 const ACTIVE_SUBSCRIBERS_PATH = path.join(__dirname, 'ouro_active_teachers.json');
                 let subscribersDb = [];
                 try {
@@ -706,28 +704,30 @@ io.on('connection', (socket) => {
 
                 const newSubscriberObj = {
                     username: applicantName,
-                    userId: teacherUser._id.toString(), // قفل وحفظ الهوية بالـ ID الفريد الصارم للمدرس
-                    expiresAt: expiryDate.getTime() // توثيق تاريخ الانتهاء الموقوت بالملي ثانية
+                    userId: teacherUser._id.toString(),
+                    expiresAt: expiryDate.getTime()
                 };
 
-                // منع تكرار تدوين بيانات المدرس في الملف العام المشترك
                 subscribersDb = subscribersDb.filter(s => s.username !== applicantName);
                 subscribersDb.push(newSubscriberObj);
                 fs.writeFileSync(ACTIVE_SUBSCRIBERS_PATH, JSON.stringify(subscribersDb, null, 2), 'utf-8');
 
-                // 📡 [تصحيح البث والمطابقة] صب وتوجيه حزمة البيانات المحدثة لتلتحم بالملي ثانية مع ال-State الفرونت إند
+                // 🚀 [الحسم والمطابقة بالملي] بث النبضة السحابية وحقن ال-targetAdminId وال-requestId 
+                // لكي يخترق جدار فحص ال-App.js ويقوم بإنعاش ومسح بطاقة الانتظار فوراً دون ريفريش
                 io.emit('teacher_request_granted', { 
-                    requestId: data.requestId, // 👑 مررنا ال-ID لتقوم واجهتك بمسح السجل فوراً من قائمة الانتظار
+                    requestId: data.requestId, 
                     username: applicantName, 
                     userId: teacherUser._id.toString(),
+                    targetAdminId: adminId, // 👑 تم حقن المعرّف هنا لمطابقة ملف الاستدعاء وسحق الاختفاء!
                     expiresAt: expiryDate,
                     activeSubscribers: subscribersDb 
                 });
 
-                console.log(`✔️ [Sovereign Activation] تم تفويض وتفعيل السنتر وأرشفة العضو بالـ ID بداخل الملف العام: ${applicantName}`);
+                console.log(`✔️ [Center Sovereign Approved] تم تفويض وتفعيل السنتر ومطابقة كتل الاستدعاء بالواجهة: ${applicantName}`);
             }
-        } catch (e) { console.error("خطأ قبول وأرشفة طلب السنتر:", e); }
+        } catch (e) { console.error("خطأ قبول وأرشفة طلب السنتر المطور:", e); }
     });
+
 
     // 3️⃣ [المستمع 3]: استقبال طلب المطور لاستخراج مفتاح API وتوجيهه للأدمن بالـ ID لمنع التزييف
     socket.on('submit_developer_key_request', async (data) => {
