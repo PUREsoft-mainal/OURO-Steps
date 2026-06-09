@@ -9,6 +9,10 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
   const [centerMeta, setCenterMeta] = useState({ isHost: false, activeRoom: null, hasAccess: false, expiryDate: "" });
   const [liveStreamActive, setLiveStreamActive] = useState(false);
   
+  // 👑 [تم الحقن السيادي] - تعريف حالات تفعيل الكاميرا والميكروفون لمنع كراش ال-no-undef ل-Vercel
+  const [isCamActive, setIsCamActive] = useState(false);
+  const [isMicActive, setIsMicActive] = useState(false);
+
   // قنوات استقبال إشعارات الأدمن والمحاضرين حية من السحاب
   const [adminRequests, setAdminRequests] = useState([]);
   const [hostRequests, setHostRequests] = useState([]);
@@ -21,16 +25,16 @@ const OuroCenterModal = ({ user, socket, API_BASE, onClose }) => {
 
   // 👑 [تم الحقن والتأمين بنجاح] متغير الـ State لحفظ وقراءة قائمة الملف العام للمشتركين
   const [activeSubscribers, setActiveSubscribers] = useState([]); 
-    // 🔑 [متغيرات جديدة] لإدارة وحفظ وقراءة مفتاح Google Drive API KEY للمدرس
+  // 🔑 [متغيرات جديدة] لإدارة وحفظ وقراءة مفتاح Google Drive API KEY للمدرس
   const [driveApiKey, setDriveApiKey] = useState("");
   const [isSavedKey, setIsSavedKey] = useState(false);
-    // 👑 [تم الحقن موضعياً] - تروس مراجع الكاميرا الفيزيائية والشات الجانبي الطائر
+  // 👑 [تم الحقن موضعياً] - تروس مراجع الكاميرا الفيزيائية والشات الجانبي الطائر
   const localVideoRef = React.useRef(null);
   const streamRef = React.useRef(null);
   const chatEndRef = React.useRef(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [newComment, setNewComment] = useState("");
-    // 👑 [تم الحقن موضعياً] - تروس تبويب محاضرات البث الحية وطلبات انضمام الطلاب
+  // 👑 [تم الحقن موضعياً] - تروس تبويب محاضرات البث الحية وطلبات انضمام الطلاب
   const [liveTeachers, setLiveTeachers] = useState([]); // قائمة المدرسين المتصلين حياً الآن
   const [studentJoinRequests, setStudentJoinRequests] = useState([]); // مصفوفة طلبات الطلاب المعلقة (تظهر للمعلم)
 
