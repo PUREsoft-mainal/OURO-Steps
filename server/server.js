@@ -599,7 +599,9 @@ io.on('connection', (socket) => {
     // 🏛️ [تحديث مستمعي السنتر والـ API المطورين] - احقنهم أسفل بلوك join_group_room مباشرة:
     // ==========================================================================
 
-    // 1️⃣ [المستمع 1 المحمي سيبرانياً]: استقبال طلب المدرس وتوجيهه حصرياً للأدمن Mostafa بالـ ID
+     // ==========================================================================
+    // 🪙 [المستمع 1 المحمي سيبرانياً] - استقبال طلب المدرس وتوجيهه للأدمن بال-ID
+    // ==========================================================================
     socket.on('submit_teacher_subscribe_request', async (data) => {
         try {
             if (!data || !data.username) return;
@@ -614,8 +616,13 @@ io.on('connection', (socket) => {
             const reqId = 'req_' + Date.now();
             const centerReqId = 'req_center_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
             
-            // 📝 الجدولة الآلية بالملف السحابي للمستجدين كطلب معلق
+            // 📝 الجدولة الآلية بالملي في السحاب ومحاصرة فخ الـ Undefined لحماية التجميع
             let db = readCloudRequestsFile(); 
+            
+            // 🔒 [خط الدفاع السيادي] تأمين وجود حقل المصفوفة بداخل الكائن قبل عمل الفحص منعا للانهيار
+            if (!db) db = {};
+            if (!db.centerRequests) db.centerRequests = [];
+
             const newReqObj = {
                 requestId: centerReqId,
                 type: 'teacher_access',
