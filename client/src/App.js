@@ -72,17 +72,40 @@ function App() {
   const [adminRequests, setAdminRequests] = useState([]);
   const [companyRequests, setCompanyRequests] = useState([]); // مصفوفة طلبات الشركات المستقلة
 
+  // ==========================================================================
+  // 👑 📡 [دمج وتصحيح شريان الاستقبال المزدوج] قنص طلبات السنتر والشركات معاً حياً
+  // ==========================================================================
   useEffect(() => {
     if (socket) {
-      // 📡 قنص طلبات الشركات حية على شاشة الأدمن الملكية Mostafa
+      // 1️⃣ قنص واستقبال طلبات السنتر والاجتماعات الموقوتة (30 يوماً) حياً في السحاب
+      socket.on('admin_receive_teacher_request', (req) => {
+        if (user?.username === 'Admin_Mostafa' || user?.role === 'Admin') {
+          setAdminRequests(prev => {
+            if (prev.some(r => r.requestId === req.requestId)) return prev; // منع تكرار السجل
+            return [...prev, req];
+          });
+        }
+      });
+
+      // 2️⃣ قنص واستقبال طلبات رخص الشركات والمصانع السنوية (365 يوماً) حياً في السحاب
       socket.on('admin_receive_company_request', (req) => {
         if (user?.username === 'Admin_Mostafa' || user?.role === 'Admin') {
-          setCompanyRequests(prev => [...prev, req]);
+          setCompanyRequests(prev => {
+            if (prev.some(r => r.requestId === req.requestId)) return prev; // منع تكرار السجل
+            return [...prev, req];
+          });
         }
       });
     }
-    return () => { if (socket) socket.off('admin_receive_company_request'); };
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // تنظيف البوابات والمستمعات صامتاً عند خروج الأدمن لحماية ذاكرة المتصفح
+    return () => {
+      if (socket) {
+        socket.off('admin_receive_teacher_request');
+        socket.off('admin_receive_company_request');
+      }
+    };
+  }, [socket, user?.username]); // eslint-disable-line react-hooks/exhaustive-deps
   
   // دالة تفعيل رخص الشركات والمصانع السنوية للمستخدم بنجاح 365 يوماً
   const handleApproveCompanySystem = (reqId, applicant) => {
