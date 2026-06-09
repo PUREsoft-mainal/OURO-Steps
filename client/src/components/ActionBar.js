@@ -15,7 +15,8 @@ const ActionBar = ({
   setShowWalletModal, // 👑 [تم الحقن] استقبال دالة فتح المحفظة المنبثقة من المكون الأب App.js
   setShowAdminPanelModal, // 🚀 تم التثبيت الشرعي هنا لمنع خطأ الـ undef
   setShowInvoiceModal, // 👈 👑 حقن دالة الفواتير الجديدة هنا
-  setShowCompanyModal // 👈 👑 حقن دالة الشركات الجديدة هنا
+  setShowCompanyModal, // 👈 👑 حقن دالة الشركات الجديدة هنا
+  setShowDocEngineModal // 👈 👑 حقن دالة المستندات الجديدة هنا
 }) => {    
   
   // 👑 دالة ذكية معقمة لتفتيت التنبيهات وإطلاق النوافذ الموجهة فوراً دون تضارب
@@ -170,6 +171,20 @@ const ActionBar = ({
         style={{ borderColor: '#27ae60' }}
       >
         🧾 الفواتير والأسعار
+      </button>
+
+                {/* 📝 الزر الملكي المطور لإطلاق محرك صياغة المستندات والملازم التعليمية */}
+      <button 
+        type="button" 
+        className="action-bar-btn"
+        onClick={() => {
+          if (typeof setShowDocEngineModal === 'function') {
+            setShowDocEngineModal(true);
+          }
+        }}
+        style={{ borderColor: '#e67e22' }}
+      >
+        📝 منشئ المستندات والملازم
       </button>
 
     </div>
