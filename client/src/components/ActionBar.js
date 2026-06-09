@@ -184,7 +184,7 @@ const ActionBar = ({
         }}
         style={{ borderColor: '#e67e22' }}
       >
-        📝 منشئ المستندات والملازم
+        📝 كتابة مستندات
       </button>
 
     </div>
