@@ -91,9 +91,31 @@ const AdSliderBottom = ({ ads, user }) => { // 👑 استقبال جلسة ال
                 </a>
               )}
               
-              {/* 🔥 [تم الإصلاح والتأمين] وضع علامة المائل / الحيوية لحماية التوجيه ومنع كسر التوجيه السحابي */}
-              {selectedAd.whatsapp && <a href={`https://wa.me{selectedAd.whatsapp}`} target="_blank" rel="noreferrer" className="contact-btn wa">واتساب</a>}
-              {selectedAd.telegram && <a href={`https://t.me{selectedAd.telegram}`} target="_blank" rel="noreferrer" className="contact-btn tg">تلغرام</a>}
+              {/* 👑 [تم الدمج والحسم بالملي] - تصحيح شريان الروابط بالشرطة المائلة والرسالة المشفرة الموجهة */}
+              {selectedAd?.whatsapp && (
+                <a 
+                  href={`https://wa.me{selectedAd.whatsapp.replace(/[^0-9]/g, '')}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="contact-btn wa"
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
+                >
+                  واتساب 💬
+                </a>
+              )}
+              
+              {selectedAd?.telegram && (
+                <a 
+                  href={`https://t.me{selectedAd.telegram.replace('@', '').trim()}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="contact-btn tg"
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
+                >
+                  تلغرام ✈️
+                </a>
+              )}
+
             </div>
             <button className="close-ad-btn" onClick={() => setSelectedAd(null)} style={{marginTop:'20px', cursor:'pointer'}}>إغلاق</button>
           </div>
