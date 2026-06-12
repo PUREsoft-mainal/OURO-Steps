@@ -27,8 +27,40 @@ const ActionBar = ({
     }
   };
 
+    // 👑 [تم الحقن موضعياً] - مراجع ومحركات التحريك الأفقي لشريط الأزرار الملكي
+  const ouroScrollRef = React.useRef(null);
+
+  const scrollOuroBar = (direction) => {
+    if (ouroScrollRef.current) {
+      const scrollAmount = 180; // المسافة الفيزيائية الحرة للتحريك بالبيكسل مع كل نقرة
+      ouroScrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+
   return (
     <div className="ouro-action-bar">
+
+        <div className="action-bar-container" style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%', background: 'rgba(0,0,0,0.2)', padding: '5px 0', borderTop: '1px solid var(--border-glass)', borderBottom: '1px solid var(--border-glass)', margin: '10px 0' }}>
+      
+      {/* ⬅️ السهم الملكي الأيسر للتحريك والتمرير بنقاء */}
+      <button 
+        type="button" 
+        onClick={() => scrollOuroBar('left')} 
+        style={{ background: '#000', color: 'var(--gold-primary)', border: '1px solid var(--gold-primary)', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, fontSize: '14px', fontWeight: 'bold', boxShadow: '0 0 8px rgba(212,175,55,0.3)', marginRight: '5px' }}
+      >
+        ‹
+      </button>
+
+      {/* 🎰 الحاوية الرئيسية العائمة والمرنة ذات التمرير الأفقي الحر للأزرار */}
+      <div 
+        ref={ouroScrollRef} 
+        className="action-bar-scroll-wrapper" 
+        style={{ flex: 1, display: 'flex', gap: '8px', overflowX: 'auto', scrollBehavior: 'smooth', padding: '5px 10px', whiteSpace: 'nowrap', WebkitOverflowScrolling: 'touch' }}
+      >
       
       {/* 🔍 زر البحث عن صديق المطور لتوجيه لوحة الاستكشاف الصافية */}
       <button 
@@ -185,6 +217,18 @@ const ActionBar = ({
         style={{ borderColor: '#e67e22' }}
       >
         📝 كتابة مستندات
+      </button>
+
+          
+      </div>
+
+      {/* ➡️ السهم الملكي الأيمن للتحريك والتمرير بنقاء */}
+      <button 
+        type="button" 
+        onClick={() => scrollOuroBar('right')} 
+        style={{ background: '#000', color: 'var(--gold-primary)', border: '1px solid var(--gold-primary)', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, fontSize: '14px', fontWeight: 'bold', boxShadow: '0 0 8px rgba(212,175,55,0.3)', marginLeft: '5px' }}
+      >
+        ›
       </button>
 
     </div>
