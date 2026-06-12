@@ -602,6 +602,7 @@ return (
           setShowInvoiceModal={setShowInvoiceModal} // 👈 تأكد من وجود هذا السطر هنا بالملي!
           setShowCompanyModal={setShowCompanyModal}
           setShowDocEngineModal={setShowDocEngineModal}
+          setShowAiModal={setShowAiModal}
         />
 
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
