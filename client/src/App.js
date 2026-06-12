@@ -21,6 +21,7 @@ import OuroWalletModal from './components/OuroWalletModal'; // 👑 🪙 قُم 
 import OuroInvoiceModal from './components/OuroInvoiceModal'; // 👑 قُم بحقن هذا السطر السحري هنا فوراً!
 import OuroCompanyManager from './components/OuroCompanyManager'; // 👑 🏛️ حقن السيستم العملاق للشركات هنا
 import OuroDocEngine from './components/OuroDocEngine'; // 👑 📝 حقن محرك صياغة المستندات والملازم الملكي هنا
+import OuroAiAssistant from './components/OuroAiAssistant'; // 👑 🤖 حقن المساعد الذكي لـ جوجل Gemini هنا بالملي
 import './App.css';
 
 // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
