@@ -309,25 +309,37 @@ app.post('/api/prayer/upload-adhan', upload.single('adhanAudio'), async (req, re
 });
 
 // ==========================================================================
-// 🧠 🤖 [محرك الذكاء الاصطناعي السيادي لـ OURO Core - Google Gemini Client]
+// 🧠 🤖 [تم الحسم والتصحيح] - محرك الذكاء الاصطناعي السيادي لـ OURO Core
 // ==========================================================================
 app.post('/api/ai/chat', async (req, res) => {
     try {
         const { username, prompt } = req.body;
-        if (!username || !prompt) return res.status(400).json({ success: false });
+        if (!username || !prompt) return res.status(400).json({ success: false, message: "⚠️ بيانات ناقصة" });
 
-        // 🔒 جدار الفحص الصارم: التحقق من أن العضو يمتلك رخصة ال-AI السنوية النشطة بـ Atlas
+        // 🧠 قنص وثيقة المستخدم من الأطلس
         const userDoc = await UserModel.findOne({ username: username.trim() });
-        const isAuthorized = userDoc && (userDoc.canAccessAI || userDoc.username === 'Admin_Mostafa');
+        
+        // 🔒 [تحديث الحسم للتجربة]: جعل الصلاحية تفتح تلقائياً للأدمن ولأي حساب يمتلك الرخصة السحابية
+        const isAuthorized = userDoc && (
+            userDoc.canAccessAI === true || 
+            userDoc.username === 'Admin_Mostafa' || 
+            userDoc.role === 'Admin' ||
+            username.trim() === 'Admin_Mostafa' // خط دفاع إضافي لضمان فتح الميزة لحسابك فوراً
+        );
 
         if (!isAuthorized) {
-            return res.json({ success: false, isLocked: true, message: "🔒 خاصية المساعد الذكي الملكي غير مفعلة لحسابك حالياً." });
+            return res.json({ success: false, isLocked: true, message: "🔒 خاصية المساعد الذكي الملكي غير مفعلة لحسابك حالياً، يرجى تفعيل الرخصة السنوية." });
         }
 
-        // سحب مفتاح جوجل الافتراضي المدمج بالسيرفر أو المعين لسيادتك
-        const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyAXqRXuwz1rDUhbyIIjCu9JTiOW3Ub_rJA";
+        // 🔑 [تنبيه التفعيل الجوهري]: الصق هنا مفتاح Google Gemini API Key الخاص بك بنقاط الاقتباس
+        // يمكنك الحصول عليه مجاناً 100% من Google AI Studio لعام 2026 م
+        const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AQ.Ab8RN6JIYOa4mwtAMmoVXo8XBEiEgZ0O4V_H_Ky-WcgR7GTXTw"; 
         
-        // ضرب قنوات جوجل طيراناً دون حفظ أي ملفات على هارد السيرفر نهائياً
+        if (GEMINI_API_KEY.includes("YourActualValid")) {
+            return res.json({ success: false, reply: "⚠️ تنبيه الإدارة: يرجى فتح ملف server.js ولصق مفتاح الـ API KEY الحقيقي الخاص بجوجل جيفين داخل متغير GEMINI_API_KEY لتفعيل البث السحابي حياً!" });
+        }
+
+        // ضرب بوابات جوجل السحابية طيراناً وبـ Zero-Storage كامل
         const response = await axios.post(
             `https://googleapis.com{GEMINI_API_KEY}`,
             { contents: [{ parts: [{ text: prompt }] }] },
@@ -338,8 +350,8 @@ app.post('/api/ai/chat', async (req, res) => {
         return res.json({ success: true, reply: aiReply });
 
     } catch (e) {
-        console.error("خطأ معالجة محرك الذكاء الاصطناعي:", e);
-        res.json({ success: false, reply: "❌ عذراً، تعذر الاتصال بمصفوفة جوجل الذكية." });
+        console.error("خطأ معالجة محرك الذكاء الاصطناعي السحابي لجوجل:", e?.response?.data || e);
+        res.json({ success: false, reply: "❌ عذراً، تعذر فك تشفير مصفوفة جوجل، تأكد من صلاحية ونشاط الـ API KEY الخاص بك بملف server.js." });
     }
 });
 
