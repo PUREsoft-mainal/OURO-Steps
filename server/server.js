@@ -308,6 +308,41 @@ app.post('/api/prayer/upload-adhan', upload.single('adhanAudio'), async (req, re
     } catch (err) { res.status(500).json({ success: false }); }
 });
 
+// ==========================================================================
+// 🧠 🤖 [محرك الذكاء الاصطناعي السيادي لـ OURO Core - Google Gemini Client]
+// ==========================================================================
+app.post('/api/ai/chat', async (req, res) => {
+    try {
+        const { username, prompt } = req.body;
+        if (!username || !prompt) return res.status(400).json({ success: false });
+
+        // 🔒 جدار الفحص الصارم: التحقق من أن العضو يمتلك رخصة ال-AI السنوية النشطة بـ Atlas
+        const userDoc = await UserModel.findOne({ username: username.trim() });
+        const isAuthorized = userDoc && (userDoc.canAccessAI || userDoc.username === 'Admin_Mostafa');
+
+        if (!isAuthorized) {
+            return res.json({ success: false, isLocked: true, message: "🔒 خاصية المساعد الذكي الملكي غير مفعلة لحسابك حالياً." });
+        }
+
+        // سحب مفتاح جوجل الافتراضي المدمج بالسيرفر أو المعين لسيادتك
+        const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyAXqRXuwz1rDUhbyIIjCu9JTiOW3Ub_rJA";
+        
+        // ضرب قنوات جوجل طيراناً دون حفظ أي ملفات على هارد السيرفر نهائياً
+        const response = await axios.post(
+            `https://googleapis.com{GEMINI_API_KEY}`,
+            { contents: [{ parts: [{ text: prompt }] }] },
+            { headers: { 'Content-Type': 'application/json' } }
+        );
+
+        const aiReply = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "🤖 عذراً، خطوط المعالجة السحابية لجوجل مشغولة حالياً.";
+        return res.json({ success: true, reply: aiReply });
+
+    } catch (e) {
+        console.error("خطأ معالجة محرك الذكاء الاصطناعي:", e);
+        res.json({ success: false, reply: "❌ عذراً، تعذر الاتصال بمصفوفة جوجل الذكية." });
+    }
+});
+
 // مسار API لجلب الأصول الحالية عند فتح النافذة
 app.get('/api/prayer/assets', async (req, res) => {
     try {
