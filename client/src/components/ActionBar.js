@@ -1,34 +1,26 @@
-import React from 'react';
-import '../App.css';
+/* eslint-disable react/jsx-no-comment-textnodes */
+/* eslint-disable no-unused-vars */
+import React, { useRef } from 'react';
 
-// 👑 [النسخة القياسية الكاملة لـ OURO Steps] استقبال معطيات النوافذ والتحويل السحابي والسنتر المكتسح والفلاشة
-const ActionBar = ({
-  user, // 🔒 استقبال كائن المستخدم لفحص الرتبة الإدارية أمنياً وعزل الزر
+const ActionBar = ({ 
+  user, 
   setShowDiscovery, 
   setDiscoveryTab, 
   setShowPrayerModal, 
   setShowMarket, 
   friendRequestsCount, 
-  setShowApiKeyModal,
-  setShowCenterModal,
+  setShowApiKeyModal, 
+  setShowCenterModal, 
+  setShowAdminPanelModal, 
   setShowFlashModal,
-  setShowWalletModal, // 👑 [تم الحقن] استقبال دالة فتح المحفظة المنبثقة من المكون الأب App.js
-  setShowAdminPanelModal, // 🚀 تم التثبيت الشرعي هنا لمنع خطأ الـ undef
-  setShowInvoiceModal, // 👈 👑 حقن دالة الفواتير الجديدة هنا
-  setShowCompanyModal, // 👈 👑 حقن دالة الشركات الجديدة هنا
-  setShowDocEngineModal // 👈 👑 حقن دالة المستندات الجديدة هنا
-}) => {    
-  
-  // 👑 دالة ذكية معقمة لتفتيت التنبيهات وإطلاق النوافذ الموجهة فوراً دون تضارب
-  const handleButtonClick = (tabName) => {
-    if (typeof setDiscoveryTab === 'function' && typeof setShowDiscovery === 'function') {
-      setDiscoveryTab(tabName);
-      setShowDiscovery(true);
-    }
-  };
+  setShowWalletModal,
+  setShowInvoiceModal,
+  setShowCompanyModal,
+  setShowDocEngineModal // 👑 استقبال شريان تفعيل محرك المستندات
+}) => {
 
-    // 👑 [تم الحقن موضعياً] - مراجع ومحركات التحريك الأفقي لشريط الأزرار الملكي
-  const ouroScrollRef = React.useRef(null);
+  // 👑 مراجع ومحركات التحريك والتمرير الأفقي لشريط الأزرار الملكي بسلاسة
+  const ouroScrollRef = useRef(null);
 
   const scrollOuroBar = (direction) => {
     if (ouroScrollRef.current) {
@@ -40,11 +32,10 @@ const ActionBar = ({
     }
   };
 
+  const isAdmin = user?.username === 'Admin_Mostafa' || user?.role === 'Admin';
 
   return (
-    <div className="ouro-action-bar">
-
-        <div className="action-bar-container" style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%', background: 'rgba(0,0,0,0.2)', padding: '5px 0', borderTop: '1px solid var(--border-glass)', borderBottom: '1px solid var(--border-glass)', margin: '10px 0' }}>
+    <div className="action-bar-container" style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%', background: 'rgba(0,0,0,0.2)', padding: '5px 0', borderTop: '1px solid var(--border-glass)', borderBottom: '1px solid var(--border-glass)', margin: '10px 0' }}>
       
       {/* ⬅️ السهم الملكي الأيسر للتحريك والتمرير بنقاء */}
       <button 
@@ -61,165 +52,25 @@ const ActionBar = ({
         className="action-bar-scroll-wrapper" 
         style={{ flex: 1, display: 'flex', gap: '8px', overflowX: 'auto', scrollBehavior: 'smooth', padding: '5px 10px', whiteSpace: 'nowrap', WebkitOverflowScrolling: 'touch' }}
       >
-      
-      {/* 🔍 زر البحث عن صديق المطور لتوجيه لوحة الاستكشاف الصافية */}
-      <button 
-        className="action-bar-btn gold-glow-btn" 
-        onClick={() => handleButtonClick('friends')} 
-      >
-       إضافة صديق
-      </button>
-      
-      {/* 👑 طبقة الدائرة النيونية اللامعة حول زر الأصدقاء الحركي دون مساس بجيناته */}
-      <div className="badge-container" style={{ position: 'relative', display: 'inline-block' }}>
-        {/* 🤝 زر الأصدقاء المطور لتوجيه واستدعاء ملف الأصدقاء والطلبات المعزولة */}
-        <button 
-          className="action-bar-btn gold-glow-btn" 
-          onClick={() => handleButtonClick('my_friends_list')} 
-        >
-          الأصدقاء
-        </button>
         
-        {/* 🔴 تنبثق الدائرة الحمراء النيونية النابضة بالحياة تلقائياً إذا كان هناك طلبات واردة معلقة أكبر من صفر */}
-        {friendRequestsCount > 0 && (
-          <span className="notification-badge-neon">{friendRequestsCount}</span>
+        {/* 👑 رص الأزرار بمساحتهم الحرة دون نزول في الأسطر */}
+        <button type="button" className="action-bar-btn" onClick={() => setShowWalletModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}>🪙 المحفظة الرقمية</button>
+        <button type="button" className="action-bar-btn" onClick={() => setShowInvoiceModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: '#27ae60' }}>🧾 محرك الفواتير</button>
+        <button type="button" className="action-bar-btn" onClick={() => setShowCompanyModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: '#2980b9' }}>🏛️ إدارة الشركات</button>
+        <button type="button" className="action-bar-btn" onClick={() => setShowDocEngineModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: '#e67e22' }}>📝 منشئ المستندات</button>
+        <button type="button" className="action-bar-btn" onClick={() => setShowCenterModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: 'var(--gold-primary)' }}>🏫 قاعة السنتر</button>
+        
+        {/* أزرار الخدمات التفاعلية المدمجة مسبقاً بمنصتك */}
+        <button type="button" className="action-bar-btn" onClick={() => { setShowDiscovery(true); setDiscoveryTab('prayer'); }} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}>🕋 مواقيت الصلاة</button>
+        <button type="button" className="action-bar-btn" onClick={() => setShowMarket(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}>🛒 المتجر المفتوح</button>
+        <button type="button" className="action-bar-btn" onClick={() => setShowFlashModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}>💾 الفلاشة الافتراضية</button>
+        <button type="button" className="action-bar-btn" onClick={() => setShowApiKeyModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}>🔑 بوابات المطورين</button>
+        
+        {/* زر لوحة تحكم الأدمن لسيادتك Mostafa لرصد الموافقات */}
+        {isAdmin && (
+          <button type="button" className="action-bar-btn" onClick={() => setShowAdminPanelModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: '#c0392b', color: '#c0392b', fontWeight: 'bold' }}>⚙️ طلبات الإدارة</button>
         )}
-      </div>
 
-      {/* 🕋 زرع منظومة مواقيت الصلاة والأذان المنبثقة الفاخرة متمركزة في قلب شريط الأزرار */}
-      <button 
-        className="action-bar-btn gold-glow-btn prayer-zone-trigger-btn" 
-        onClick={() => {
-          if (typeof setShowPrayerModal === 'function') {
-            setShowPrayerModal(true);
-          }
-        }}
-      >
-        🕋 الصلاة
-      </button>
-      
-      {/* 🛍️ زر المتجر الملكي المستقل لاستدعاء ملف الـ Market المطور */}
-      <button 
-        className="action-bar-btn gold-glow-btn" 
-        onClick={() => {
-          if (typeof setShowMarket === 'function') {
-            setShowMarket(true); 
-          }
-        }}
-      >
-        🛍️ المتجر 
-      </button>
-
-      {/* ⚙️ زر فتح واستدعاء بوابة الـ API واستخراج مفاتيح المطورين للموبايل والتطبيقات المأمن */}
-      <button 
-        className="action-bar-btn gold-glow-btn" 
-        style={{ borderColor: '#27ae60' }} 
-        onClick={() => {
-          if (typeof setShowApiKeyModal === 'function') {
-            setShowApiKeyModal(true); 
-          }
-        }}
-      >
-        API KEY
-      </button>
-
-      {/* 🪙 الزر الملكي المطور لبلوكتشين ومحفظة العملات الداخلي */}
-      <button 
-        type="button" 
-        className="action-bar-btn gold-glow-btn"
-        onClick={() => {
-          if (typeof setShowWalletModal === 'function') {
-            setShowWalletModal(true);
-          }
-        }}
-        style={{ borderColor: 'var(--gold-primary)' }}
-      >
-        المحفظة
-      </button>
-
-      {/* 🏛️ [الكمبلة التعليمية المكتسحة] زر إطلاق السنتر والاجتماعات والبث الحي والمذكرات */}
-      <button 
-        className="action-bar-btn gold-glow-btn" 
-        style={{ borderColor: '#9b59b6', background: 'rgba(155,89,182,0.05)' }} 
-        onClick={() => {
-          if (typeof setShowCenterModal === 'function') {
-            setShowCenterModal(true); 
-          }
-        }}
-      >
-        غرفة بث حى
-      </button>
-
-      {/* 📟 [نقل وتوطين الفلاشة الرقمية الموقوتة] زر إطلاق واستدعاء صندوق الفلاشة العائم بدقة بصرية ممتدة */}
-      <button 
-        className="action-bar-btn gold-glow-btn" 
-        style={{ borderColor: '#e67e22', background: 'rgba(230,126,34,0.05)' }} // تمييز فوسفوري برتقالي نيون للفلاشة
-        onClick={() => {
-          if (typeof setShowFlashModal === 'function') {
-            setShowFlashModal(true); // تفعيل النافذة العائمة المنبثقة للفلاشة الإلكترونية فوراً
-          }
-        }}
-      >
-        الفلاشة
-      </button>
-
-      <button 
-        className="action-bar-btn gold-glow-btn neon-admin-btn" 
-        style={{ 
-          borderColor: 'var(--gold-primary)', 
-          background: 'linear-gradient(180deg, rgba(212,175,55,0.15) 0%, rgba(0,0,0,0.8) 100%)', 
-          fontWeight: 'bold',
-          color: 'var(--gold-primary)',
-          textShadow: '0 0 5px rgba(212,175,55,0.5)'
-        }} 
-        onClick={() => { if (typeof setShowAdminPanelModal === 'function') setShowAdminPanelModal(true); }}
-      >
-        👑 الإدارة
-      </button>
-
-      {/* 🏛️ الزر السيادي المطور لإطلاق نظام تشغيل وإدارة الشركات والمصانع */}
-      <button 
-        type="button" 
-        className="action-bar-btn gold-glow-btn"
-        onClick={() => {
-          if (typeof setShowCompanyModal === 'function') {
-            setShowCompanyModal(true);
-          }
-        }}
-        style={{ borderColor: '#2980b9' }}
-      >
-       إدارة الشركات
-      </button>
-
-                {/* 🧾 الزر الملكي المطور لمحرك الفواتير الرقمية وعروض الأسعار الفورية */}
-      <button 
-        type="button" 
-        className="action-bar-btn"
-        onClick={() => {
-          if (typeof setShowInvoiceModal === 'function') {
-            setShowInvoiceModal(true);
-          }
-        }}
-        style={{ borderColor: '#27ae60' }}
-      >
-        🧾 الفواتير والأسعار
-      </button>
-
-                {/* 📝 الزر الملكي المطور لإطلاق محرك صياغة المستندات والملازم التعليمية */}
-      <button 
-        type="button" 
-        className="action-bar-btn"
-        onClick={() => {
-          if (typeof setShowDocEngineModal === 'function') {
-            setShowDocEngineModal(true);
-          }
-        }}
-        style={{ borderColor: '#e67e22' }}
-      >
-        📝 كتابة مستندات
-      </button>
-
-          
       </div>
 
       {/* ➡️ السهم الملكي الأيمن للتحريك والتمرير بنقاء */}
