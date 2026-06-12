@@ -16,7 +16,8 @@ const ActionBar = ({
   setShowWalletModal,
   setShowInvoiceModal,
   setShowCompanyModal,
-  setShowDocEngineModal // 👑 استقبال شريان تفعيل محرك المستندات
+  setShowDocEngineModal, // 👑 استقبال شريان تفعيل محرك المستندات
+  setShowAiModal // 👈 👑 حقن دالة الـ AI الجديدة هنا
 }) => {
 
   // 👑 مراجع ومحركات التحريك والتمرير الأفقي لشريط الأزرار الملكي بسلاسة
@@ -68,6 +69,18 @@ const ActionBar = ({
         >
           🕋 مواقيت الصلاة
         </button>
+
+        {/* 🤖 الزر السيادي المطور لإطلاق المساعد الذكي المدفوع لـ جوجل Gemini */}
+        <button 
+          type="button" 
+          className="action-bar-btn"
+          onClick={() => { if (typeof setShowAiModal === 'function') setShowAiModal(true); }}
+          style={{ borderColor: '#9b59b6', color: '#fff' }}
+        >
+          AI
+        </button>
+
+
         {/* أزرار الخدمات التفاعلية المدمجة مسبقاً بمنصتك */}
         <button type="button" className="action-bar-btn" onClick={() => { setShowDiscovery(true); setDiscoveryTab('prayer'); }} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}>الأصدقاء</button>
         <button type="button" className="action-bar-btn" onClick={() => setShowMarket(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}>🛒 المتجر المفتوح</button>
