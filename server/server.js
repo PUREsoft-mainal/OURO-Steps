@@ -309,7 +309,7 @@ app.post('/api/prayer/upload-adhan', upload.single('adhanAudio'), async (req, re
 });
 
 // ==========================================================================
-// 🧠 🤖 [تم الحسم والتصحيح] - محرك الذكاء الاصطناعي السيادي لـ OURO Core
+// 🧠 🤖 [تم الحقن والحسم بمفتاحك الملكي] - محرك الذكاء الاصطناعي السيادي لـ OURO Core
 // ==========================================================================
 app.post('/api/ai/chat', async (req, res) => {
     try {
@@ -331,15 +331,10 @@ app.post('/api/ai/chat', async (req, res) => {
             return res.json({ success: false, isLocked: true, message: "🔒 خاصية المساعد الذكي الملكي غير مفعلة لحسابك حالياً، يرجى تفعيل الرخصة السنوية." });
         }
 
-        // 🔑 [تنبيه التفعيل الجوهري]: الصق هنا مفتاح Google Gemini API Key الخاص بك بنقاط الاقتباس
-        // يمكنك الحصول عليه مجاناً 100% من Google AI Studio لعام 2026 م
+        // 🔑 [تم الحقن والتحصين بالملي ثانية] - قفل شفرة الـ API KEY المجانية والنشطة الخاصة بسيادتك لعام 2026 م
         const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AQ.Ab8RN6JIYOa4mwtAMmoVXo8XBEiEgZ0O4V_H_Ky-WcgR7GTXTw"; 
-        
-        if (GEMINI_API_KEY.includes("YourActualValid")) {
-            return res.json({ success: false, reply: "⚠️ تنبيه الإدارة: يرجى فتح ملف server.js ولصق مفتاح الـ API KEY الحقيقي الخاص بجوجل جيفين داخل متغير GEMINI_API_KEY لتفعيل البث السحابي حياً!" });
-        }
 
-        // ضرب بوابات جوجل السحابية طيراناً وبـ Zero-Storage كامل
+        // ضرب بوابات جوجل السحابية طيراناً وبـ Zero-Storage كامل لحفظ مساحة خادمك
         const response = await axios.post(
             `https://googleapis.com{GEMINI_API_KEY}`,
             { contents: [{ parts: [{ text: prompt }] }] },
@@ -354,6 +349,7 @@ app.post('/api/ai/chat', async (req, res) => {
         res.json({ success: false, reply: "❌ عذراً، تعذر فك تشفير مصفوفة جوجل، تأكد من صلاحية ونشاط الـ API KEY الخاص بك بملف server.js." });
     }
 });
+
 
 // مسار API لجلب الأصول الحالية عند فتح النافذة
 app.get('/api/prayer/assets', async (req, res) => {
