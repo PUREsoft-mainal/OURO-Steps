@@ -73,7 +73,8 @@ function App() {
   const [adminRequests, setAdminRequests] = useState([]);
   const [companyRequests, setCompanyRequests] = useState([]); // مصفوفة طلبات الشركات المستقلة
   const [showDocEngineModal, setShowDocEngineModal] = useState(false); // محرك صياغة المستندات والملازم
-
+  const [showAiModal, setShowAiModal] = useState(false); // كبسولة إطلاق المساعد الذكي
+  
   // ==========================================================================
   // 👑 📡 [دمج وتصحيح شريان الاستقبال المزدوج] قنص طلبات السنتر والشركات معاً حياً
   // ==========================================================================
@@ -808,6 +809,13 @@ return (
           </div>
         )}
 
+        {showAiModal && (
+          <OuroAiAssistant 
+            user={user}
+            API_BASE={API_BASE}
+            onClose={() => setShowAiModal(false)}
+          />
+        )}
 
         {/* 👑 نافذة مواقيت الصلاة المنبثقة الشاملة (تظهر فور النقر على زر مواقيت الصلاة بشريط الأزرار) */}
         {showPrayerModal && (
