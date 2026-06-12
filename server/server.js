@@ -336,7 +336,7 @@ app.post('/api/ai/chat', async (req, res) => {
 
         // ضرب بوابات جوجل السحابية طيراناً وبـ Zero-Storage كامل لحفظ مساحة خادمك
         const response = await axios.post(
-            `https://googleapis.com{GEMINI_API_KEY}`,
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
             { contents: [{ parts: [{ text: prompt }] }] },
             { headers: { 'Content-Type': 'application/json' } }
         );
