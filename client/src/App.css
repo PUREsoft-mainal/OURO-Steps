@@ -2093,3 +2093,12 @@ body, html {
 .dropdown-user-item {
   color: #b38f4d !important; /* درجة نحاسية فاخرة ومعتقة */
 }
+
+/* 👑 إخفاء شريط التمرير التقليدي مع الحفاظ على حركية السحب والأسهم لشريط الأزرار */
+.action-bar-scroll-wrapper::-webkit-scrollbar {
+  display: none; /* إخفاء كلي في متصفحات جوجل وكروم وسفاري */
+}
+.action-bar-scroll-wrapper {
+  -ms-overflow-style: none;  /* إخفاء في متصفح إيدج */
+  scrollbar-width: none;  /* إخفاء في متصفح فايرفوكس */
+}
