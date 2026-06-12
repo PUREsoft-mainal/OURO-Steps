@@ -61,7 +61,7 @@ const ActionBar = ({
         <button type="button" className="action-bar-btn" onClick={() => setShowCenterModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: 'var(--gold-primary)' }}>🏫 قاعة السنتر</button>
         
         {/* أزرار الخدمات التفاعلية المدمجة مسبقاً بمنصتك */}
-        <button type="button" className="action-bar-btn" onClick={() => { setShowDiscovery(true); setDiscoveryTab('prayer'); }} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}>🕋 مواقيت الصلاة</button>
+        <button type="button" className="action-bar-btn" onClick={() => { setShowDiscovery(true); setDiscoveryTab('prayer'); }} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}>الأصدقاء</button>
         <button type="button" className="action-bar-btn" onClick={() => setShowMarket(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}>🛒 المتجر المفتوح</button>
         <button type="button" className="action-bar-btn" onClick={() => setShowFlashModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}> الفلاشة </button>
         <button type="button" className="action-bar-btn" onClick={() => setShowApiKeyModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}>🔑 API Key</button>
