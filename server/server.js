@@ -308,47 +308,64 @@ app.post('/api/prayer/upload-adhan', upload.single('adhanAudio'), async (req, re
     } catch (err) { res.status(500).json({ success: false }); }
 });
 
-// ==========================================================================
-// 🧠 🤖 [تم الحقن والحسم بمفتاحك الملكي] - محرك الذكاء الاصطناعي السيادي لـ OURO Core
-// ==========================================================================
 app.post('/api/ai/chat', async (req, res) => {
     try {
         const { username, prompt } = req.body;
-        if (!username || !prompt) return res.status(400).json({ success: false, message: "⚠️ بيانات ناقصة" });
 
-        // 🧠 قنص وثيقة المستخدم من الأطلس
-        const userDoc = await UserModel.findOne({ username: username.trim() });
-        
-        // 🔒 [تحديث الحسم للتجربة]: جعل الصلاحية تفتح تلقائياً للأدمن ولأي حساب يمتلك الرخصة السحابية
-        const isAuthorized = userDoc && (
-            userDoc.canAccessAI === true || 
-            userDoc.username === 'Admin_Mostafa' || 
-            userDoc.role === 'Admin' ||
-            username.trim() === 'Admin_Mostafa' // خط دفاع إضافي لضمان فتح الميزة لحسابك فوراً
-        );
-
-        if (!isAuthorized) {
-            return res.json({ success: false, isLocked: true, message: "🔒 خاصية المساعد الذكي الملكي غير مفعلة لحسابك حالياً، يرجى تفعيل الرخصة السنوية." });
+        if (!username || !prompt) {
+            return res.status(400).json({ success: false, message: "⚠️ بيانات ناقصة" });
         }
 
-        // 🔑 [تم الحقن والتحصين بالملي ثانية] - قفل شفرة الـ API KEY المجانية والنشطة الخاصة بسيادتك لعام 2026 م
-        const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AQ.Ab8RN6JIYOa4mwtAMmoVXo8XBEiEgZ0O4V_H_Ky-WcgR7GTXTw"; 
+        // 🧠 جلب وثيقة المستخدم من قاعدة البيانات (تعديل findOne)
+        const userdoc = await usermodel.findOne({ username: username.trim() });
 
-        // ضرب بوابات جوجل السحابية طيراناً وبـ Zero-Storage كامل لحفظ مساحة خادمك
-        const response = await axios.post(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
-            { contents: [{ parts: [{ text: prompt }] }] },
-            { headers: { 'Content-Type': 'application/json' } }
+        // 🔒 التحقق من الصلاحية (ملاحظة: يفضل استبدال هذا التوثيق بـ JWT لاحقاً لحمايته من التزوير)
+        const isauthorized = userdoc && (
+            userdoc.canaccessai === true ||
+            userdoc.username === 'admin_mostafa' ||
+            userdoc.role === 'admin' ||
+            username.trim() === 'admin_mostafa'
         );
 
-        const aiReply = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "🤖 عذراً، خطوط المعالجة السحابية لجوجل مشغولة حالياً.";
-        return res.json({ success: true, reply: aiReply });
+        if (!isauthorized) {
+            return res.json({ 
+                success: false, 
+                islocked: true, 
+                message: "🔒 خاصية المساعد الذكي الملكي غير مفعلة لحسابك حالياً، يرجى تفعيل الرخصة السنوية." 
+            });
+        }
+
+        // 🔑 جلب المفتاح من البيئة المحيطة حصراً لحمايته من السرقة
+        const gemini_api_key = process.env.gemini_api_key;
+        
+        if (!gemini_api_key) {
+            return res.status(500).json({ success: false, message: "❌ خطأ في إعدادات الخادم: مفتاح الـ API غير موجود." });
+        }
+
+        // 🚀 إرسال الطلب مع تمرير المفتاح في الرابط واستقبال رد Gemini Flash
+        const response = await axios.post(
+            `https://googleapis.com{gemini_api_key}`,
+            {
+                contents: [{ parts: [{ text: prompt }] }]
+            },
+            {
+                headers: { 'Content-Type': 'application/json' }
+            }
+        );
+
+        const aireply = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "🤖 عذراً، خطوط المعالجة السحابية لجوجل مشغولة حالياً.";
+
+        return res.json({ success: true, reply: aireply });
 
     } catch (e) {
-        console.error("خطأ معالجة محرك الذكاء الاصطناعي السحابي لجوجل:", e?.response?.data || e);
-        res.json({ success: false, reply: "❌ عذراً، تعذر فك تشفير مصفوفة جوجل، تأكد من صلاحية ونشاط الـ API KEY الخاص بك بملف server.js." });
+        console.error("خطأ معالجة محرك الذكاء الاصطناعي:", e.message);
+        return res.status(500).json({ 
+            success: false, 
+            message: "💥 حدث خطأ داخلي أثناء معالجة الطلب الذكي." 
+        });
     }
 });
+
 
 
 // مسار API لجلب الأصول الحالية عند فتح النافذة
