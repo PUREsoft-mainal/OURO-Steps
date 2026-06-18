@@ -6,6 +6,7 @@ const multer = require('multer');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const { GoogleGenAI } = require('@google/genai');
 
 // ==========================================================================
 // 🛡️ [مستودع ملفات الطلبات السحابي الموحد] - حفظ وتأمين اشتراكات السنتر والـ API
@@ -316,10 +317,10 @@ app.post('/api/ai/chat', async (req, res) => {
             return res.status(400).json({ success: false, message: "⚠️ بيانات ناقصة" });
         }
 
-        // 🧠 جلب وثيقة المستخدم من قاعدة البيانات (تعديل findOne)
+        // 🧠 جلب وثيقة المستخدم من الأطلس
         const userdoc = await usermodel.findOne({ username: username.trim() });
 
-        // 🔒 التحقق من الصلاحية (ملاحظة: يفضل استبدال هذا التوثيق بـ JWT لاحقاً لحمايته من التزوير)
+        // 🔒 خط الدفاع والفتح التلقائي للأدمن ولحسابك الملكي
         const isauthorized = userdoc && (
             userdoc.canaccessai === true ||
             userdoc.username === 'admin_mostafa' ||
@@ -335,25 +336,20 @@ app.post('/api/ai/chat', async (req, res) => {
             });
         }
 
-        // 🔑 جلب المفتاح من البيئة المحيطة حصراً لحمايته من السرقة
-        const gemini_api_key = process.env.gemini_api_key;
-        
-        if (!gemini_api_key) {
-            return res.status(500).json({ success: false, message: "❌ خطأ في إعدادات الخادم: مفتاح الـ API غير موجود." });
-        }
+        // 🔑 جلب المفتاح بالأحرف الكبيرة كما نص التوثيق، أو استخدام المفتاح النصي كخيار احتياطي فوراً
+        const apiKey = process.env.GEMINI_API_KEY || "AQ.Ab8RN6INoEa1VMfqIui52Udqx_qfAemtvRj0GVj5fTFlySxiEA";
 
-        // 🚀 إرسال الطلب مع تمرير المفتاح في الرابط واستقبال رد Gemini Flash
-        const response = await axios.post(
-            `https://googleapis.com{gemini_api_key}`,
-            {
-                contents: [{ parts: [{ text: prompt }] }]
-            },
-            {
-                headers: { 'Content-Type': 'application/json' }
-            }
-        );
+        // ⚙️ تهيئة العميل الرسمي وتمرير المفتاح بشكل صريح (Explicit) كما تتيح المكتبة لضمان التشغيل الفوري
+        const ai = new GoogleGenAI({ apiKey: apiKey });
 
-        const aireply = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "🤖 عذراً، خطوط المعالجة السحابية لجوجل مشغولة حالياً.";
+        // 🚀 توليد المحتوى عبر الموديل السحابي الحديث الذكي والسريع
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash', // أو الموديل الأحدث المتاح في حسابك
+            contents: prompt,
+        });
+
+        // استخلاص الرد النصي مباشرة وبسلاسة
+        const aireply = response.text || "🤖 عذراً، خطوط المعالجة السحابية لجوجل مشغولة حالياً.";
 
         return res.json({ success: true, reply: aireply });
 
