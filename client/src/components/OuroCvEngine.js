@@ -76,7 +76,7 @@ const OuroCvEngine = ({ user, onClose }) => {
     
     document.body.innerHTML = `
       <div style="background:#fff; color:#000; padding:0; margin:0; direction:rtl; text-align:right;">
-        \${printContent}
+        ${printContent}
       </div>
     `;
     window.print();
