@@ -20,6 +20,7 @@ import OuroInvoiceModal from './components/OuroInvoiceModal'; // 👑 قُم ب�
 import OuroCompanyManager from './components/OuroCompanyManager'; // 👑 🏛️ حقن السيستم العملاق للشركات هنا
 import OuroDocEngine from './components/OuroDocEngine'; // 👑 📝 حقن محرك صياغة المستندات والملازم الملكي هنا
 import OuroAiAssistant from './components/OuroAiAssistant'; // 👑 🤖 حقن المساعد الذكي لـ جوجل Gemini هنا بالملي
+import OuroSocialFeed from './components/OuroSocialFeed'; // 👈 ضعه في أعلى الملف لتأمين العبور
 import './App.css';
 
 // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
