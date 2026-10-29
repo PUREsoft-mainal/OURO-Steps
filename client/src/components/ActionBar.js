@@ -16,9 +16,9 @@ const ActionBar = ({
   setShowInvoiceModal,
   setShowCompanyModal,
   setShowDocEngineModal, // 👑 استقبال شريان تفعيل محرك المستندات
+  setShowAiModal, // 👈 👑 حقن دالة الـ AI الجديدة هنا
   setShowLoanCalculator,
-  setShowCvEngine,
-  setShowAiModal // 👈 👑 حقن دالة الـ AI الجديدة هنا
+  setShowCvEngine
 }) => {
 
   // 👑 مراجع ومحركات التحريك والتمرير الأفقي لشريط الأزرار الملكي بسلاسة
