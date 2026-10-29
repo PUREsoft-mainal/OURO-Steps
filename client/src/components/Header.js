@@ -4,7 +4,7 @@ import StatsBar from './StatsBar';
 import '../App.css'; // استدعاء ملف التنسيق الشامل ليعمل على هذا الصندوق فوراً
 
 // 👑 [تعديل الترويسة] استقبال المعطى renderCoinBadge ديناميكياً من الأب لعرض مربع العملة وزر الـ (+)
-const Header = ({ activeUsers, totalUsers, user, renderCoinBadge }) => {
+const Header = ({ activeUsers, totalUsers, user }) => {
   const [showCS, setShowCS] = useState(false);
   
   // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
@@ -64,12 +64,6 @@ const Header = ({ activeUsers, totalUsers, user, renderCoinBadge }) => {
       {/* 👑 جهة اليسار المطور: حقن وصيانة مربع العملات وزر الـ (+) بجوار الهوية الشخصية ونظام الأفاتار */}
       <div className="user-profile-section">
         
-        {/* 🪙 [شريان الضخ السحابي الحاسم] ظهور مربع العملات وزر الـ (+) الملتزم بالأبعاد الفزيائية الدقيقة هنا فوراً */}
-        {renderCoinBadge && (
-          <div className="header-coin-badge-zone" style={{ display: 'flex', alignItems: 'center' }}>
-            {renderCoinBadge}
-          </div>
-        )}
 
         <div className="avatar-picker-wrapper" title="اضغط هنا لتغيير صورتك الشخصية الملكية">
           {/* حقل رفع ملفات مخفي يتم تفعيله بالنقر على الصورة */}
