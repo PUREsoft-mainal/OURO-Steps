@@ -17,13 +17,13 @@ const OuroCvEngine = ({ user, onClose }) => {
   const [currentSkill, setCurrentSkill] = useState("");
 
   const [experiences, setExperiences] = useState([]);
-  const [expEntity, setExpEntity] = useState(""); // الجهة التي عمل لها
-  const [contractStart, setContractStart] = useState(""); // بداية العقد
-  const [contractEnd, setContractEnd] = useState(""); // نهاية العقد
-  const [isCurrentContract, setIsCurrentContract] = useState(false); // هل العقد قائم؟
-  const [jobTitle, setJobTitle] = useState(""); // المسمى الوظيفي أو طبيعة العمل
+  const [expEntity, setExpEntity] = useState(""); 
+  const [contractStart, setContractStart] = useState(""); 
+  const [contractEnd, setContractEnd] = useState(""); 
+  const [isCurrentContract, setIsCurrentContract] = useState(false); 
+  const [jobTitle, setJobTitle] = useState(""); 
 
-  // دالة حقن المهارات الديناميكية بداخل المصفوفة المفرزة
+  // دالة حقن المهارات الديناميكية بداخل مصفوفة الفرونت إند
   const handleAddSkill = (e) => {
     e.preventDefault();
     if (!currentSkill.trim()) return;
@@ -70,18 +70,19 @@ const OuroCvEngine = ({ user, onClose }) => {
     window.html2pdf().from(element).set(opt).save();
   };
 
-  // 🖨️ محرك الطباعة المادية الفورية الصافية وعزل الـ DOM
+  // 🖨️ محرك الطباعة المادية الفورية الصافية وتصحيح دمج الرموز [✔️ تم الحسم بالملي]
   const handlePrintDoc = () => {
     const printContent = document.getElementById('ouroCvPrintableZone').innerHTML;
     
     document.body.innerHTML = `
       <div style="background:#fff; color:#000; padding:0; margin:0; direction:rtl; text-align:right;">
-        ${printContent}
+        \${printContent}
       </div>
     `;
     window.print();
     window.location.reload(); 
   };
+
 
    return (
     <div className="discovery-overlay" onClick={onClose}>
