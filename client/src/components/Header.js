@@ -56,7 +56,7 @@ const Header = ({ activeUsers, totalUsers, user }) => {
               <p>📞 <strong>فون:</strong> 01027411921</p>
               <p>💸 <strong>فودافون كاش:</strong> 01080166413</p>
               <p>📧 <strong>البريد:</strong> mostafadesha953@gmail.com</p>
-              <p style={{fontSize: '10px', color: 'var(--gold-primary)'}}>نحن هنا لخدمتك دائماً</p>
+              <p style={{fontSize: '10px', color: 'var(--gold-primary)'}}>نحن هنا لخدمتك دائماًمع تحيات آدمن مصطفى البحيرى </p>
             </div>
           )}
         </div>
