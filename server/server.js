@@ -95,7 +95,6 @@ const DeveloperKeySchema = new mongoose.Schema({
         virtual_flash: { type: Boolean, default: false }, 
         market: { type: Boolean, default: false },        
         ads: { type: Boolean, default: true },          
-        wallet: { type: Boolean, default: false },       
         center: { type: Boolean, default: false }        
     },
     isActive: { type: Boolean, default: false }, // 🔒 ينطلق مجمداً وموقوفاً تلقائياً حتى موافقة المشرفين
