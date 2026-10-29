@@ -61,7 +61,6 @@ const ActionBar = ({
         <button type="button" className="action-bar-btn" onClick={() => setShowDocEngineModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: '#e67e22' }}>📝 منشئ المستندات</button>
         <button type="button" className="action-bar-btn" onClick={() => setShowCenterModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: 'var(--gold-primary)' }}>🏫 قاعة السنتر</button>
         <button type="button" className="action-bar-btn" onClick={() => setShowLoanCalculator(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: '#e74c3c' }}>📊 حاسبة القروض</button>
-        <button type="button" className="action-bar-btn" onClick={() => setShowCvEngine(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: '#1abc9c' }}>📄 السيرة الذاتية</button>
          {/* 🕋 👑 [إضافة وحقن زر مواقيت الصلاة المستقل والشرعي] لفتح ملف PrayerWidget.js */}
         <button 
           type="button" 
@@ -87,6 +86,7 @@ const ActionBar = ({
         <button type="button" className="action-bar-btn" onClick={() => { setShowDiscovery(true); setDiscoveryTab('prayer'); }} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}>الأصدقاء</button>
         <button type="button" className="action-bar-btn" onClick={() => setShowMarket(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}>🛒 المتجر المفتوح</button>
         <button type="button" className="action-bar-btn" onClick={() => setShowFlashModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}> الفلاشة </button>
+        <button type="button" className="action-bar-btn" onClick={() => setShowCvEngine(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: '#1abc9c' }}>📄 السيرة الذاتية</button>
         <button type="button" className="action-bar-btn" onClick={() => setShowApiKeyModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}>🔑 API Key</button>
         {/* زر لوحة تحكم الأدمن لسيادتك Mostafa لرصد الموافقات */}
         {isAdmin && (
