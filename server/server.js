@@ -863,6 +863,90 @@ io.on('connection', (socket) => {
         } catch (err) { console.error("خطأ جلب سجل الغرفة من السحاب:", err); }
     });
 
+    // مصفوفة الحفظ السحابية المؤقتة للمنشورات الاجتماعية (يمكنك ربطها بجدول خاص بالمونجو لاحقاً)
+    let globalSocialPosts = [];
+
+    // حقن مسار استقبال المنشورات بالـ Base64 عبر الصور المرفوعة للمحرك السحابي
+    app.post('/api/social/create-post', upload.array('postImages', 5), async (req, res) => {
+        try {
+            const { username, text } = req.body;
+            const files = req.files || [];
+            const imagesPaths = files.map(f => `/uploads/${f.filename}`);
+
+            const newPostObj = {
+                id: 'post_' + Date.now() + Math.floor(Math.random() * 100),
+                uploader: username.trim(),
+                text: text ? text.trim() : "",
+                images: imagesPaths,
+                reactions: {}, // لحفظ التفاعلات السداسية لكل مستخدم
+                comments: [],
+                time: new Date().toLocaleDateString('ar-EG') + ' ' + new Date().toLocaleTimeString('ar-EG'),
+                isShared: false,
+                originalOwner: null
+            };
+
+            globalSocialPosts.unshift(newPostObj);
+            io.emit('new_social_post', newPostObj);
+            res.json({ success: true, post: newPostObj });
+        } catch (err) { res.status(500).json({ success: false }); }
+    });
+
+    // مستمعات قنوات السوكيت لإدارة تفاعلات ومشاركة وتعليقات الفيد
+    socket.on('get_social_posts', () => {
+        socket.emit('init_social_posts', globalSocialPosts);
+    });
+
+    socket.on('submit_post_reaction', (data) => {
+        const { postId, username, reaction } = data;
+        const post = globalSocialPosts.find(p => p.id === postId);
+        if (post) {
+            post.reactions = post.reactions || {};
+            // إذا ضغط نفس التفاعل يمسحه، وإذا ضغط تفاعل مختلف يعدله
+            if (post.reactions[username] === reaction) {
+                delete post.reactions[username];
+            } else {
+                post.reactions[username] = reaction;
+            }
+            io.emit('social_post_updated', post);
+        }
+    });
+
+    socket.on('submit_post_comment', (data) => {
+        const { postId, commentId, sender, text, time } = data;
+        const post = globalSocialPosts.find(p => p.id === postId);
+        if (post) {
+            post.comments = post.comments || [];
+            post.comments.push({ commentId, sender, text, time });
+            io.emit('social_post_updated', post);
+        }
+    });
+
+    socket.on('share_social_post', (data) => {
+        const { originalPostId, sharerUsername } = data;
+        const origPost = globalSocialPosts.find(p => p.id === originalPostId);
+        if (origPost) {
+            const sharedPost = {
+                id: 'post_shared_' + Date.now(),
+                uploader: sharerUsername,
+                text: origPost.text,
+                images: origPost.images,
+                reactions: {},
+                comments: [],
+                time: new Date().toLocaleDateString('ar-EG') + ' ' + new Date().toLocaleTimeString('ar-EG'),
+                isShared: true,
+                originalOwner: origPost.uploader
+            };
+            globalSocialPosts.unshift(sharedPost);
+            io.emit('new_social_post', sharedPost);
+        }
+    });
+
+    socket.on('delete_social_post', (data) => {
+        globalSocialPosts = globalSocialPosts.filter(p => p.id !== data.postId);
+        io.emit('social_post_deleted', data.postId);
+    });
+
+
     // 👑 [مستمع إضافي جديد مكمل للزراعة بالأسفل فوراً] لمنح ميزة بث إضافة الأصدقاء سحابياً بـ MongoDB Atlas
     socket.on('add_user_to_group', async (data) => {
         try {
