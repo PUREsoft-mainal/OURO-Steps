@@ -570,6 +570,13 @@ return (
             onCreateGroup={handleCreateGroup} 
           />
 
+          <OuroSocialFeed
+            user={user} 
+            socket={socket} 
+            API_BASE={API_BASE} 
+          />
+
+
           {/* الجانب الأيسر: القصص والمشاركات العامة */}
           <UploadSidebar 
             files={files} 
