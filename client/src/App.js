@@ -520,14 +520,6 @@ return (
           renderCoinBadge={
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.6)', padding: '4px 12px', borderRadius: '4px', border: '1px solid var(--gold-primary)', boxShadow: '0 0 8px rgba(212,175,55,0.2)' }}>
               <span style={{ color: 'var(--gold-primary)', fontSize: '13px' }}>🪙</span>
-              <span style={{ color: '#fff', fontSize: '11px', fontWeight: 'bold' }}>رصيدك السحابي:</span>
-              <strong style={{ color: '#27ae60', fontSize: '12px', fontFamily: 'monospace' }}>{ouroBalance.toFixed(2)} OURO</strong>
-              <button 
-                onClick={() => setShowWalletModal(true)}
-                style={{ background: 'var(--gold-primary)', color: '#000', border: 'none', borderRadius: '3px', fontSize: '10px', padding: '2px 6px', cursor: 'pointer', fontWeight: 'bold', marginLeft: '5px' }}
-              >
-                ➕ حوالة
-              </button>
             </div>
           }
         />
