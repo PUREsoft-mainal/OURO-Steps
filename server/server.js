@@ -880,55 +880,6 @@ io.on('connection', (socket) => {
         } catch (err) { console.error("خطأ إضافة عضو للمجموعات المغلقة:", err); }
     });
 
-    // 3️⃣ مستمع استقبال وحفظ الرسائل الجديدة بـ MongoDB Atlas وبثها لحظياً للمجموعة
-    socket.on('sendGroupMessage', async (data) => {
-        try {
-            if (!socket.user || !data.roomId || !data.text) return;
-
-            const msgData = new GroupMessageModel({
-                id: Date.now().toString(),
-                roomId: data.roomId,
-                user: socket.user.username,
-                role: socket.user.role,
-                avatar: socket.user.avatar || '', // تمرير رابط الصورة المحدثة سحابياً
-                text: data.text.trim(),
-                time: new Date().toLocaleTimeString('ar-EG')
-            });
-            await msgData.save(); // الرسالة آمنة وراسخة في السحاب الخارجي للأبد
-
-            io.to(data.roomId).emit('group_message', { roomId: data.roomId, msg: msgData });
-        } catch (err) { console.error("خطأ إرسال الرسالة سحابياً:", err); }
-    });
-
-    // 4️⃣ مستمع تعديل الرسائل سحابياً ولحظياً بـ MongoDB Atlas
-    socket.on('edit_group_message', async (data) => {
-        try {
-            if (!data.roomId || !data.msgId || !data.newText) return;
-            
-            // تحديث الحقل السحابي للرسالة المستهدفة
-            await GroupMessageModel.updateOne({ id: data.msgId }, { $set: { text: data.newText.trim() } });
-            
-            // إعادة جلب السجل المحدث وبثه لإنعاش شاشات الجميع لحظياً
-            const history = await GroupMessageModel.find({ roomId: data.roomId }).sort({ _id: 1 });
-            io.to(data.roomId).emit('group_chat_history', { roomId: data.roomId, history });
-        } catch (err) { console.error("خطأ تعديل الرسالة سحابياً:", err); }
-    });
-
-    // 5️⃣ مستمع تدمير وإبادة الرسائل سحابياً ولحظياً من الـ Cloud
-    socket.on('delete_group_message', async (data) => {
-        try {
-            if (!data.roomId || !data.msgId) return;
-            
-            // حذف السجل من قاعدة البيانات السحابية الحية
-            await GroupMessageModel.deleteOne({ id: data.msgId });
-            
-            const history = await GroupMessageModel.find({ roomId: data.roomId }).sort({ _id: 1 });
-            io.to(data.roomId).emit('group_chat_history', { roomId: data.roomId, history });
-        } catch (err) { console.error("خطأ حذف الرسالة سحابياً:", err); }
-    });
-
-
-
     // 4. تعيين المشرفين (المشرف الأول والمشرف الثاني) من قبل منشئ المجموعة
     socket.on('assign_group_moderator', (data) => {
         const groups = readJson(GROUPS_LIST_FILE);
