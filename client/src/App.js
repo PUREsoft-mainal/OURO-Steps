@@ -450,7 +450,6 @@ function App() {
         />
 
         <div className="main-content">
-          <BrowseForLocalPlaces site_search_context="true" />  
           <GroupsSidebar 
             groups={groups} 
             user={user} 
