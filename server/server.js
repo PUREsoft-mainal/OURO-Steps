@@ -112,15 +112,6 @@ const PrayerAssetSchema = new mongoose.Schema({
 });
 const PrayerAssetModel = mongoose.model('PrayerAsset', PrayerAssetSchema);
 
-// 👑 [الملف السحابي المستقل لكل مستخدم] جدول إدارة وحفظ العملات الحقيقية المتسلسلة ومنع التلاعب
-const OuroUserLedgerSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
-    ouroBalance: { type: Number, default: 0 }, // عدد العملات الفعلي المحفوظ سحابياً لكل مستخدم
-    updatedAt: { type: Date, default: Date.now }
-});
-
-const OuroUserLedgerModel = mongoose.model('OuroUserLedger', OuroUserLedgerSchema);
-
 // 👑 معيار معمارية الحسابات الملكية والأصدقاء بـ MongoDB
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
