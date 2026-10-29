@@ -7,6 +7,7 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const { GoogleGenAI } = require('@google/genai');
+const { google } = require('googleapis');
 
 // ==========================================================================
 // 🛡️ [مستودع ملفات الطلبات السحابي الموحد] - حفظ وتأمين اشتراكات السنتر والـ API
