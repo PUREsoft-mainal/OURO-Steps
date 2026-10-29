@@ -73,7 +73,8 @@ function App() {
   const [showDocEngineModal, setShowDocEngineModal] = useState(false); // محرك صياغة المستندات والملازم
   const [showAiModal, setShowAiModal] = useState(false); // كبسولة إطلاق المساعد الذكي
   const [showLoanCalculator, setShowLoanCalculator] = useState(false);
-
+  const [showCvEngine, setShowCvEngine] = useState(false);
+  
   // ==========================================================================
   // 👑 📡 [دمج وتصحيح شريان الاستقبال المزدوج] قنص طلبات السنتر والشركات معاً حياً
   // ==========================================================================
@@ -550,6 +551,7 @@ return (
               return currentUserData && currentUserData.friendRequests ? currentUserData.friendRequests.length : 0;
             })()
           }
+          setShowCvEngine={setShowCvEngine} // 👈 احقن هذا السطر بداخل الـ <ActionBar />
           setShowApiKeyModal={setShowApiKeyModal} // 👈 قُم بحقن هذا السطر هنا لتتصل التروس ببعضها
           setShowCenterModal={setShowCenterModal}
           setShowAdminPanelModal={setShowAdminPanelModal} // 🚀 تمرير دالة التفجير الفوري للوحة الطلبات
@@ -767,6 +769,12 @@ return (
            user={user} 
            onClose={() => setShowLoanCalculator(false)} />
        )}
+
+       {showCvEngine && (
+         <OuroCvEngine user={user} 
+           onClose={() => setShowCvEngine(false)} />
+       )}
+
 
 
         {/* 👑 نافذة مواقيت الصلاة المنبثقة الشاملة (تظهر فور النقر على زر مواقيت الصلاة بشريط الأزرار) */}
