@@ -99,8 +99,8 @@ function App() {
         socket.off('admin_receive_company_request');
       }
     };
-  }, [socket, user?.username]);
-
+  }, [socket, user?.username, user?.role]); // 👈 وضعنا 'user?.role' هنا لحل التحذير
+  
   const handleApproveCompanySystem = (reqId, applicant) => {
     if (socket) {
       socket.emit('admin_approve_company_system', { requestId: reqId, applicantName: applicant });
@@ -212,7 +212,8 @@ function App() {
         console.log("🏛️ [Sovereign License Locked] تم قفل وتأمين رخصة الشركات السنوية رغماً عن الريفريش!");
       }
     }
-  }, [isLogged, user?.canAccessCompanySystem]);
+  }, [isLogged, currentGroup.id, user]); // eslint-disable-line react-hooks/exhaustive-deps
+  
   useEffect(() => {
     if (socket) {
       socket.on('group_message', (data) => {
@@ -331,8 +332,9 @@ function App() {
         }
       });
     }
-    return () => { if (socket) socket.off('company_system_granted'); };
-  }, [socket, user?.username]);
+    return () => clearInterval(adsInterval);
+  }, [isLogged, ads.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   useEffect(() => {
     const fetchLiveAdsFromServer = async () => {
