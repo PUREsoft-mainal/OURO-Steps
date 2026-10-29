@@ -9,7 +9,6 @@ import ActionBar from './components/ActionBar';
 import GroupsSidebar from './components/GroupsSidebar';
 import UploadSidebar from './components/UploadSidebar';
 import LoginBox from './components/LoginBox';
-import ChatArea from './components/ChatArea';
 import VirtualFlash from './components/VirtualFlash';
 import PrayerWidget from './components/PrayerWidget'; 
 import AdSliderBottom from './components/AdSliderBottom';
@@ -570,16 +569,6 @@ return (
             currentGroup={currentGroup.id}
             onJoinRoom={handleSwitchRoom}
             onCreateGroup={handleCreateGroup} 
-          />
-
-          {/* المنتصف: منطقة الدردشة واستقبال رسائل الغرفة الفرعية */}
-          <ChatArea 
-            chat={chat} 
-            currentUser={user.username} 
-            msg={msg} 
-            setMsg={setMsg} 
-            socket={socket} 
-            currentGroup={currentGroup} 
           />
 
           {/* الجانب الأيسر: القصص والمشاركات العامة */}
