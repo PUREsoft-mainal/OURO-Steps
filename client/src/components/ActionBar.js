@@ -13,7 +13,6 @@ const ActionBar = ({
   setShowCenterModal, 
   setShowAdminPanelModal, 
   setShowFlashModal,
-  setShowWalletModal,
   setShowInvoiceModal,
   setShowCompanyModal,
   setShowDocEngineModal, // 👑 استقبال شريان تفعيل محرك المستندات
@@ -55,7 +54,6 @@ const ActionBar = ({
       >
         
         {/* 👑 رص الأزرار بمساحتهم الحرة دون نزول في الأسطر */}
-        <button type="button" className="action-bar-btn" onClick={() => setShowWalletModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}>🪙 المحفظة الرقمية</button>
         <button type="button" className="action-bar-btn" onClick={() => setShowInvoiceModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: '#27ae60' }}>🧾 محرك الفواتير</button>
         <button type="button" className="action-bar-btn" onClick={() => setShowCompanyModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: '#2980b9' }}>🏛️ إدارة الشركات</button>
         <button type="button" className="action-bar-btn" onClick={() => setShowDocEngineModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: '#e67e22' }}>📝 منشئ المستندات</button>
