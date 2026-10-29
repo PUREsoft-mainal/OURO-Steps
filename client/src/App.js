@@ -785,10 +785,6 @@ return (
           </div>
         )}
 
-        {/* 👑 [القفل القياسي الصافي] الحاوية السفلية المستقرة بنقاء تام دون أي تكرار */}
-        <div className="spacer-wrapper-zone" style={{ padding: '0 20px', width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '5px' }}> 
-          <div className="disclaimer-bar" style={{ margin: '15px 0 10px 0' }}> 👑 منصة OURO Steps - تجربة ملكية فريدة 2026 </div>
-        </div> 
 
         {/* 👑 [توطين الحسم السيادي المعزول] - ضعه في قاع الملف قبل إغلاق حاوية الـ App مباشرة */}
         {showCvEngine && (
@@ -798,7 +794,12 @@ return (
           />
         )}
 
-          
+
+        {/* 👑 [القفل القياسي الصافي] الحاوية السفلية المستقرة بنقاء تام دون أي تكرار */}
+        <div className="spacer-wrapper-zone" style={{ padding: '0 20px', width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '5px' }}> 
+          <div className="disclaimer-bar" style={{ margin: '15px 0 10px 0' }}> 👑 منصة OURO Steps - تجربة ملكية فريدة 2026 </div>
+        </div> 
+     
       </div> {/* إغلاق app-overlay الشرعي */}
     </div> // إغلاق app-container الشرعي
   );
