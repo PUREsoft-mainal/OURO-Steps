@@ -529,7 +529,7 @@ return (
         
         {/* 2. الفراغ الملكي الفاصل المستقل لعرض جملة الترحيب واللوجو حرّاً بانتظام أزلي */}
         <div className="header-center">
-          <div className="welcome-msg">مرحباً بكم فى عالمكم الجديد</div>
+          <div className="welcome-msg">مرحباً بكم مع تحيات آدمن مصطفى البحيرى</div>
           <img src="/assets/logo.png" className="mini-logo" alt="logo" />
         </div>
           
