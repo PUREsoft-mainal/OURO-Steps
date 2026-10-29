@@ -66,9 +66,6 @@ function App() {
   const [showAdminPanelModal, setShowAdminPanelModal] = useState(false);
   const [pendingCenterRequests, setPendingCenterRequests] = useState([]);
   const [pendingApiRequests, setPendingApiRequests] = useState([]);
-  const [ouroBalance, setOuroBalance] = useState(0);
-  const [ouroHistory, setOuroHistory] = useState([]); // 👑 State جديد لتخزين سجل المعاملات
-  const [showWalletModal, setShowWalletModal] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false); // كبسولة الفواتير وعروض الأسعار
   const [showCompanyModal, setShowCompanyModal] = useState(false); // نظام تشغيل الشركات والمصانع
   const [adminRequests, setAdminRequests] = useState([]);
@@ -119,41 +116,6 @@ function App() {
       alert("👑 تم تفعيل ترخيص نظام إدارة الشركات والمصانع السنوي للمستخدم بنجاح لمدة سنة كاملة!");
     }
   };
-
-  const fetchOuroWalletBalance = async () => {
-    if (!isLogged || !user) return;
-    try {
-      const res = await axios.post(`${API_BASE}/api/wallet/balance`, { userId: user._id || user.user_id, username: user.username });
-      if (res.data) {
-        if (typeof res.data.balance !== 'undefined') setOuroBalance(res.data.balance);
-        if (res.data.history) setOuroHistory(res.data.history); // 🚀 شحن السجل حياً
-      }
-    } catch (e) {}
-  };
-
-  // 👑 [مستمع الرصد والتحجيم الدوري المباشر لملف العملات بالسحاب]
-  useEffect(() => {
-    fetchOuroWalletBalance(); // الاستدعاء الفوري الأول عند الدخول
-
-    if (socket) {
-      socket.on('ouro_coins_synced', (data) => {
-        const myId = user?._id || user?.user_id;
-        if (myId === data.senderId || myId === data.targetUserId || myId === data.adminId) {
-          fetchOuroWalletBalance(); // إنعاش لحظي فور إتمام أي حوالة
-        }
-      });
-    }
-
-    // ⏳ [محرك المراقبة الدائمة]: إجبار المتصفح على مراجعة وتحديث الرصيد من سحابة الأدمن تلقائياً كل 30 ثانية رغماً عن الكاش
-    const walletInterval = setInterval(() => {
-      fetchOuroWalletBalance();
-    }, 30 * 1000); // 30 ثانية بدقة فلكية
-
-    return () => { 
-      if (socket) socket.off('ouro_coins_synced'); 
-      clearInterval(walletInterval); // إبادة التوقيت عند الخروج لحماية المعالج
-    };
-  }, [isLogged, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 👑 [دالة الحذف السحابية المحدثة] إطلاق نبضة الإبادة السيبرانية لكارت المنتج وتطهيره من MongoDB Atlas
   const handleDeletePost = async (postId) => {
@@ -650,16 +612,6 @@ return (
             setAllUsers={setAllUsers} // 👈 حقن وتمرير دالة التحديث الصامتة هنا
             loading={loading}         // 👈 حقن حالة التحميل التلقائي هنا
             onClose={() => setShowDiscovery(false)} 
-          />
-        )}
-
-        {showWalletModal && (
-          <OuroWalletModal 
-            user={user}
-            currentBalance={ouroBalance}
-            transactionHistory={ouroHistory} // 👈 👑 ضخ وحقن مصفوفة سجل المعاملات هنا بالملي!
-            socket={socket}
-            onClose={() => setShowWalletModal(false)}
           />
         )}
 
