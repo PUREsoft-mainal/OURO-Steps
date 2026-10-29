@@ -21,6 +21,7 @@ import OuroCompanyManager from './components/OuroCompanyManager'; // 👑 🏛�
 import OuroDocEngine from './components/OuroDocEngine'; // 👑 📝 حقن محرك صياغة المستندات والملازم الملكي هنا
 import OuroAiAssistant from './components/OuroAiAssistant'; // 👑 🤖 حقن المساعد الذكي لـ جوجل Gemini هنا بالملي
 import OuroSocialFeed from './components/OuroSocialFeed'; // 👈 ضعه في أعلى الملف لتأمين العبور
+import OuroLoanCalculator from './components/OuroLoanCalculator';
 import './App.css';
 
 // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
@@ -71,7 +72,8 @@ function App() {
   const [companyRequests, setCompanyRequests] = useState([]); // مصفوفة طلبات الشركات المستقلة
   const [showDocEngineModal, setShowDocEngineModal] = useState(false); // محرك صياغة المستندات والملازم
   const [showAiModal, setShowAiModal] = useState(false); // كبسولة إطلاق المساعد الذكي
-  
+  const [showLoanCalculator, setShowLoanCalculator] = useState(false);
+
   // ==========================================================================
   // 👑 📡 [دمج وتصحيح شريان الاستقبال المزدوج] قنص طلبات السنتر والشركات معاً حياً
   // ==========================================================================
@@ -556,6 +558,7 @@ return (
           setShowCompanyModal={setShowCompanyModal}
           setShowDocEngineModal={setShowDocEngineModal}
           setShowAiModal={setShowAiModal}
+          setShowLoanCalculator={setShowLoanCalculator} // 👈 احقن هذا السطر بداخل الـ <ActionBar />
         />
 
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
@@ -757,6 +760,14 @@ return (
             onClose={() => setShowAiModal(false)}
           />
         )}
+
+
+       {showLoanCalculator && (
+         <OuroLoanCalculator 
+           user={user} 
+           onClose={() => setShowLoanCalculator(false)} />
+       )}
+
 
         {/* 👑 نافذة مواقيت الصلاة المنبثقة الشاملة (تظهر فور النقر على زر مواقيت الصلاة بشريط الأزرار) */}
         {showPrayerModal && (
