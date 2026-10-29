@@ -220,12 +220,12 @@ const OuroSocialFeed = ({ user, socket, API_BASE }) => {
                   <button 
                     type="button" 
                     style={{ fontSize: '11px', padding: '5px 10px', background: 'transparent', border: 'none', color: 'var(--gold-primary)', cursor: 'pointer' }}
-                    onClick={() => setActiveMenuId(activeMenuId === post.id ? null : post.id)}
+                    onClick={() => setActiveMenuId(activeReactionMenu === post.id ? null : post.id)}
                   >
                     {post.reactions && post.reactions[user?.username] ? `🎭 ${reactionTypes.find(r => r.type === post.reactions[user.username])?.emoji} ${reactionTypes.find(r => r.type === post.reactions[user.username])?.label}` : '🎭 تفاعل'}
                   </button>
 
-                  {activeMenuId === post.id && (
+                  {activeReactionMenu === post.id && (
                     <div style={{ position: 'absolute', bottom: '35px', right: '0', background: '#0a0a0a', border: '1px solid var(--gold-primary)', borderRadius: '30px', padding: '5px 12px', display: 'flex', gap: '8px', zIndex: 100, boxShadow: '0 0 15px rgba(212,175,55,0.3)' }}>
                       {reactionTypes.map(r => (
                         <button 
