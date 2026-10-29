@@ -22,6 +22,7 @@ import OuroDocEngine from './components/OuroDocEngine'; // 👑 📝 حقن مح
 import OuroAiAssistant from './components/OuroAiAssistant'; // 👑 🤖 حقن المساعد الذكي لـ جوجل Gemini هنا بالملي
 import OuroSocialFeed from './components/OuroSocialFeed'; // 👈 ضعه في أعلى الملف لتأمين العبور
 import OuroLoanCalculator from './components/OuroLoanCalculator';
+import OuroCvEngine from './components/OuroCvEngine'; // 👈 ضعه في أعلى الملف فوراً لتأمين الاستدعاء المفقود
 import './App.css';
 
 // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
