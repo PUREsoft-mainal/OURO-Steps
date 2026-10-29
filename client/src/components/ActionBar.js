@@ -16,6 +16,7 @@ const ActionBar = ({
   setShowInvoiceModal,
   setShowCompanyModal,
   setShowDocEngineModal, // 👑 استقبال شريان تفعيل محرك المستندات
+  setShowLoanCalculator,
   setShowAiModal // 👈 👑 حقن دالة الـ AI الجديدة هنا
 }) => {
 
@@ -58,7 +59,9 @@ const ActionBar = ({
         <button type="button" className="action-bar-btn" onClick={() => setShowCompanyModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: '#2980b9' }}>🏛️ إدارة الشركات</button>
         <button type="button" className="action-bar-btn" onClick={() => setShowDocEngineModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: '#e67e22' }}>📝 منشئ المستندات</button>
         <button type="button" className="action-bar-btn" onClick={() => setShowCenterModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: 'var(--gold-primary)' }}>🏫 قاعة السنتر</button>
-        {/* 🕋 👑 [إضافة وحقن زر مواقيت الصلاة المستقل والشرعي] لفتح ملف PrayerWidget.js */}
+        <button type="button" className="action-bar-btn" onClick={() => setShowLoanCalculator(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: '#e74c3c' }}>📊 حاسبة القروض</button>
+
+         {/* 🕋 👑 [إضافة وحقن زر مواقيت الصلاة المستقل والشرعي] لفتح ملف PrayerWidget.js */}
         <button 
           type="button" 
           className="action-bar-btn" 
@@ -84,7 +87,6 @@ const ActionBar = ({
         <button type="button" className="action-bar-btn" onClick={() => setShowMarket(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}>🛒 المتجر المفتوح</button>
         <button type="button" className="action-bar-btn" onClick={() => setShowFlashModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}> الفلاشة </button>
         <button type="button" className="action-bar-btn" onClick={() => setShowApiKeyModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap' }}>🔑 API Key</button>
-        
         {/* زر لوحة تحكم الأدمن لسيادتك Mostafa لرصد الموافقات */}
         {isAdmin && (
           <button type="button" className="action-bar-btn" onClick={() => setShowAdminPanelModal(true)} style={{ flex: '0 0 auto', minWidth: '130px', whiteSpace: 'nowrap', borderColor: '#c0392b', color: '#c0392b', fontWeight: 'bold' }}>⚙️ طلبات الإدارة</button>
