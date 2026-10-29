@@ -771,14 +771,6 @@ return (
             onClose={() => setShowLoanCalculator(false)} />
         )}
 
-        {/* 👑 [توطين الحسم السيادي المعزول] - ضعه في قاع الملف قبل إغلاق حاوية الـ App مباشرة */}
-        {showCvEngine && (
-          <OuroCvEngine 
-            user={user} 
-            onClose={() => setShowCvEngine(false)} 
-          />
-        )}
-
         {/* 👑 نافذة مواقيت الصلاة المنبثقة الشاملة (تظهر فور النقر على زر مواقيت الصلاة بشريط الأزرار) */}
         {showPrayerModal && (
           <div className="ad-modal-overlay" onClick={() => setShowPrayerModal(false)}>
@@ -798,6 +790,15 @@ return (
           <div className="disclaimer-bar" style={{ margin: '15px 0 10px 0' }}> 👑 منصة OURO Steps - تجربة ملكية فريدة 2026 </div>
         </div> 
 
+        {/* 👑 [توطين الحسم السيادي المعزول] - ضعه في قاع الملف قبل إغلاق حاوية الـ App مباشرة */}
+        {showCvEngine && (
+          <OuroCvEngine 
+            user={user} 
+            onClose={() => setShowCvEngine(false)} 
+          />
+        )}
+
+          
       </div> {/* إغلاق app-overlay الشرعي */}
     </div> // إغلاق app-container الشرعي
   );
