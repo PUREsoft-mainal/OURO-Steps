@@ -336,7 +336,6 @@ function App() {
   }, [isLogged, ads.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
-  // 👑 2. [منظومة اقتراحك العبقري] مراقبة وجلب دوري مستقل لشريط الإعلانات كل 15 دقيقة لمنع الاختفاء الصامت
   useEffect(() => {
     const fetchLiveAdsFromServer = async () => {
       if (!isLogged) return;
@@ -350,16 +349,15 @@ function App() {
       }
     };
 
-    // الاستدعاء الفوري الأول بمجرد دخول المنصة
     fetchLiveAdsFromServer();
 
     // ⏳ جدولة الفحص الذكي: مراجعة قاعدة البيانات بانتظام كل 15 دقيقة
-    const liveAdsInterval = setInterval(() => {
+    const adsInterval = setInterval(() => {
       fetchLiveAdsFromServer();
     }, 15 * 60 * 1000); 
 
     // دالة التطهير والتنظيف الصحيحة بداخل النطاق الشرعي للمتغير
-    return () => clearInterval(liveAdsInterval);
+    return () => clearInterval(adsInterval);
   }, [isLogged, ads.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
