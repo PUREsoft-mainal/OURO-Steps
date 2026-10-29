@@ -3,16 +3,14 @@
 import React, { useState } from 'react';
 
 const OuroCvEngine = ({ user, onClose }) => {
-  // 🔒 أ) الحقول الأساسية لمالك السيرة الذاتية أو المنشأة
-  const [profileType, setProfileType] = useState("person"); // person, company, factory, workshop, shop, office
-  const [fullName, setFullName] = useState(""); // اسم الشخص أو المنشأة
-  const [identityNo, setIdentityNo] = useState(""); // الرقم القومي أو السجل التجاري
-  const [contactPhone, setContactPhone] = useState(""); // رقم التواصل
-  const [contactEmail, setContactEmail] = useState(""); // البريد الإلكتروني
-  const [locationAddress, setLocationAddress] = useState(""); // العنوان بالتفصيل
-  const [aboutText, setAboutText] = useState(""); // نبذة مختصرة القانونية
+  const [profileType, setProfileType] = useState("person"); 
+  const [fullName, setFullName] = useState(""); 
+  const [identityNo, setIdentityNo] = useState(""); 
+  const [contactPhone, setContactPhone] = useState(""); 
+  const [contactEmail, setContactEmail] = useState(""); 
+  const [locationAddress, setLocationAddress] = useState(""); 
+  const [aboutText, setAboutText] = useState(""); 
 
-  // 📄 ب) كتل تخزين مصفوفات المهارات والخبرات والعقود التفاعلية
   const [skills, setSkills] = useState([]);
   const [currentSkill, setCurrentSkill] = useState("");
 
@@ -23,15 +21,13 @@ const OuroCvEngine = ({ user, onClose }) => {
   const [isCurrentContract, setIsCurrentContract] = useState(false); 
   const [jobTitle, setJobTitle] = useState(""); 
 
-    // دالة حقن المهارات الديناميكية بداخل مصفوفة الفرونت إند
-  const handleAddSkill = (e) => {
+    const handleAddSkill = (e) => {
     e.preventDefault();
     if (!currentSkill.trim()) return;
     setSkills([...skills, currentSkill.trim()]);
     setCurrentSkill("");
   };
 
-  // دالة حقن الخبرات والتوثيق العقدي بالتواريخ الصارمة
   const handleAddExperience = (e) => {
     e.preventDefault();
     if (!expEntity.trim() || !jobTitle.trim() || !contractStart) {
@@ -55,14 +51,13 @@ const OuroCvEngine = ({ user, onClose }) => {
     setIsCurrentContract(false);
   };
 
-  // 🏆 محرك تصدير الـ PDF السينمائي المباشر لورق A4
   const handleExportPDF = () => {
     const element = document.getElementById('ouroCvPrintableZone');
     if (!element || !window.html2pdf) return alert("❌ محرك تصدير PDF غير متوفر حالياً بالمتصفح.");
 
     const opt = {
       margin: 0,
-      filename: `CV_${fullName || 'Ouro'}.pdf`,
+      filename: `CV_\${fullName || 'Ouro'}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, logging: false },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -70,30 +65,25 @@ const OuroCvEngine = ({ user, onClose }) => {
     window.html2pdf().from(element).set(opt).save();
   };
 
-  // 🖨️ محرك الطباعة المادية الفورية الصافية وتفادي أخطاء دمج الحروف
   const handlePrintDoc = () => {
     const printContent = document.getElementById('ouroCvPrintableZone').innerHTML;
-    const originalContent = document.body.innerHTML;
-    
-    document.body.innerHTML = `
-      <div style="background:#fff; color:#000; padding:0; margin:0; direction:rtl; text-align:right;">
-        ${printContent}
-      </div>
-    `;
-    window.print();
-    window.location.reload(); 
+    const win = window.open('', '', 'height=700,width=900');
+    if (win) {
+      win.document.write('<html><head><title>Print CV</title></head><body style="margin:0; padding:0; direction:rtl; text-align:right; background:#fff; color:#000;">' + printContent + '</body></html>');
+      win.document.close();
+      win.print();
+    }
   };
 
-   return (
-    <div className="discovery-overlay" onClick={onClose}>
-      <div className="discovery-window gold-border scrollbar-gold" onClick={e => e.stopPropagation()} style={{ width: '97%', maxWidth: '1150px', background: '#070707', padding: '20px', borderRadius: '12px', display: 'flex', gap: '20px', flexWrap: 'wrap', maxHeight: '85vh', overflowY: 'auto' }}>
+    return (
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ width: '97%', maxWidth: '1150px', background: '#070707', padding: '20px', borderRadius: '12px', border: '1px solid var(--gold-primary)', display: 'flex', gap: '20px', flexWrap: 'wrap', maxHeight: '90vh', overflowY: 'auto', boxSizing: 'border-box', boxShadow: '0 0 30px rgba(212,175,55,0.2)' }}>
         
-        {/* الجانب الأيمن: لوحة صياغة محتوى السيرة الذاتية */}
         <div style={{ flex: '1', minWidth: '320px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <h3 style={{ color: 'var(--gold-primary)', margin: 0, fontSize: '14px', borderBottom: '1px solid rgba(212,175,55,0.2)', paddingBottom: '6px' }}>⚙️ لوحة صياغة محرك السيرة الذاتية والملفات التعريفية</h3>
+          <h3 style={{ color: 'var(--gold-primary)', margin: 0, fontSize: '14px', borderBottom: '1px solid rgba(212,175,55,0.2)', paddingBottom: '6px', textAlign: 'right' }}>⚙️ لوحة صياغة محرك السيرة الذاتية والملفات التعريفية</h3>
           
           <div style={{ background: 'rgba(212,175,55,0.02)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(212,175,55,0.1)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <select value={profileType} onChange={e => setProfileType(e.target.value)} style={{ padding: '6px', background: '#000', color: '#fff', border: '1px solid var(--border-glass)', borderRadius: '4px', fontSize: '11px' }}>
+            <select value={profileType} onChange={e => setProfileType(e.target.value)} style={{ padding: '8px', background: '#000', color: '#fff', border: '1px solid var(--border-glass)', borderRadius: '4px', fontSize: '11px', direction: 'rtl' }}>
               <option value="person">👤 سيرة ذاتية لشخص (فردي)</option>
               <option value="company">🏛️ ملف تعريفي لشركة (Company Profile)</option>
               <option value="factory">🏭 ملف تعريفي لمصنع متكامل</option>
@@ -102,59 +92,58 @@ const OuroCvEngine = ({ user, onClose }) => {
               <option value="office">💼 ملف تعريفي لمكتب استشاري</option>
             </select>
             
-            <input type="text" placeholder="📝 الاسم الكامل للشخص أو المنشأة..." value={fullName} onChange={e => setFullName(e.target.value)} style={{ padding: '6px', background: '#000', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px', fontSize: '11px' }} />
-             setIdentityNo(e.target.value)} style={{ padding: '6px', background: '#000', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px', fontSize: '11px' }} />
+            <input type="text" placeholder="📝 الاسم الكامل للشخص أو المنشأة..." value={fullName} onChange={e => setFullName(e.target.value)} style={{ padding: '8px', background: '#000', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px', fontSize: '11px', direction: 'rtl' }} />
+             setIdentityNo(e.target.value)} style={{ padding: '8px', background: '#000', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px', fontSize: '11px', direction: 'rtl' }} />
             
             <div style={{ display: 'flex', gap: '6px' }}>
-              <input type="text" placeholder="📞 هاتف التواصل..." value={contactPhone} onChange={e => setContactPhone(e.target.value)} style={{ flex: 1, padding: '6px', background: '#000', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px', fontSize: '11px' }} />
-              <input type="email" placeholder="📧 البريد الإلكتروني..." value={contactEmail} onChange={e => setContactEmail(e.target.value)} style={{ flex: 1, padding: '6px', background: '#000', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px', fontSize: '11px' }} />
+              <input type="text" placeholder="📞 هاتف التواصل..." value={contactPhone} onChange={e => setContactPhone(e.target.value)} style={{ flex: 1, padding: '8px', background: '#000', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px', fontSize: '11px', direction: 'rtl' }} />
+              <input type="email" placeholder="📧 البريد الإلكتروني..." value={contactEmail} onChange={e => setContactEmail(e.target.value)} style={{ flex: 1, padding: '8px', background: '#000', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px', fontSize: '11px', direction: 'rtl' }} />
             </div>
-            <input type="text" placeholder="📍 العنوان بالتفصيل..." value={locationAddress} onChange={e => setLocationAddress(e.target.value)} style={{ padding: '6px', background: '#000', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px', fontSize: '11px' }} />
-            <textarea placeholder="⚖️ نبذة مختصرة للمستهدف (رؤية قانونية، أهداف، طبيعة النشاط)..." value={aboutText} onChange={e => setAboutText(e.target.value)} style={{ width: '100%', height: '50px', background: '#000', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px', padding: '6px', fontSize: '11px', resize: 'none' }} />
+            <input type="text" placeholder="📍 العنوان بالتفصيل..." value={locationAddress} onChange={e => setLocationAddress(e.target.value)} style={{ padding: '8px', background: '#000', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px', fontSize: '11px', direction: 'rtl' }} />
+            <textarea placeholder="⚖️ نبذة مختصرة للمستهدف (رؤية قانونية، أهداف، طبيعة النشاط)..." value={aboutText} onChange={e => setAboutText(e.target.value)} style={{ width: '100%', height: '60px', background: '#000', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px', padding: '8px', fontSize: '11px', resize: 'none', direction: 'rtl' }} />
           </div>
 
           <div style={{ background: '#000', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-glass)' }}>
-            <small style={{ color: 'var(--gold-primary)', display: 'block', marginBottom: '4px' }}>🎯 حقن المهارات والمزايا الحيوية:</small>
+            <small style={{ color: 'var(--gold-primary)', display: 'block', marginBottom: '4px', textAlign: 'right' }}>🎯 حقن المهارات والمزايا الحيوية:</small>
             <div style={{ display: 'flex', gap: '6px' }}>
-              <input type="text" placeholder="اكتب مهارة أو ميزة (مثال: البرمجة بـ Node.js)..." value={currentSkill} onChange={e => setCurrentSkill(e.target.value)} style={{ flex: 1, padding: '6px', background: '#111', color: '#fff', border: '1px solid var(--border-glass)', borderRadius: '4px', fontSize: '11px' }} />
-              <button type="button" onClick={handleAddSkill} style={{ background: 'var(--gold-primary)', color: '#000', border: 'none', padding: '4px 12px', fontSize: '11px', fontWeight: 'bold', borderRadius: '4px', cursor: 'pointer' }}>+ حقن</button>
+              <input type="text" placeholder="اكتب مهارة أو ميزة..." value={currentSkill} onChange={e => setCurrentSkill(e.target.value)} style={{ flex: 1, padding: '8px', background: '#111', color: '#fff', border: '1px solid var(--border-glass)', borderRadius: '4px', fontSize: '11px', direction: 'rtl' }} />
+              <button type="button" onClick={handleAddSkill} style={{ background: 'var(--gold-primary)', color: '#000', border: 'none', padding: '4px 14px', fontSize: '11px', fontWeight: 'bold', borderRadius: '4px', cursor: 'pointer' }}>+ حقن</button>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px', direction: 'rtl' }}>
               {skills.map((s, idx) => <span key={idx} style={{ background: 'rgba(212,175,55,0.1)', color: 'var(--gold-primary)', fontSize: '10px', padding: '2px 6px', borderRadius: '4px' }}>🔹 {s}</span>)}
             </div>
           </div>
 
           <div style={{ background: '#000', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-glass)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <small style={{ color: 'var(--gold-primary)', fontWeight: 'bold' }}>💼 سجل الخبرات والتعاقدات السابقة والقائمة:</small>
-            <input type="text" placeholder={profileType === 'person' ? "الشركة / الجهة التي عملت بها..." : "العميل / المشروع الذي نفذته المنشأة..."} value={expEntity} onChange={e => setExpEntity(e.target.value)} style={{ padding: '6px', background: '#111', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px', fontSize: '11px' }} />
-            <input type="text" placeholder="المسمى الوظيفي أو طبيعة التعاقد..." value={jobTitle} onChange={e => setJobTitle(e.target.value)} style={{ padding: '6px', background: '#111', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px', fontSize: '11px' }} />
+            <small style={{ color: 'var(--gold-primary)', fontWeight: 'bold', textAlign: 'right' }}>💼 سجل الخبرات والتعاقدات السابقة والقائمة:</small>
+            <input type="text" placeholder={profileType === 'person' ? "الشركة / الجهة التي عملت بها..." : "العميل / المشروع الذي نفذته المنشأة..."} value={expEntity} onChange={e => setExpEntity(e.target.value)} style={{ padding: '8px', background: '#111', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px', fontSize: '11px', direction: 'rtl' }} />
+            <input type="text" placeholder="المسمى الوظيفي أو طبيعة التعاقد..." value={jobTitle} onChange={e => setJobTitle(e.target.value)} style={{ padding: '8px', background: '#111', border: '1px solid var(--border-glass)', color: '#fff', borderRadius: '4px', fontSize: '11px', direction: 'rtl' }} />
             
             <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-              <div style={{ flex: 1 }}><small style={{ color: 'var(--text-muted)', fontSize: '9px' }}>بداية العقد:</small><input type="date" value={contractStart} onChange={e => setContractStart(e.target.value)} style={{ width: '100%', padding: '4px', background: '#111', color: '#fff', border: '1px solid #333', fontSize: '10px' }} /></div>
-              <div style={{ flex: 1 }}><small style={{ color: 'var(--text-muted)', fontSize: '9px' }}>نهاية العقد:</small><input type="date" value={contractEnd} onChange={e => setContractEnd(e.target.value)} disabled={isCurrentContract} style={{ width: '100%', padding: '4px', background: '#111', color: '#fff', border: '1px solid #333', fontSize: '10px' }} /></div>
+              <div style={{ flex: 1 }}><small style={{ color: 'var(--text-muted)', fontSize: '9px', display: 'block', textAlign: 'right' }}>بداية العقد:</small><input type="date" value={contractStart} onChange={e => setContractStart(e.target.value)} style={{ width: '100%', padding: '6px', background: '#111', color: '#fff', border: '1px solid #333', fontSize: '11px' }} /></div>
+              <div style={{ flex: 1 }}><small style={{ color: 'var(--text-muted)', fontSize: '9px', display: 'block', textAlign: 'right' }}>نهاية العقد:</small><input type="date" value={contractEnd} onChange={e => setContractEnd(e.target.value)} disabled={isCurrentContract} style={{ width: '100%', padding: '6px', background: '#111', color: '#fff', border: '1px solid #333', fontSize: '11px' }} /></div>
             </div>
 
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff', fontSize: '11px', cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff', fontSize: '11px', cursor: 'pointer', direction: 'rtl' }}>
               <input type="checkbox" checked={isCurrentContract} onChange={() => setIsCurrentContract(!isCurrentContract)} />
               ⏳ هذا تعاقد قائم ونشط حالياً (مستمر للآن)
             </label>
-            <button type="button" onClick={handleAddExperience} style={{ background: '#27ae60', color: '#fff', border: 'none', padding: '6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>💾 توثيق العقد والخبرة داخل السجل</button>
+            <button type="button" onClick={handleAddExperience} style={{ background: '#27ae60', color: '#fff', border: 'none', padding: '8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>💾 توثيق العقد داخل السجل</button>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: '5px' }}>
-            <button type="button" onClick={handleExportPDF} style={{ background: '#c0392b', color: '#fff', fontWeight: 'bold', padding: '8px', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>📄 حفظ كـ PDF</button>
-            <button type="button" onClick={handlePrintDoc} style={{ background: 'var(--gold-primary)', color: '#000', fontWeight: 'bold', padding: '8px', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>🖨️ طباعة السيرة فوراً</button>
-            <button type="button" onClick={onClose} style={{ gridColumn: '1 / -1', background: '#333', color: '#fff', padding: '6px', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>إغلاق منشئ السير الذاتية ✖</button>
+            <button type="button" onClick={handleExportPDF} style={{ background: '#c0392b', color: '#fff', fontWeight: 'bold', padding: '10px', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>📄 حفظ كـ PDF</button>
+            <button type="button" onClick={handlePrintDoc} style={{ background: 'var(--gold-primary)', color: '#000', fontWeight: 'bold', padding: '10px', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>🖨️ طباعة السيرة فوراً</button>
+            <button type="button" onClick={onClose} style={{ gridColumn: '1 / -1', background: '#333', color: '#fff', padding: '8px', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>إغلاق النافذة ✖</button>
           </div>
         </div>
-         {/* الجانب الأيسر: منطقة المعاينة الحية الفاخرة بورق الـ A4 والبرواز التناظري */}
-        <div style={{ flex: '1.3', minWidth: '350px', background: '#111', padding: '15px', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.2)', maxHeight: '75vh', overflowY: 'auto' }}>
+        <div style={{ flex: '1.3', minWidth: '350px', background: '#111', padding: '15px', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.2)', maxHeight: '80vh', overflowY: 'auto' }}>
           <div id="ouroCvPrintableZone" style={{ width: '210mm', minHeight: '296mm', padding: '20mm 15mm', boxSizing: 'border-box', background: '#fff', color: '#000', position: 'relative', border: '1px solid #eee' }}>
             
             <div style={{ position: 'absolute', top: '10mm', bottom: '15mm', left: '10mm', right: '10mm', border: '3px double var(--gold-primary)', pointerEvents: 'none', boxSizing: 'border-box' }} />
             
             <div style={{ textAlign: 'center', borderBottom: '2px solid var(--gold-primary)', paddingBottom: '12px', marginBottom: '20px', direction: 'rtl' }}>
-              <h1 style={{ color: 'var(--gold-primary)', margin: '0 0 6px 0', fontSize: '24px', fontWeight: 'bold' }}>{fullName || "اسم الشخص أو المنشأة المستهدفة"}</h1>
+              <h1 style={{ color: 'var(--gold-primary)', margin: '0 0 6px 0', fontSize: '24px', fontWeight: 'bold' }}>{fullName || "اسم الشخص أو المنشأة"}</h1>
               <span style={{ fontSize: '11px', color: '#7f8c8d', fontWeight: 'bold' }}>
                 {profileType === 'person' && "📄 سيرة ذاتية مهنية موثقة رسمياً"}
                 {profileType === 'company' && "🏛️ ملف تعريفي معتمد للشركات الكبرى"}
@@ -191,7 +180,7 @@ const OuroCvEngine = ({ user, onClose }) => {
                 {experiences.map(exp => (
                   <div key={exp.id} style={{ background: '#fcfcfc', padding: '10px', borderRadius: '6px', borderRight: '3px solid var(--gold-primary)', border: '1px solid #eee' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', color: '#2c3e50', marginBottom: '4px' }}>
-                      <span>🏢 : {exp.entity}</span>
+                      <span>🏢 الجهة/العميل: {exp.entity}</span>
                       <span style={{ fontSize: '11px', color: exp.isCurrent ? '#27ae60' : '#7f8c8d' }}>⏳ {exp.start} ⬅️ {exp.end}</span>
                     </div>
                     <div style={{ fontSize: '11.5px', color: '#34495e' }}>طبيعة العمل والتعاقد: <strong>{exp.title}</strong></div>
