@@ -552,7 +552,6 @@ return (
               return currentUserData && currentUserData.friendRequests ? currentUserData.friendRequests.length : 0;
             })()
           }
-          setShowCvEngine={setShowCvEngine} // 👈 احقن هذا السطر بداخل الـ <ActionBar />
           setShowApiKeyModal={setShowApiKeyModal} // 👈 قُم بحقن هذا السطر هنا لتتصل التروس ببعضها
           setShowCenterModal={setShowCenterModal}
           setShowAdminPanelModal={setShowAdminPanelModal} // 🚀 تمرير دالة التفجير الفوري للوحة الطلبات
@@ -562,6 +561,7 @@ return (
           setShowDocEngineModal={setShowDocEngineModal}
           setShowAiModal={setShowAiModal}
           setShowLoanCalculator={setShowLoanCalculator} // 👈 احقن هذا السطر بداخل الـ <ActionBar />
+          setShowCvEngine={setShowCvEngine} // 👈 احقن هذا السطر بداخل الـ <ActionBar />
         />
 
         {/* 5. المخطط الثلاثي للدردشة والقوائم والقصص النظيف تماماً من أي تداخل */}
@@ -765,18 +765,19 @@ return (
         )}
 
 
-       {showLoanCalculator && (
-         <OuroLoanCalculator 
-           user={user} 
-           onClose={() => setShowLoanCalculator(false)} />
-       )}
+        {showLoanCalculator && (
+          <OuroLoanCalculator 
+            user={user} 
+            onClose={() => setShowLoanCalculator(false)} />
+        )}
 
-       {showCvEngine && (
-         <OuroCvEngine user={user} 
-           onClose={() => setShowCvEngine(false)} />
-       )}
-
-
+        {/* 👑 [توطين الحسم السيادي المعزول] - ضعه في قاع الملف قبل إغلاق حاوية الـ App مباشرة */}
+        {showCvEngine && (
+          <OuroCvEngine 
+            user={user} 
+            onClose={() => setShowCvEngine(false)} 
+          />
+        )}
 
         {/* 👑 نافذة مواقيت الصلاة المنبثقة الشاملة (تظهر فور النقر على زر مواقيت الصلاة بشريط الأزرار) */}
         {showPrayerModal && (
