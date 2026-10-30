@@ -349,17 +349,16 @@ function App() {
       }
     };
 
+    // الاستدعاء الفوري الأول بمجرد عبور بوابة الدخول لضمان رسم الكروت بلا تأخير
     fetchLiveAdsFromServer();
 
-    // ⏳ جدولة الفحص الذكي: مراجعة قاعدة البيانات بانتظام كل 15 دقيقة
+    // ⏳ جدولة الفحص الذكي: مراجعة قاعدة البيانات بانتظام كل 15 دقيقة لإثبات المتوفر وعزل الممسوح
     const adsInterval = setInterval(() => {
       fetchLiveAdsFromServer();
-    }, 15 * 60 * 1000); 
+    }, 15 * 60 * 1000); // 15 دقيقة بالملي ثانية بدقة فلكية
 
-    // دالة التطهير والتنظيف الصحيحة بداخل النطاق الشرعي للمتغير
     return () => clearInterval(adsInterval);
-  }, [isLogged, ads.length]); // eslint-disable-line react-hooks/exhaustive-deps
-
+  }, [isLogged, ads.length]); 
   useEffect(() => {
     const fetchGlobalStories = async () => {
       if (!isLogged) return;
