@@ -70,7 +70,7 @@ function App() {
   const [showDocEngineModal, setShowDocEngineModal] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
   const [showLoanCalculator, setShowLoanCalculator] = useState(false);
-  const [showCvEngine, setShowCvEngine] = useState(false);
+  const [showOuroCvEngine, setShowOuroCvEngine] = useState(false);
   // 👑 قنص طلبات السنتر والشركات معاً حياً بداخل السيرفر السحابي
   useEffect(() => {
     if (socket) {
@@ -494,7 +494,7 @@ function App() {
           setShowDocEngineModal={setShowDocEngineModal}
           setShowAiModal={setShowAiModal}
           setShowLoanCalculator={setShowLoanCalculator} 
-          setShowCvEngine={setShowCvEngine} 
+          setShowOuroCvEngine={setShowOuroCvEngine} 
         />
 
         <div className="main-content">
@@ -677,7 +677,7 @@ function App() {
         )}
 
         {/* 👑 [توطين الحسم القياسي المظبوط بالتناظر] - حقن المكون بنظام البرمجة الخاص بكام الحاويات */}
-        {showCvEngine && (
+        {showOuroCvEngine && (
           <OuroCvEngine 
             user={user} 
             onClose={() => setShowCvEngine(false)} 
