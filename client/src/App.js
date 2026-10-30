@@ -341,14 +341,20 @@ function App() {
         socket.off('update_groups_list');
         socket.off('group_chat_history');
         socket.off('group_deleted_success');
-        socket.off('update_ads');
-        socket.off('error_msg');
       }
     };
+
+  }, [isLogged, currentGroup.id, user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ==========================================================================
+  // 🏛️ [تثبيت وحسم رخصة الشركات] - منع الاختفاء والتحصين الشامل بالـ State العلوية
+  // ==========================================================================
   useEffect(() => {
     if (socket) {
       socket.on('company_system_granted', (data) => {
+        // إذا كان اسم المستخدم المطابق هو صاحب الحساب الحالي
         if (data.username === user?.username) {
+          // تحديث كائن ال-user العلوي قسرياً ليشمل الصلاحيات السنوية الجديدة في ال-State العلوية
           setUser(prevUser => ({
             ...prevUser,
             canAccessCompanySystem: true,
@@ -357,8 +363,8 @@ function App() {
         }
       });
     }
-    return () => clearInterval(adsInterval);
-  }, [isLogged, ads.length]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => { if (socket) socket.off('company_system_granted'); };
+  }, [socket, user?.username]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
 
