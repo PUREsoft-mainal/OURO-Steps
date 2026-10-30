@@ -22,7 +22,7 @@ import OuroDocEngine from './components/OuroDocEngine';
 import OuroAiAssistant from './components/OuroAiAssistant';
 import OuroSocialFeed from './components/OuroSocialFeed';
 import OuroLoanCalculator from './components/OuroLoanCalculator';
-import OuroCvEngine from './components/OuroCvEngine';
+import CvEngine from './components/OuroCvEngine';
 import './App.css';
 
 // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
