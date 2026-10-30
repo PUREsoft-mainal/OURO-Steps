@@ -99,7 +99,7 @@ function App() {
         socket.off('admin_receive_company_request');
       }
     };
-  }, [socket, user?.username, user?.role]); // 👈 وضعنا 'user?.role' هنا لحل التحذير
+  }, [user?.username, user?.role]); // eslint-disable-line react-hooks/exhaustive-deps
   
   const handleApproveCompanySystem = (reqId, applicant) => {
     if (socket) {
