@@ -245,25 +245,37 @@ function App() {
         });
       });
 
+ ==========================================================================
+// 🔊 3. مستمع MOCK المزامنة التاريخية وتأمين بيانات الدخول والتصاريح الإدارية
+// ==========================================================================
       socket.on('init_data', (data) => { 
         if (data.user) {
+          
           setAds(data.ads || []); 
+          
           const sanitizedHistory = (data.chatHistory || []).map(m => ({
             ...m,
             text: typeof m.text === 'object' && m.text !== null ? (m.text.text || JSON.stringify(m.text)) : m.text
           }));
+          
           setChat(sanitizedHistory); 
-          setUser(data.user);
+          setUser(data.user); // استقبال كائن الحساب المحقون بالتصاريح الإدارية الحية من السيرفر
           if (data.groups) setGroups(data.groups); 
           if (data.stats) { 
               setTotalUsers(data.stats.totalUsers); 
               setActiveUsers(data.stats.activeUsers); 
           }
           setIsLogged(true); 
-          if (data.usersList && typeof setAllUsers === 'function') setAllUsers(data.usersList);
-          if (typeof setLoading === 'function') setLoading(false);
+          
+          if (data.usersList && typeof setAllUsers === 'function') {
+              setAllUsers(data.usersList);
+          }
+          if (typeof setLoading === 'function') {
+              setLoading(false); // 🔓 كسر سياج التحميل وتفجير الكروت فوراً بالواجهة
+          }
         }
       });
+
 
       socket.on('update_stats', (data) => { 
         if (data) {
@@ -297,6 +309,8 @@ function App() {
         }
       });
 
+
+      // 🔊 10. مستمع استقبال إشارة حذف الغرفة الفرعية وتوجيه المستخدمين للمجموعة العامة تلقائياً
       socket.on('group_deleted_success', (data) => {
         setGroups(prev => prev.filter(g => g.id !== data.roomId));
         setChat([]); 
@@ -305,21 +319,32 @@ function App() {
         alert("🗑️ تم حذف المجموعة وتطهير سجل محادثتها سحابياً بنجاح!");
       });
 
+      // 🔊 11. مستمع استقبال جلب وضخ تحديثات الإعلانات اللحظية الحية للأشرطة المزدوجة
       socket.on('update_ads', (data) => setAds(data));
+
+      // 🔊 12. مستمع إشارات الأخطاء والتحذيرات السحابية الواردة
       socket.on('error_msg', (msg) => alert("⚠️ " + msg));
     }
 
+    // 🧹 تصفية وتدمير الجلسات المفتوحة والمستمعات عند مغادرة الصفحة لمنع تسريب الذاكرة والتداخل
     return () => {
       if (socket) {
-        socket.off('group_message'); socket.off('message'); socket.off('admin_receive_teacher_request');
-        socket.off('admin_receive_api_key_request'); socket.off('init_data'); socket.off('update_stats');
-        socket.off('new_file'); socket.off('new_group_added'); socket.off('register_success');
-        socket.off('update_groups_list'); socket.off('group_chat_history'); socket.off('group_deleted_success');
-        socket.off('update_ads'); socket.off('error_msg');
+        socket.off('group_message');
+        socket.off('message');
+        socket.off('admin_receive_teacher_request');
+        socket.off('admin_receive_api_key_request');
+        socket.off('init_data');
+        socket.off('update_stats');
+        socket.off('new_file');
+        socket.off('new_group_added');
+        socket.off('register_success');
+        socket.off('update_groups_list');
+        socket.off('group_chat_history');
+        socket.off('group_deleted_success');
+        socket.off('update_ads');
+        socket.off('error_msg');
       }
     };
-  }, [isLogged, currentGroup.id, user]);
-
   useEffect(() => {
     if (socket) {
       socket.on('company_system_granted', (data) => {
@@ -336,6 +361,8 @@ function App() {
   }, [isLogged, ads.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
+
+  // 👑 2. [منظومة اقتراحك العبقري] مراقبة وجلب دوري مستقل لشريط الإعلانات كل 15 دقيقة لمنع الاختفاء الصامت كلياً
   useEffect(() => {
     const fetchLiveAdsFromServer = async () => {
       if (!isLogged) return;
@@ -352,6 +379,7 @@ function App() {
     // الاستدعاء الفوري الأول بمجرد عبور بوابة الدخول لضمان رسم الكروت بلا تأخير
     fetchLiveAdsFromServer();
 
+ 
     // ⏳ جدولة الفحص الذكي: مراجعة قاعدة البيانات بانتظام كل 15 دقيقة لإثبات المتوفر وعزل الممسوح
     const adsInterval = setInterval(() => {
       fetchLiveAdsFromServer();
@@ -359,6 +387,8 @@ function App() {
 
     return () => clearInterval(adsInterval);
   }, [isLogged, ads.length]); 
+  // 👑 [تم الحسم] حذف المتغير الخارجي ليتخطى فحص ال-ESLint وتستقر الأشرطة والإعلانات كلياً  // 👑 3. دالة مستقلة ومعزولة كلياً لجلب الستوريات (القصص) لعدم تداخل خطأ الـ 404 مع الأشرطة أو السوكت
+
   useEffect(() => {
     const fetchGlobalStories = async () => {
       if (!isLogged) return;
@@ -432,8 +462,10 @@ function App() {
         </div>
           
         <div className="ads-section-wrapper">
+          {/* 👑 تمرير الـ user ليفهم المكون أنك الأدمن فيظهر لك زر الحذف في الأعلى */}
           <AdSlider ads={ads} filterLocation="top" user={user} /> 
         </div>
+
 
         <ActionBar 
           user={user} 
@@ -476,6 +508,8 @@ function App() {
             API_BASE={API_BASE} 
           />
 
+
+          {/* الجانب الأيسر: القصص والمشاركات العامة */}
           <UploadSidebar 
             files={files} 
             serverUrl={API_BASE} 
@@ -573,7 +607,10 @@ function App() {
           />
         )}
 
+
+        {/* [موضع الشريط السفلي الصحيح أفقياً] */}
         <div style={{ padding: '0 20px', width: '100%', boxSizing: 'border-box', marginTop: '15px', marginBottom: '15px' }}>
+          {/* 👑 تمرير الـ user ليفهم المكون السفلي أنك الأدمن فيظهر لك زر الحذف في الأسفل */}
           <AdSliderBottom ads={ads} user={user} />
         </div>
 
