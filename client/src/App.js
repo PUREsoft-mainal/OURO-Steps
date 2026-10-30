@@ -26,7 +26,7 @@ import OuroCvEngine from './components/OuroCvEngine';
 import './App.css';
 
 // 👑 ربط الواجهة الأمامية بالسيرفر السحابي المباشر على Hugging Face
-const API_BASE = "https://hf.space";
+const API_BASE = "https://puresoft-mainal-ouro-steps.hf.space";
 
 // 👑 تهيئة السوكت النقي والمتوافق مع جدار حماية خوادم Hugging Face لاختراق البروكسي
 const socket = io(API_BASE, { 
