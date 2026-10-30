@@ -680,7 +680,7 @@ function App() {
         {showOuroCvEngine && (
           <OuroCvEngine 
             user={user} 
-            onClose={() => setShowCvEngine(false)} 
+            onClose={() => setShowOuroCvEngine(false)} 
           />
         )}
 
