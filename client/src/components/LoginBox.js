@@ -39,7 +39,19 @@ const LoginBox = ({ isSignUp, setIsSignUp, user, setUser, password, setPassword,
               >
                 <option value="">اختر التخصص</option>
                 <option value="مبرمج">💻 مبرمج</option>
+                <option value="مدرس">💻 مدرس</option>
+                <option value="مدير">💻 مدير</option>
+                <option value="عامل">💻 عامل</option>
+                <option value="فنى">💻 فنى</option>
+                <option value="محاسب">💻 محاسب</option>
+                <option value="HR 💻<"HR</option>
+                <option value="مشرف">💻 مشرف</option>
+                <option value="مهندس">💻 مهندس</option>
                 <option value="تاجر">💰 تاجر</option>
+                <option value="ضابط">💻 ضابط</option>
+                <option value="صف ضابط">💻 صف ضابط</option>
+                <option value="أمين">💻 أمين</option>
+                <option value="مكتبة">💻 مكتبة</option>
                 <option value="مستخدم">✍️ مستخدم عام</option>
               </select>
             )}
