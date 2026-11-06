@@ -44,7 +44,6 @@ const LoginBox = ({ isSignUp, setIsSignUp, user, setUser, password, setPassword,
                 <option value="عامل">💻 عامل</option>
                 <option value="فنى">💻 فنى</option>
                 <option value="محاسب">💻 محاسب</option>
-                <option value="الموارد البشرية 💻<"الموارد البشرية</option>
                 <option value="مشرف">💻 مشرف</option>
                 <option value="مهندس">💻 مهندس</option>
                 <option value="تاجر">💰 تاجر</option>
