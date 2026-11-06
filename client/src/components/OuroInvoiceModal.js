@@ -155,11 +155,11 @@ const OuroInvoiceModal = ({ user, onClose }) => {
             <button type="button" onClick={onClose} style={{ gridColumn: '1 / -1', background: '#333', color: '#fff', padding: '6px', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>إغلاق النافذة ✖</button>
           </div>
         </div>
-        {/* الجانب الأيسر: المعاينة الحية للفاتورة وحقن اللوجو الحر للشركة مع تثبيت اسم منصة OURO بالسقف */}
+        {/* الجانب الأيسر: المعاينة الحية للفاتورة وحقن اللوجو الحر للشركة مع تثبيت اسم منصة HONOR بالسقف */}
         <div style={{ flex: '1.2', minWidth: '350px', background: '#000', padding: '15px', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.3)', boxShadow: '0 0 15px rgba(212,175,55,0.1)' }}>
           <div id="ouroPrintedInvoiceZone" style={{ direction: 'rtl', textAlign: 'right', fontFamily: 'sans-serif', padding: '15px', background: '#000', color: '#fff' }}>
             
-            {/* 👑 🏛️ [سقف التوثيق السيادي للمنصة] - تثبيت اسم وشعار منصة OURO Steps أعلى الفاتورة دائماً كضامن رسمي */}
+            {/* 👑 🏛️ [سقف التوثيق السيادي للمنصة] - تثبيت اسم وشعار منصة The HONOR أعلى الفاتورة دائماً كضامن رسمي */}
             <div style={{ textAlign: 'center', borderBottom: '1px dashed rgba(212,175,55,0.3)', paddingBottom: '8px', marginBottom: '12px' }}>
               <h2 style={{ color: 'var(--gold-primary)', margin: 0, fontSize: '14px', fontWeight: 'bold', letterSpacing: '0.5px' }}> مستند موثق عبر منصة The HONOR 👑</h2>
             </div>
