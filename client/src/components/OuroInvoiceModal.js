@@ -227,7 +227,7 @@ const OuroInvoiceModal = ({ user, onClose }) => {
 
             {/* الأختام والتوثيقات الموحدة لـ OURO Steps */}
             <div style={{ marginTop: '20px', textAlign: 'center', borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '8px' }}>
-              <small style={{ color: 'var(--gold-primary)', fontSize: '9px', fontFamily: 'monospace', display: 'block' }}>👑 تم توليد وتأمين هذا المستند عبر محرك الفواتير السحابي الموحد لـ OURO Steps 2026 🏛️</small>
+              <small style={{ color: 'var(--gold-primary)', fontSize: '9px', fontFamily: 'monospace', display: 'block' }}>👑 تم توليد وتأمين هذا المستند عبر محرك الفواتير السحابي الموحد لـ The HONOR 2026 🏛️</small>
             </div>
 
           </div>
