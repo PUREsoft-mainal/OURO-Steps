@@ -9,7 +9,7 @@ const OuroInvoiceModal = ({ user, onClose }) => {
   const [companyLogo, setCompanyLogo] = useState(""); // شفرة اللوجو اللامركزية الطائرة Base64
   
   const [clientName, setClientName] = useState("");
-  const [invoiceType, setInvoiceType] = useState("فاتورة بيع رقمية"); 
+  const [invoiceType, setInvoiceType] = useState("فاتورة بيع"); 
   const [items, setItems] = useState([{ id: 1, name: "", qty: 1, price: 0 }]);
   const [taxRate, setTaxRate] = useState(0); 
   const [discount, setDiscount] = useState(0); 
@@ -161,7 +161,7 @@ const OuroInvoiceModal = ({ user, onClose }) => {
             
             {/* 👑 🏛️ [سقف التوثيق السيادي للمنصة] - تثبيت اسم وشعار منصة OURO Steps أعلى الفاتورة دائماً كضامن رسمي */}
             <div style={{ textAlign: 'center', borderBottom: '1px dashed rgba(212,175,55,0.3)', paddingBottom: '8px', marginBottom: '12px' }}>
-              <h2 style={{ color: 'var(--gold-primary)', margin: 0, fontSize: '14px', fontWeight: 'bold', letterSpacing: '0.5px' }}> مستند موثق عبر منصة OURO Steps 👑</h2>
+              <h2 style={{ color: 'var(--gold-primary)', margin: 0, fontSize: '14px', fontWeight: 'bold', letterSpacing: '0.5px' }}> مستند موثق عبر منصة The HONOR 👑</h2>
             </div>
 
             {/* ترويسة الفاتورة المرنة وحقن الهوية البصرية اللامركزية والحرّة للشركة المستخدمة */}
